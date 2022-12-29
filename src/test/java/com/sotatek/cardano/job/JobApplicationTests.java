@@ -1,5 +1,9 @@
 package com.sotatek.cardano.job;
 
+import com.bloxbean.cardano.client.crypto.Blake2bUtil;
+import com.bloxbean.cardano.client.util.HexUtil;
+import com.sotatek.cardano.job.dto.PoolData;
+import com.sotatek.cardano.job.event.FetchPoolDataSuccess;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslProvider;
@@ -23,16 +27,20 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLException;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.TcpClient;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
 
 
@@ -43,26 +51,24 @@ class JobApplicationTests {
    WebClient.Builder webClientBuilder;
   @Test
   void contextLoads() {
-      System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,TLSv1");
     try {
+      System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,TLSv1");
       var sslContext = SslContextBuilder
           .forClient()
           .sslProvider(SslProvider.JDK)
           .startTls(true)
           .trustManager(InsecureTrustManagerFactory.INSTANCE)
           .build();
-    } catch (SSLException e) {
 
-    }
+      TcpClient tcpClient = TcpClient.create().secure(sslContextSpec -> sslContextSpec.sslContext(sslContext));
 
-    var httpClient = HttpClient.create()
-          .wiretap("reactor.netty.http.client.HttpClient", LogLevel.DEBUG,
-              AdvancedByteBufFormat.TEXTUAL, StandardCharsets.UTF_8)
+      var httpClient = HttpClient.from(tcpClient).create()
+          .wiretap("reactor.netty.http.client.HttpClient", LogLevel.TRACE, AdvancedByteBufFormat.TEXTUAL, StandardCharsets.UTF_8)
           //.wiretap(Boolean.FALSE)
           //.secure(t -> t.sslContext(sslContext))
           .followRedirect(Boolean.TRUE)
           .responseTimeout(Duration.ofSeconds(30000))
-          .protocol(HttpProtocol.HTTP11)
+          .protocol(HttpProtocol.H2C)
           .doOnConnected(connection -> {
             connection.addHandlerFirst(new ReadTimeoutHandler(19000, TimeUnit.SECONDS));
             connection.addHandlerFirst(
@@ -72,11 +78,10 @@ class JobApplicationTests {
 
       webClientBuilder
           .clientConnector(new ReactorClientHttpConnector(httpClient))
-
           .build()
           .get()
-          .uri("gist.github.com/pavanvora/42f63b97e3311fb344f8d0a1595fd4d4")
-
+          .uri("https://cardanostakehouse.com/1404d233-c0f4-47fb-bdcb-321.json")
+          .acceptCharset(StandardCharsets.UTF_8)
           .retrieve()
           .toEntity(String.class)
           .map(response -> {
@@ -115,13 +120,33 @@ class JobApplicationTests {
               default:
                 return Optional.of(response);
             }
-          }).block().ifPresent(System.out::println);
+          }).toFuture().thenAccept(
+              responseOptional ->
+                  responseOptional.ifPresentOrElse(response -> {
+                    ResponseEntity responseEntity = (ResponseEntity) response;
+                    var responseBody = responseEntity.getBody().toString();
+
+                    PoolData data = PoolData.builder()
+                        .status(HttpStatus.OK.value())
+                        .json(responseBody.getBytes(StandardCharsets.UTF_8))
+                        .hash(
+                            HexUtil.encodeHexString(
+                                Blake2bUtil.blake2bHash256(
+                                    responseBody.getBytes())
+                            ))
+                        .build();
+
+                    //log.info("Fetch success {} \n {}", poolHash.getUrl(),responseEntity.getBody());
+                  }, () -> {
+                  }));
+    } catch (SSLException e) {
 
     }
+  }
 
-    @Test
+  @Test
   void httpUrlClient() throws IOException {
-    URL url = new URL(("https://gist.githubusercontent.com/Gatewi/5c7f5403f60f897e761cefb5d2ce0efb/raw/fac02db333f1a9e06554a61bb80ba86dce21a248/FIMI.json"));
+    URL url = new URL(("https://cardanostakehouse.com/1404d233-c0f4-47fb-bdcb-321.json"));
     HttpURLConnection con = (HttpsURLConnection) url.openConnection();
     con.setRequestMethod(RequestMethod.GET.name());
     con.setRequestProperty("Content-Type", "application/json");
