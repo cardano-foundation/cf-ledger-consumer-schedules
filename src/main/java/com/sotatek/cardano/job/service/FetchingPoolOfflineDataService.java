@@ -123,7 +123,6 @@ public class FetchingPoolOfflineDataService {
           .build();
 
       var httpClient = HttpClient.create()
-          //.wiretap("reactor.netty.http.client.HttpClient", LogLevel., AdvancedByteBufFormat.TEXTUAL, StandardCharsets.UTF_8)
           .wiretap(Boolean.FALSE)
           .secure(t -> t.sslContext(sslContext))
           .followRedirect(Boolean.TRUE)
@@ -141,7 +140,6 @@ public class FetchingPoolOfflineDataService {
           .build()
           .get()
           .uri(poolHash.getUrl())
-          //.uri("https://raw.githubusercontent.com/hodlonaut/a/master/t1.json")
           .acceptCharset(StandardCharsets.UTF_8)
           .retrieve()
           .toEntity(String.class)
@@ -185,7 +183,8 @@ public class FetchingPoolOfflineDataService {
                 return Optional.of(response);
 
               default:
-                log.info("unhandled code {} for url: {}", response.getStatusCode(),poolHash.getUrl());
+                log.info("unhandled code {} for url: {}", response.getStatusCode(),
+                    poolHash.getUrl());
                 return Optional.of(response);
             }
           }).toFuture().thenAccept(
@@ -215,8 +214,6 @@ public class FetchingPoolOfflineDataService {
     } catch (SSLException e) {
 
     }
-
-
   }
 
   /**
@@ -250,7 +247,6 @@ public class FetchingPoolOfflineDataService {
     //log.error("{} {}", log, poolHash.getUrl());
     applicationEventPublisher.publishEvent(new FetchPoolDataFail(data));
   }
-
 
 
   @Transactional(rollbackFor = RuntimeException.class)

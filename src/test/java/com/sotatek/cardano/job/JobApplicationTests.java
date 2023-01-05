@@ -50,8 +50,7 @@ class JobApplicationTests {
   @Autowired
    WebClient.Builder webClientBuilder;
   @Test
-  void contextLoads() {
-    try {
+  void contextLoads() throws SSLException {
       System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,TLSv1");
       var sslContext = SslContextBuilder
           .forClient()
@@ -60,15 +59,14 @@ class JobApplicationTests {
           .trustManager(InsecureTrustManagerFactory.INSTANCE)
           .build();
 
-      TcpClient tcpClient = TcpClient.create().secure(sslContextSpec -> sslContextSpec.sslContext(sslContext));
-
-      var httpClient = HttpClient.from(tcpClient).create()
-          .wiretap("reactor.netty.http.client.HttpClient", LogLevel.TRACE, AdvancedByteBufFormat.TEXTUAL, StandardCharsets.UTF_8)
+      var httpClient = HttpClient.create()
+          .wiretap("reactor.netty.http.client.HttpClient", LogLevel.DEBUG,
+              AdvancedByteBufFormat.TEXTUAL, StandardCharsets.UTF_8)
           //.wiretap(Boolean.FALSE)
           //.secure(t -> t.sslContext(sslContext))
           .followRedirect(Boolean.TRUE)
           .responseTimeout(Duration.ofSeconds(30000))
-          .protocol(HttpProtocol.H2C)
+          .protocol(HttpProtocol.HTTP11)
           .doOnConnected(connection -> {
             connection.addHandlerFirst(new ReadTimeoutHandler(19000, TimeUnit.SECONDS));
             connection.addHandlerFirst(
@@ -78,10 +76,11 @@ class JobApplicationTests {
 
       webClientBuilder
           .clientConnector(new ReactorClientHttpConnector(httpClient))
+
           .build()
           .get()
           .uri("https://cardanostakehouse.com/1404d233-c0f4-47fb-bdcb-321.json")
-          .acceptCharset(StandardCharsets.UTF_8)
+
           .retrieve()
           .toEntity(String.class)
           .map(response -> {
@@ -125,7 +124,7 @@ class JobApplicationTests {
                   responseOptional.ifPresentOrElse(response -> {
                     ResponseEntity responseEntity = (ResponseEntity) response;
                     var responseBody = responseEntity.getBody().toString();
-
+                    System.out.println(responseBody);
                     PoolData data = PoolData.builder()
                         .status(HttpStatus.OK.value())
                         .json(responseBody.getBytes(StandardCharsets.UTF_8))
@@ -139,12 +138,10 @@ class JobApplicationTests {
                     //log.info("Fetch success {} \n {}", poolHash.getUrl(),responseEntity.getBody());
                   }, () -> {
                   }));
-    } catch (SSLException e) {
 
     }
-  }
 
-  @Test
+    @Test
   void httpUrlClient() throws IOException {
     URL url = new URL(("https://cardanostakehouse.com/1404d233-c0f4-47fb-bdcb-321.json"));
     HttpURLConnection con = (HttpsURLConnection) url.openConnection();
