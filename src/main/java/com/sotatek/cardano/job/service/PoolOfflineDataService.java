@@ -5,21 +5,22 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sotatek.cardano.common.entity.PoolHash;
 import com.sotatek.cardano.common.entity.PoolOfflineData;
-import com.sotatek.cardano.job.dto.IdleInsert;
 import com.sotatek.cardano.job.dto.PoolData;
 import com.sotatek.cardano.job.event.FetchPoolDataSuccess;
 import com.sotatek.cardano.job.projection.PoolOfflineHashProjection;
 import com.sotatek.cardano.job.repository.PoolHashRepository;
 import com.sotatek.cardano.job.repository.PoolMetadataRefRepository;
 import com.sotatek.cardano.job.repository.PoolOfflineDataRepository;
+import com.sotatek.cardano.job.repository.PoolOfflineFetchErrorRepository;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -44,10 +45,9 @@ public class PoolOfflineDataService {
   final PoolOfflineDataRepository poolOfflineDataRepository;
   final PoolHashRepository poolHashRepository;
   final ObjectMapper objectMapper;
-  final Set<PoolData> successPools;
+  final Queue<PoolData> successPools;
   @Value("${jobs.install-batch}")
   private int batchSize;
-  private IdleInsert idleInsert;
 
   public PoolOfflineDataService(PoolOfflineDataRepository poolOfflineDataRepository,
       PoolHashRepository poolHashRepository,
@@ -56,36 +56,37 @@ public class PoolOfflineDataService {
     this.poolOfflineDataRepository = poolOfflineDataRepository;
     this.poolHashRepository = poolHashRepository;
     this.objectMapper = objectMapper;
-    this.successPools = Collections.synchronizedSet(new HashSet<>());
-    idleInsert = IdleInsert.builder().build();
+    this.successPools = new LinkedBlockingDeque<>();
     this.poolMetadataRefRepository = poolMetadataRefRepository;
   }
 
   @Transactional
   @Scheduled(fixedDelayString = "${jobs.insert-pool-offline-data.delay}",
       initialDelayString = "${jobs.insert-pool-offline-data.innit}")
-  public void updatePoolOffline() {
+  public void updatePoolOffline() throws InterruptedException {
     log.info("pool size {}", successPools.size());
 
     if (CollectionUtils.isEmpty(successPools)) {
-      return;
+      Thread.sleep(1000);
     }
 
-    if (successPools.size() >= batchSize ||
-        idleInsert.getRetry() == BigInteger.TWO.intValue()) {
-      insertBatch(successPools);
-      restartPointer();
-      return;
+    Set<PoolData> poolData = new HashSet<>();
+
+    while (successPools.size() > BigInteger.ZERO.intValue()){
+      poolData.add(successPools.poll());
+      if(poolData.size() == batchSize){
+        insertBatch(poolData);
+        poolData.clear();
+      }
     }
 
-    idleInsert.setSize(idleInsert.getSize());
-    idleInsert.setRetry(idleInsert.getRetry() + 1);
+    if(CollectionUtils.isEmpty(poolData)){
+      insertBatch(poolData);
+      poolData.clear();
+    }
+
   }
 
-  private void restartPointer() {
-    idleInsert.setSize(0);
-    idleInsert.setRetry(0);
-  }
 
   @EventListener
   public void handleSuccessfulPoolData(FetchPoolDataSuccess fetchData) {
@@ -93,9 +94,9 @@ public class PoolOfflineDataService {
   }
 
 
-  private synchronized void insertBatch(Set<PoolData> successPools) {
+  private void insertBatch(Set<PoolData> successPools) {
+    log.info("Fetch Data size {}", successPools.size());
     Set<PoolOfflineData> savingPoolData = new HashSet<>();
-
     var existedPoolData = poolOfflineDataRepository.
         findPoolOfflineDataHashByPoolIds(
             successPools
@@ -156,14 +157,6 @@ public class PoolOfflineDataService {
         .filter(exPod -> exPod.getHash().equals(pod.getHash()) &&
             pod.getPoolId().equals(exPod.getPoolId()))
         .findFirst();
-  }
-
-  private void handleEmptyPoolOfflineData(Set<PoolOfflineData> savingPoolData) {
-    savingPoolData.addAll(successPools.stream()
-        .map(this::mapPoolOfflineData)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .collect(Collectors.toList()));
   }
 
   private Optional<PoolOfflineData> mapPoolOfflineData(PoolData poolData) {
