@@ -25,5 +25,4 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
 
   List<PoolHash> findByHashRawIn(Collection<String> hashes);
 
-
 }

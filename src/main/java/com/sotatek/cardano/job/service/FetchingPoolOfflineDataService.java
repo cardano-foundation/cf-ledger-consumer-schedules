@@ -2,16 +2,13 @@ package com.sotatek.cardano.job.service;
 
 import com.bloxbean.cardano.client.crypto.Blake2bUtil;
 import com.bloxbean.cardano.client.util.HexUtil;
-import com.sotatek.cardano.common.entity.PoolOfflineData;
-import com.sotatek.cardano.common.entity.PoolOfflineFetchError;
 import com.sotatek.cardano.job.constant.JobConstants;
 import com.sotatek.cardano.job.dto.PoolData;
 import com.sotatek.cardano.job.event.FetchPoolDataFail;
 import com.sotatek.cardano.job.event.FetchPoolDataSuccess;
 import com.sotatek.cardano.job.projection.PoolHashUrlProjection;
 import com.sotatek.cardano.job.repository.PoolHashRepository;
-import com.sotatek.cardano.job.repository.PoolOfflineDataRepository;
-import com.sotatek.cardano.job.repository.PoolOfflineFetchErrorRepository;
+import com.sotatek.cardano.ledgersync.util.UrlUtil;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandshakeTimeoutException;
 import io.netty.handler.ssl.SslProvider;
@@ -23,7 +20,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -44,7 +41,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
@@ -56,8 +52,6 @@ import reactor.netty.http.client.HttpClient;
 public class FetchingPoolOfflineDataService {
 
   final PoolHashRepository poolHashRepository;
-  final PoolOfflineDataRepository poolOfflineDataRepository;
-  final PoolOfflineFetchErrorRepository poolOfflineFetchErrorRepository;
   final WebClient.Builder webClientBuilder;
   final ApplicationEventPublisher applicationEventPublisher;
 
@@ -83,7 +77,6 @@ public class FetchingPoolOfflineDataService {
     AtomicReference<Long> startReference = new AtomicReference<>(start);
     while (true) {
       List<PoolHashUrlProjection> poolHashUrlProjections = poolHashRepository.findPoolHashAndUrl(
-          startReference.get(),
           PageRequest.of(BigInteger.ZERO.intValue(),
               JobConstants.DEFAULT_BATCH));
 
@@ -102,16 +95,8 @@ public class FetchingPoolOfflineDataService {
 
   private void fetchData(PoolHashUrlProjection poolHash) {
 
-    if (!isUrl(poolHash.getUrl())) {
-      PoolData data = PoolData.builder()
-          .status(HttpStatus.NOT_FOUND.value())
-          .errorMessage(
-              String.format("not valid url may contain unscene character  %s", poolHash.getUrl()))
-          .poolId(poolHash.getPoolId())
-          .metadataRefId(poolHash.getMetadataId())
-          .build();
-
-      applicationEventPublisher.publishEvent(new FetchPoolDataFail(data));
+    if (!UrlUtil.isUrl(poolHash.getUrl())) {
+      fetchFail("not valid url may contain special character", poolHash);
       return;
     }
 
@@ -158,16 +143,16 @@ public class FetchingPoolOfflineDataService {
                 return Optional.empty();
 
               case FORBIDDEN:
-                //log.error("FORBIDDEN for url: {}", poolHash.getUrl());
+                log.error("FORBIDDEN for url: {}", poolHash.getUrl());
                 return Optional.empty();
               case REQUEST_TIMEOUT:
-                //log.error("REQUEST_TIMEOUT for url: {}", poolHash.getUrl());
+                log.error("REQUEST_TIMEOUT for url: {}", poolHash.getUrl());
                 return Optional.empty();
               case MOVED_PERMANENTLY:
-                //log.error("MOVED PERMANENTLY for url: {}", poolHash.getUrl());
+                log.error("MOVED PERMANENTLY for url: {}", poolHash.getUrl());
                 return Optional.empty();
               case OK:
-                if (response.getHeaders().get(HttpHeaders.CONTENT_TYPE)
+                if (Objects.requireNonNull(response.getHeaders().get(HttpHeaders.CONTENT_TYPE))
                     .stream()
                     .noneMatch(contentType ->
                         contentType.contains(MediaType.APPLICATION_JSON_VALUE) ||
@@ -177,7 +162,7 @@ public class FetchingPoolOfflineDataService {
                   return Optional.empty();
                 }
 
-                if (response.getBody().getBytes().length > LIMIT_BYTES) {
+                if (Objects.requireNonNull(response.getBody()).getBytes().length > LIMIT_BYTES) {
                   return Optional.empty();
                 }
                 return Optional.of(response);
@@ -190,75 +175,46 @@ public class FetchingPoolOfflineDataService {
           }).toFuture().thenAccept(
               responseOptional ->
                   responseOptional.ifPresentOrElse(response -> {
-                    ResponseEntity responseEntity = (ResponseEntity) response;
-                    var responseBody = responseEntity.getBody().toString();
+                        ResponseEntity responseEntity = (ResponseEntity) response;
 
-                    PoolData data = PoolData.builder()
-                        .status(HttpStatus.OK.value())
-                        .json(responseBody.getBytes(StandardCharsets.UTF_8))
-                        .poolId(poolHash.getPoolId())
-                        .metadataRefId(poolHash.getMetadataId())
-                        .hash(
-                            HexUtil.encodeHexString(
-                                Blake2bUtil.blake2bHash256(
-                                    responseBody.getBytes())
-                            ))
-                        .build();
+                        var responseBody = String.valueOf(responseEntity.getBody());
 
-                    //log.info("Fetch success {} \n {}", poolHash.getUrl(),responseEntity.getBody());
-                    applicationEventPublisher.publishEvent(new FetchPoolDataSuccess(data));
-                  }, () -> {
-                    fetchFail("Response larger than 512 bytes or response body not in json with",
-                        poolHash);
-                  }));
+                        if (Objects.nonNull(responseBody)) {
+                          PoolData data = PoolData.builder()
+                              .status(HttpStatus.OK.value())
+                              .json(responseBody.getBytes(StandardCharsets.UTF_8))
+                              .poolId(poolHash.getPoolId())
+                              .metadataRefId(poolHash.getMetadataId())
+                              .hash(
+                                  HexUtil.encodeHexString(
+                                      Blake2bUtil.blake2bHash256(
+                                          responseBody.getBytes())
+                                  ))
+                              .build();
+                          applicationEventPublisher.publishEvent(new FetchPoolDataSuccess(data));
+                        }
+                      }, () ->
+                          fetchFail("Response larger than 512 bytes or response body not in json with",
+                              poolHash)
+                  ));
     } catch (SSLException e) {
-
+      log.error(e.getMessage());
     }
-  }
-
-  /**
-   * Check input string ís URL or not
-   *
-   * @param string url string
-   * @return boolean if url string return true else return false
-   */
-  private boolean isUrl(String string) {
-    String urlRegex = "(http(s)?:\\/\\/)?(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
-
-    Pattern pattern = Pattern.compile(urlRegex);
-    Matcher matcher = pattern.matcher(string);
-    return matcher.matches();
   }
 
   /**
    * Logging and send event for fetching pool data fail
-   *
-   * @param log      log content
-   * @param poolHash
+   * @param error  log content
    */
-  private void fetchFail(String log, PoolHashUrlProjection poolHash) {
+  private void fetchFail(String error, PoolHashUrlProjection poolHash) {
     PoolData data = PoolData.builder()
-        .status(HttpStatus.NOT_FOUND.value())
-        .errorMessage(String.format(log, poolHash.getUrl()))
+        .errorMessage(String.format(error, poolHash.getUrl()))
         .poolId(poolHash.getPoolId())
         .metadataRefId(poolHash.getMetadataId())
         .build();
 
-    //log.error("{} {}", log, poolHash.getUrl());
+    log.error("{} {}", error, poolHash.getUrl());
     applicationEventPublisher.publishEvent(new FetchPoolDataFail(data));
-  }
-
-
-  @Transactional(rollbackFor = RuntimeException.class)
-  public void savePoolData(Map<String, PoolOfflineData> poolOfflineData,
-      Map<String, PoolOfflineFetchError> poolOfflineFetchErrors) {
-    poolOfflineDataRepository.saveAll(poolOfflineData.values());
-    poolOfflineData.clear();
-
-    if (!CollectionUtils.isEmpty(poolOfflineFetchErrors)) {
-      poolOfflineFetchErrorRepository.saveAll(poolOfflineFetchErrors.values());
-      poolOfflineFetchErrors.clear();
-    }
   }
 
 }

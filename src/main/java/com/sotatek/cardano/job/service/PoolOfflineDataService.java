@@ -27,6 +27,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,15 +73,15 @@ public class PoolOfflineDataService {
 
     Set<PoolData> poolData = new HashSet<>();
 
-    while (successPools.size() > BigInteger.ZERO.intValue()){
+    while (successPools.size() > BigInteger.ZERO.intValue()) {
       poolData.add(successPools.poll());
-      if(poolData.size() == batchSize){
+      if (poolData.size() == batchSize) {
         insertBatch(poolData);
         poolData.clear();
       }
     }
 
-    if(CollectionUtils.isEmpty(poolData)){
+    if (!CollectionUtils.isEmpty(poolData)) {
       insertBatch(poolData);
       poolData.clear();
     }
@@ -89,6 +90,7 @@ public class PoolOfflineDataService {
 
 
   @EventListener
+  @Async
   public void handleSuccessfulPoolData(FetchPoolDataSuccess fetchData) {
     successPools.add(fetchData.getPoolData());
   }
@@ -119,8 +121,6 @@ public class PoolOfflineDataService {
       Optional<PoolOfflineHashProjection> poolOfflineHash = findPoolWithSameHash(existedPoolData,
           pod);
 
-
-
       poolOfflineHash.ifPresentOrElse(exPod -> {
 
             if (!exPod.getHash().equals(pod.getHash())) {
@@ -141,8 +141,7 @@ public class PoolOfflineDataService {
                     .equals(exPod.getPoolId()))
                 .findFirst();
 
-
-            if (existSavingPoolData.isEmpty()){
+            if (existSavingPoolData.isEmpty()) {
               mapPoolOfflineData(pod).ifPresent(savingPoolData::add);
             }
           }
@@ -189,9 +188,16 @@ public class PoolOfflineDataService {
   private Optional<PoolOfflineData> buildOfflineData(PoolData poolData, Map<String, Object> map) {
 
     String name = null;
-    PoolHash poolHash = poolHashRepository.getReferenceById(poolData.getPoolId());
+
+    var poolHash = poolHashRepository.findById(poolData.getPoolId());
+    var poolMetadataRef = poolMetadataRefRepository.findById(poolData.getPoolId());
+
+    if (poolHash.isEmpty() || poolMetadataRef.isEmpty()) {
+      return Optional.empty();
+    }
+
     if (ObjectUtils.isEmpty(map.get(POOL_NAME))) {
-      name = poolHash.getView();
+      name = poolHash.get().getView();
     } else {
       name = map.get(POOL_NAME).toString();
     }
@@ -199,11 +205,12 @@ public class PoolOfflineDataService {
         .replace("\\t+", "")
         .replace("\\s+", "")
         .strip();
+
     return Optional.of(PoolOfflineData.builder()
         .poolId(poolData.getPoolId())
         .pmrId(poolData.getMetadataRefId())
-        .pool(poolHashRepository.getReferenceById(poolData.getPoolId()))
-        .poolMetadataRef(poolMetadataRefRepository.getReferenceById(poolData.getMetadataRefId()))
+        .pool(poolHash.get())
+        .poolMetadataRef(poolMetadataRef.get())
         .hash(poolData.getHash())
         .poolName(name)
         .tickerName(map.get(TICKER).toString())
