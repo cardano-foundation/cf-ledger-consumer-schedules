@@ -79,7 +79,7 @@ class JobApplicationTests {
 
           .build()
           .get()
-          .uri("https://cardanostakehouse.com/1404d233-c0f4-47fb-bdcb-321.json")
+          .uri("gist.github.com/pavanvora/42f63b97e3311fb344f8d0a1595fd4d4")
 
           .retrieve()
           .toEntity(String.class)
@@ -119,25 +119,7 @@ class JobApplicationTests {
               default:
                 return Optional.of(response);
             }
-          }).toFuture().thenAccept(
-              responseOptional ->
-                  responseOptional.ifPresentOrElse(response -> {
-                    ResponseEntity responseEntity = (ResponseEntity) response;
-                    var responseBody = responseEntity.getBody().toString();
-                    System.out.println(responseBody);
-                    PoolData data = PoolData.builder()
-                        .status(HttpStatus.OK.value())
-                        .json(responseBody.getBytes(StandardCharsets.UTF_8))
-                        .hash(
-                            HexUtil.encodeHexString(
-                                Blake2bUtil.blake2bHash256(
-                                    responseBody.getBytes())
-                            ))
-                        .build();
-
-                    //log.info("Fetch success {} \n {}", poolHash.getUrl(),responseEntity.getBody());
-                  }, () -> {
-                  }));
+          }).block().ifPresent(System.out::println);
 
     }
 

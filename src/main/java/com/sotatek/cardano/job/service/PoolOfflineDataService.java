@@ -3,7 +3,6 @@ package com.sotatek.cardano.job.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sotatek.cardano.common.entity.PoolHash;
 import com.sotatek.cardano.common.entity.PoolOfflineData;
 import com.sotatek.cardano.job.dto.PoolData;
 import com.sotatek.cardano.job.event.FetchPoolDataSuccess;
@@ -11,7 +10,6 @@ import com.sotatek.cardano.job.projection.PoolOfflineHashProjection;
 import com.sotatek.cardano.job.repository.PoolHashRepository;
 import com.sotatek.cardano.job.repository.PoolMetadataRefRepository;
 import com.sotatek.cardano.job.repository.PoolOfflineDataRepository;
-import com.sotatek.cardano.job.repository.PoolOfflineFetchErrorRepository;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -166,7 +164,7 @@ public class PoolOfflineDataService {
 
     String json = new String(poolData.getJson());
     try {
-      Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {
+      Map<String, String> map = objectMapper.readValue(json, new TypeReference<>() {
       });
 
       if (CollectionUtils.isEmpty(map)) {
@@ -185,7 +183,7 @@ public class PoolOfflineDataService {
     return Optional.empty();
   }
 
-  private Optional<PoolOfflineData> buildOfflineData(PoolData poolData, Map<String, Object> map) {
+  private Optional<PoolOfflineData> buildOfflineData(PoolData poolData, Map<String, String> map) {
 
     String name = null;
 
@@ -199,7 +197,7 @@ public class PoolOfflineDataService {
     if (ObjectUtils.isEmpty(map.get(POOL_NAME))) {
       name = poolHash.get().getView();
     } else {
-      name = map.get(POOL_NAME).toString();
+      name = map.get(POOL_NAME);
     }
     String jsonFormated = new String(poolData.getJson()).replace("\n", "")
         .replace("\\t+", "")
@@ -213,7 +211,7 @@ public class PoolOfflineDataService {
         .poolMetadataRef(poolMetadataRef.get())
         .hash(poolData.getHash())
         .poolName(name)
-        .tickerName(map.get(TICKER).toString())
+        .tickerName(map.get(TICKER))
         .json(jsonFormated)
         .bytes(poolData.getJson())
         .build());
