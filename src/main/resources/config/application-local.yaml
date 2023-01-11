@@ -37,7 +37,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        default_schema: dev
+        default_schema: ${POSTGRES_SCHEMA:dev}
         show_sql: false
         format_sql: true
         jdbc:
