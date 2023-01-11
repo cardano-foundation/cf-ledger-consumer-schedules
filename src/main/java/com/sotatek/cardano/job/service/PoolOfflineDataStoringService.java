@@ -35,7 +35,7 @@ import org.springframework.util.ObjectUtils;
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-public class PoolOfflineDataService {
+public class PoolOfflineDataStoringService {
 
   private final PoolMetadataRefRepository poolMetadataRefRepository;
 
@@ -48,7 +48,7 @@ public class PoolOfflineDataService {
   @Value("${jobs.install-batch}")
   private int batchSize;
 
-  public PoolOfflineDataService(PoolOfflineDataRepository poolOfflineDataRepository,
+  public PoolOfflineDataStoringService(PoolOfflineDataRepository poolOfflineDataRepository,
       PoolHashRepository poolHashRepository,
       ObjectMapper objectMapper,
       PoolMetadataRefRepository poolMetadataRefRepository) {

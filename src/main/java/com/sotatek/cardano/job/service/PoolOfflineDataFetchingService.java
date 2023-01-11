@@ -24,8 +24,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import lombok.AccessLevel;
@@ -49,7 +47,7 @@ import reactor.netty.http.client.HttpClient;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 @Slf4j
-public class FetchingPoolOfflineDataService {
+public class PoolOfflineDataFetchingService {
 
   final PoolHashRepository poolHashRepository;
   final WebClient.Builder webClientBuilder;
