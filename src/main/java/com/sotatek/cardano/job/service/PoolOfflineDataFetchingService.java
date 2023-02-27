@@ -122,7 +122,7 @@ public class PoolOfflineDataFetchingService {
           .clientConnector(new ReactorClientHttpConnector(httpClient))
           .build()
           .get()
-          .uri(poolHash.getUrl())
+          .uri(UrlUtil.formatSpecialCharactersUrl(poolHash.getUrl()))
           .acceptCharset(StandardCharsets.UTF_8)
           .retrieve()
           .toEntity(String.class)
@@ -195,7 +195,7 @@ public class PoolOfflineDataFetchingService {
                           fetchFail("Response larger than 512 bytes or response body not in json with",
                               poolHash)
                   ));
-    } catch (SSLException e) {
+    } catch (Exception e) {
       log.error(e.getMessage());
     }
   }

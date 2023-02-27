@@ -111,6 +111,11 @@ public class PoolOfflineDataStoringService {
     successPools.clear();
   }
 
+  /**
+   * @param poolData
+   * @param savingPoolData
+   * @param existedPoolData
+   */
   private void handleExistedPoolOfflineData(Set<PoolData> poolData,
       Set<PoolOfflineData> savingPoolData,
       Set<PoolOfflineHashProjection> existedPoolData) {
@@ -148,6 +153,13 @@ public class PoolOfflineDataStoringService {
     });
   }
 
+  /**
+   * Find pool have offline data of not
+   *
+   * @param existedPoolData Set of existed Pool Offline Data
+   * @param pod             data object transfer of pool offline data {
+   * @return if existed Optional of {@link PoolOfflineHashProjection} projection of empty
+   */
   private Optional<PoolOfflineHashProjection> findPoolWithSameHash(
       Set<PoolOfflineHashProjection> existedPoolData, PoolData pod) {
     return existedPoolData.stream()
@@ -156,6 +168,12 @@ public class PoolOfflineDataStoringService {
         .findFirst();
   }
 
+  /**
+   * Extract json of return pool data for mapping entity pool offline data
+   *
+   * @param poolData data object transfer of pool offline data
+   * @return Optional of PoolOfflineData or empty
+   */
   private Optional<PoolOfflineData> mapPoolOfflineData(PoolData poolData) {
 
     if (ObjectUtils.isEmpty(poolData.getJson())) {
@@ -183,6 +201,12 @@ public class PoolOfflineDataStoringService {
     return Optional.empty();
   }
 
+  /**
+   * Mapping pool offline data features input parameters
+   * @param poolData  data object transfer of pool offline data
+   * @param map       map contains features extracted from json
+   * @return Optional of PoolOfflineData or empty
+   */
   private Optional<PoolOfflineData> buildOfflineData(PoolData poolData, Map<String, String> map) {
 
     String name = null;
