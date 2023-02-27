@@ -182,7 +182,7 @@ public class PoolOfflineDataStoringService {
 
     String json = new String(poolData.getJson());
     try {
-      Map<String, String> map = objectMapper.readValue(json, new TypeReference<>() {
+      Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {
       });
 
       if (CollectionUtils.isEmpty(map)) {
@@ -207,7 +207,7 @@ public class PoolOfflineDataStoringService {
    * @param map       map contains features extracted from json
    * @return Optional of PoolOfflineData or empty
    */
-  private Optional<PoolOfflineData> buildOfflineData(PoolData poolData, Map<String, String> map) {
+  private Optional<PoolOfflineData> buildOfflineData(PoolData poolData, Map<String, Object> map) {
 
     String name = null;
 
@@ -221,7 +221,7 @@ public class PoolOfflineDataStoringService {
     if (ObjectUtils.isEmpty(map.get(POOL_NAME))) {
       name = poolHash.get().getView();
     } else {
-      name = map.get(POOL_NAME);
+      name = String.valueOf(map.get(POOL_NAME));
     }
     String jsonFormated = new String(poolData.getJson()).replace("\n", "")
         .replace("\\t+", "")
@@ -235,7 +235,7 @@ public class PoolOfflineDataStoringService {
         .poolMetadataRef(poolMetadataRef.get())
         .hash(poolData.getHash())
         .poolName(name)
-        .tickerName(map.get(TICKER))
+        .tickerName(String.valueOf(map.get(TICKER)))
         .json(jsonFormated)
         .bytes(poolData.getJson())
         .build());
