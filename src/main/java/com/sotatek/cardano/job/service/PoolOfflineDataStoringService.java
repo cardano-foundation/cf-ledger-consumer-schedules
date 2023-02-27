@@ -188,7 +188,7 @@ public class PoolOfflineDataStoringService {
     String name = null;
 
     var poolHash = poolHashRepository.findById(poolData.getPoolId());
-    var poolMetadataRef = poolMetadataRefRepository.findById(poolData.getPoolId());
+    var poolMetadataRef = poolMetadataRefRepository.findById(poolData.getMetadataRefId());
 
     if (poolHash.isEmpty() || poolMetadataRef.isEmpty()) {
       return Optional.empty();
