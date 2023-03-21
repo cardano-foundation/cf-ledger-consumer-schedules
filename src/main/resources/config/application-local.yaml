@@ -1,0 +1,136 @@
+# Infrastructure domain
+infrastructure:
+  host: ${HOST:127.0.0.1}
+spring:
+  # Datasource specific configs
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:54321}/${POSTGRES_DB:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
+    username: ${POSTGRES_USER:cardano-master}
+    password: ${POSTGRES_PASSWORD:Y2FyZGFuby1kYXRhYmFzZS1tYXN0ZXI=}
+    driver-class-name: org.postgresql.Driver
+    # Hikari specific configs
+    hikari:
+      pool-name: explorer-api-pool
+      minimum-idle: 1 #minimum number of idle connections maintained by HikariCP in a connection pool
+      maximum-pool-size: 3 #maximum pool size
+      idle-timeout: 300000 #maximum idle time for connection
+      max-lifetime: 900000 #maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      connection-timeout: 50000 #maximum number of milliseconds that a client will wait for a connection
+      auto-commit: false #default auto-commit behavior.
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+  # JPA specific configs
+  jpa:
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: ${POSTGRES_SCHEMA:dev}
+        show_sql: false
+        format_sql: true
+        jdbc:
+          batch_size: 100
+  kafka:
+    bootstrap-servers: ${BOOTSTRAP_SERVER:127.0.0.1:29092}
+    #client-id:  crawler
+    producer:
+      acks: all
+      retries: 3
+      retryBackoff: 1000
+      properties:
+        enable:
+          idempotence: true
+        max:
+          pool:
+            interval: 60000
+          in:
+            flight:
+              requests:
+                per:
+                  connection: 1
+  task:
+    execution:
+      pool:
+        max-size: 2
+        core-size: 2
+        queue-capacity: 50
+      thread-name-prefix: Executorxx-
+logging:
+  level:
+    com:
+      cardano: INFO
+    io: OFF
+    root: INFO
+jobs:
+  cardano-cli:
+    delay: 10
+  fetch-pool-offline-data:
+    delay: 172800000
+  insert-pool-offline-data:
+    delay: 180000
+    innit: 5000
+  install-batch: 100
+
+
+application:
+  network-magic: ${NETWORK_MAGIC:1}
+  magic-param: ${MAGIC_PARAM:--testnet-magic}
+  cli: cardano-cli
+  query: query
+  kafka:
+    topic:
+      epochStake: dev.preprod.cli.epoch.stake
+      epochParam: epoch-param
+      reward: reward
+
+  queries:
+    ledgerState:
+      - ${application.cli}
+      - ${application.query}
+      - ledger-state
+      - ${application.magic-param}
+      - ${application.network-magic}
+    tip:
+      - ${application.cli}
+      - ${application.query}
+      - tip
+      - ${application.magic-param}
+      - ${application.network-magic}
+
+docker:
+  host: ${DOCKER_HOST:unix:///var/run/docker.sock}
+  imageId: ${IMAGE_ID:bba793bf23cdd3a2ad8d2213f51c5b19a97a0745d8e77222c25322634b51e243}
+  environments:
+    - NETWORK=preprod
+    - node-ipc:/ipc
+    - CARDANO_NODE_SOCKET_PATH=/ipc/node.socket
+  cardanoNodeName: cardano-node
+  portSpecs:
+    - 3001
+  exposedPorts: 3001
+
+redis:
+  databaseIndex: 0
+  master: ${REDIS_MASTER_NAME:mymaster}
+  password: ${REDIS_SENTINEL_PASS:redis_sentinel_pass}
+  testOnBorrow: false
+  maxTotal: 10
+  maxIdle: 5
+  minIdle: 3
+  testOnReturn: false
+  testWhileIdle: false
+  sentinels:
+    - host: ${REDIS_SENTINEL_HOST:127.0.0.1}
+      port: 26379
