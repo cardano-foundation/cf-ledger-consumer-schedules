@@ -40,3 +40,12 @@ build/
 /.mvn/wrapper/maven-wrapper.properties
 /mvnw
 /logs/
+
+!Dockerfile
+
+### Environment variables ###
+.env
+
+### Maven ###
+.m2/
+!.m2/settings.default.xml
