@@ -37,29 +37,11 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        default_schema: ${POSTGRES_SCHEMA:dev}
+        default_schema: ${POSTGRES_SCHEMA:preprod}
         show_sql: false
         format_sql: true
         jdbc:
           batch_size: 100
-  kafka:
-    bootstrap-servers: ${BOOTSTRAP_SERVER:127.0.0.1:29092}
-    #client-id:  crawler
-    producer:
-      acks: all
-      retries: 3
-      retryBackoff: 1000
-      properties:
-        enable:
-          idempotence: true
-        max:
-          pool:
-            interval: 60000
-          in:
-            flight:
-              requests:
-                per:
-                  connection: 1
   task:
     execution:
       pool:
@@ -67,12 +49,14 @@ spring:
         core-size: 2
         queue-capacity: 50
       thread-name-prefix: Executorxx-
+
 logging:
   level:
     com:
       cardano: INFO
     io: OFF
     root: INFO
+
 jobs:
   cardano-cli:
     delay: ${CARDANO_CLI_DELAY:10}
@@ -89,11 +73,6 @@ application:
   magic-param: ${MAGIC_PARAM:--testnet-magic}
   cli: cardano-cli
   query: query
-  kafka:
-    topic:
-      epochStake: ${EPOCH_STAKE_TOPIC:dev.preprod.cli.epoch.stake}
-      epochParam: ${EPOCH_PARAM:epoch-param}
-      reward: ${REWARD:reward}
 
   queries:
     ledgerState:
@@ -134,3 +113,50 @@ redis:
   sentinels:
     - host: ${REDIS_SENTINEL_HOST:127.0.0.1}
       port: 26379
+
+kafka:
+  auto-create-topics: false
+  admin:
+    bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
+  topics:
+    epochStake:
+      name: ${EPOCH_STAKE_TOPIC:dev.preprod.cli.epoch.stake}
+      partitions: 0
+      replicationFactor: 1
+    epochParam:
+      name: ${EPOCH_PARAM:epoch-param}
+      partitions: 0
+      replicationFactor: 1
+    reward:
+      name: ${REWARD:reward}
+      partitions: 0
+      replicationFactor: 1
+  producers:
+    json-producer:
+      clientId: json-producer
+      retries: 3
+      bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
+      maxInFlightRequestsPerConnection: 1
+      requestTimeoutMs: 30000
+      batchSize: 16384
+      lingerMs: 5
+      bufferMemory: 33554432
+      acks: all
+      enableIdempotence: true
+      keySerializer: org.apache.kafka.common.serialization.StringSerializer
+      valueSerializer: org.springframework.kafka.support.serializer.JsonSerializer
+  consumers:
+    json-consumer:
+      clientId: json-consumer
+      bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
+      keyDeserializer: org.apache.kafka.common.serialization.StringDeserializer
+      valueDeserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      autoOffsetReset: earliest
+      enableAutoCommit: false
+      autoCommitIntervalMs: 1000
+      sessionTimeoutMs: 30000
+      trustedPackages: "*"
+      allowAutoCreateTopics: false
+      concurrency: 6
+      pollTimeout: 360000000
+      groupId: ${NETWORK_NAME:preprod}

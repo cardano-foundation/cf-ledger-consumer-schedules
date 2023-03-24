@@ -2,6 +2,7 @@ package com.sotatek.cardano.job.repository;
 
 import com.sotatek.cardano.job.projection.PoolHashUrlProjection;
 import com.sotatek.cardano.common.entity.PoolHash;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
@@ -12,10 +13,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
 
-  //@Query("SELECT PH.hashRaw FROM PoolHash PH WHERE ")
-  Optional<PoolHash> findPoolHashByHashRaw(String hashBytes);
-
-  Optional<PoolHash> findPoolHashByView(String view);
 
   @Query("SELECT ph.id AS poolId, pmr.url as url, pmr.id as metadataId "
       + "FROM PoolHash ph "
@@ -25,4 +22,8 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
   List<PoolHashUrlProjection> findPoolHashAndUrl(Pageable pageable);
 
   Optional<PoolHash> findById(Long id);
+
+  List<PoolHash> findByHashRawIn(Collection<String> hashes);
+
+
 }

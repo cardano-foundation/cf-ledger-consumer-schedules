@@ -161,8 +161,7 @@ public class CardanoCliServiceImpl implements CardanoCliService {
   @Override
   public void writeLedgerState(ByteArrayOutputStream outputStream, Integer epoch)
       throws IOException {
-    File ledgerStateFile = new File(
-        String.join(JobConstants.DASH_DELIMITER, networkMagic, FILE_NAME, String.valueOf(epoch)));
+    File ledgerStateFile = new File(getFileName(networkMagic, String.valueOf(epoch)));
     if (ledgerStateFile.exists()) {
       outputStream.close();
       return;
@@ -186,6 +185,10 @@ public class CardanoCliServiceImpl implements CardanoCliService {
     }
 
     saveNodeInfo();
+  }
+
+  public static String getFileName(String networkMagic, String epoch) {
+    return String.join(JobConstants.DASH_DELIMITER, networkMagic, FILE_NAME, epoch);
   }
 
   @Override

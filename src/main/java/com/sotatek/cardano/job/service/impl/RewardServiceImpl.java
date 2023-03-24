@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class RewardServiceImpl implements RewardService {
 
-  @Value("${application.kafka.topic.reward}")
+  @Value("${kafka.topics.reward.name}")
   String kafkaTopic;
 
   @Override

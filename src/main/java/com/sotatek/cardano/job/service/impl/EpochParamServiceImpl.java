@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EpochParamServiceImpl implements EpochParamService {
 
-  @Value("${application.kafka.topic.epochParam}")
+  @Value("${kafka.topics.epochParam.name}")
   String kafkaTopic;
 
   private final KafkaService kafkaService;

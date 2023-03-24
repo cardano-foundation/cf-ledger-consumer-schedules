@@ -1,64 +1,68 @@
 package com.sotatek.cardano.job.config.kafka;
 
+import com.sotatek.cardano.job.config.properties.KafkaProperties;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.SneakyThrows;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.kafka.support.serializer.JsonSerializer;
 
 @Configuration
 public class KafKaProducerConfiguration {
 
-  private static final int MAX_REQUEST_SIZE = 1_097_152;
-  @Value("${spring.kafka.bootstrap-servers}")
-  private String bootstrapServers;
+  public static final String JSON_SERIALIZER = "json-producer";
+  private final KafkaProperties kafkaProperties;
 
-  @Value("${spring.kafka.producer.acks}")
-  private String acks;
-
-  @Value("${spring.kafka.producer.retries}")
-  private int retriesTime;
-
-  @Value("${spring.kafka.producer.properties.enable.idempotence}")
-  private boolean isIdempotence;
-
-  @Value("${spring.kafka.producer.properties.max.in.flight.requests.per.connection}")
-  private int requestPerConnection;
-
-  @Value("${spring.kafka.producer.retryBackoff}")
-  private int retryBackoff;
-
-  @Bean
-  public ProducerFactory<String, Object> producerFactory() {
-    Map<String, Object> map = new HashMap<>();
-
-    map.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-        bootstrapServers);
-    map.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-        StringSerializer.class);
-    map.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-        JsonSerializer.class);
-    map.put(ProducerConfig.RETRIES_CONFIG,
-        retriesTime);
-    map.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG,
-        isIdempotence);
-    map.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION,
-        requestPerConnection);
-    map.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG,retryBackoff);
-    map.put(ProducerConfig.MAX_REQUEST_SIZE_CONFIG, MAX_REQUEST_SIZE);
-
-    return new DefaultKafkaProducerFactory<>(map);
+  public KafKaProducerConfiguration(KafkaProperties kafkaProperties) {
+    this.kafkaProperties = kafkaProperties;
   }
 
   @Bean
-  KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
-    return new KafkaTemplate<>(producerFactory);
+  @Primary
+  public KafkaTemplate<?, ?> kafkaTemplate() {
+    return new KafkaTemplate<>(producerFactory());
+  }
+
+  @Bean
+  public ProducerFactory<String, Object> producerFactory() {
+    var jsonConfigs = kafkaProperties.getProducers().get(JSON_SERIALIZER);
+
+    return new DefaultKafkaProducerFactory<>(jsonProducerConfigs(jsonConfigs));
+  }
+
+  @SneakyThrows
+  private Map<String, Object> jsonProducerConfigs(KafkaProperties.ProducerConfig jsonConfigs) {
+    Map<String, Object> props;
+    props = new HashMap<>();
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+        jsonConfigs.getBootstrapServers());
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.CLIENT_ID_CONFIG,
+        jsonConfigs.getClientId());
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.ACKS_CONFIG, jsonConfigs.getAcks());
+    props.put(
+        org.apache.kafka.clients.producer.ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION,
+        jsonConfigs.getMaxInFlightRequestsPerConnection());
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.RETRIES_CONFIG,
+        jsonConfigs.getRetries());
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG,
+        jsonConfigs.getRequestTimeoutMs());
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.BATCH_SIZE_CONFIG,
+        jsonConfigs.getBatchSize());
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.LINGER_MS_CONFIG,
+        jsonConfigs.getLingerMs());
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.BUFFER_MEMORY_CONFIG,
+        jsonConfigs.getBufferMemory());
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+        Class.forName(jsonConfigs.getKeySerializer()));
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+        Class.forName(jsonConfigs.getValueSerializer()));
+    props.put(org.apache.kafka.clients.producer.ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG,
+        jsonConfigs.getEnableIdempotence());
+    return props;
   }
 
 }
