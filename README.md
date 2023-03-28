@@ -22,7 +22,7 @@ Run schedule task
 ## Task
 ### Extract ledger state & insert
 #### Require 
- - Docker
+ - Docker (permission read docker.sock file to create container ) ```chmod -R o+r docker.sock```
  - Cardano-node image ```docker image pull inputoutput/cardano-node:latest```
 #### Description
  Extract ledger dump file every epoch start from shelley era then wait consumer send message that consumered to extracted epoch then insert to database

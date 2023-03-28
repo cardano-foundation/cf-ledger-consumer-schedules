@@ -20,6 +20,7 @@ import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -46,8 +47,9 @@ import redis.clients.jedis.JedisPoolConfig;
  */
 @Slf4j
 @Configuration
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @EnableCaching
+@Profile("sentinel")
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RedisConfiguration extends CachingConfigurerSupport {
 
   /**

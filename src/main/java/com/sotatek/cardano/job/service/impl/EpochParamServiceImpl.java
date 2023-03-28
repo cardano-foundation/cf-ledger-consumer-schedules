@@ -6,16 +6,12 @@ import java.util.LinkedHashMap;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class EpochParamServiceImpl implements EpochParamService {
-
-  @Value("${kafka.topics.epochParam.name}")
-  String kafkaTopic;
 
   private final KafkaService kafkaService;
 

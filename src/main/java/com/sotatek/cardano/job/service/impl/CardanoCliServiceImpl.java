@@ -36,7 +36,7 @@ import org.springframework.util.ObjectUtils;
 @Service
 public class CardanoCliServiceImpl implements CardanoCliService {
 
-  private final NodeInfo nodeInfo;
+  private NodeInfo nodeInfo;
   private final ObjectMapper mapper;
   private final Docker docker;
   private final RedisService redisService;
@@ -58,17 +58,32 @@ public class CardanoCliServiceImpl implements CardanoCliService {
 
     NodeInfo redisNodeInfo = redisService.getValue(getNodeInfoKey(networkMagic), NodeInfo.class);
 
-    if (ObjectUtils.isEmpty(redisNodeInfo)) {
-      redisNodeInfo = NodeInfo.builder()
-          .containerId("")
-          .epochNo(BigInteger.ZERO.intValue())
-          .build();
-      recreateContainer(redisNodeInfo);
+    if (ObjectUtils.isEmpty(redisNodeInfo) ||
+        !checkContainerExist(redisNodeInfo.getContainerId())) {
+      redisNodeInfo = recreateContainer();
     }
 
-    dockerClient.startContainerCmd(redisNodeInfo.getContainerId()).exec();
+    InspectContainerResponse containerResponse = dockerClient.inspectContainerCmd(redisNodeInfo.getContainerId()).exec();
     this.nodeInfo = redisNodeInfo;
     saveNodeInfo();
+
+    if(Boolean.TRUE.equals(containerResponse.getState().getRunning())){
+      return;
+    }
+    dockerClient.startContainerCmd(redisNodeInfo.getContainerId()).exec();
+  }
+
+  /**
+   * Check container exits or not
+   *
+   * @param containerId string container id
+   * @return
+   */
+  private boolean checkContainerExist(String containerId) {
+    var containers = dockerClient.listContainersCmd().withShowAll(Boolean.TRUE).exec().stream()
+        .filter(container -> container.getId().equals(containerId)).findFirst();
+
+    return containers.isPresent();
   }
 
   private Optional<Image> getImage() {
@@ -82,14 +97,17 @@ public class CardanoCliServiceImpl implements CardanoCliService {
   public void removeContainer() {
     dockerClient.stopContainerCmd(nodeInfo.getContainerId()).exec();
     dockerClient.removeContainerCmd(nodeInfo.getContainerId()).exec();
-    recreateContainer(nodeInfo);
+    nodeInfo = recreateContainer();
     dockerClient.startContainerCmd(nodeInfo.getContainerId()).exec();
     saveNodeInfo();
   }
 
   @Synchronized
-  private void recreateContainer(NodeInfo nodeInfo) {
-
+  private NodeInfo recreateContainer() {
+    NodeInfo node = NodeInfo.builder()
+        .epochNo(0)
+        .containerId("")
+        .build();
     Optional<Image> cardanoNodeImage = getImage();
     if (cardanoNodeImage.isEmpty()) {
       log.error("Can't find image with tag {}", docker.getImageId());
@@ -104,8 +122,10 @@ public class CardanoCliServiceImpl implements CardanoCliService {
           .withExposedPorts(ExposedPort.parse(docker.getExposedPorts()))
           .withName(docker.getCardanoNodeName())
           .exec();
-      nodeInfo.setContainerId(containerResponse.getId());
+      node.setContainerId(containerResponse.getId());
     }
+
+    return node;
   }
 
   @Override

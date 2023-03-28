@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
@@ -89,9 +90,19 @@ public class EpochStakeServiceImpl implements EpochStakeService {
     }
 
     insertEpochStake(EpochStakes.builder()
-        .epoch(activeEpoch + BigInteger.ONE.intValue())
+        .epoch(activeEpoch)
         .stakes(epochStakes)
         .build());
+  }
+
+  @Override
+  public Integer findMaxEpochNoStaked(){
+    var epochNo = epochStakeRepository.findMaxEpochNoStaked();
+    if(Objects.isNull(epochNo)){
+      epochNo = BigInteger.ZERO.intValue();
+    }
+
+    return epochNo;
   }
 
   private String getStakeHash(LinkedHashMap<String, Object> stake) {
@@ -141,9 +152,8 @@ public class EpochStakeServiceImpl implements EpochStakeService {
         .collect(Collectors.toList());
 
     epochStakeRepository.saveAll(epochStakesEntities);
-    //updatePoolSize(poolsHashEntities, epochStakesEntities);
+    updatePoolSize(poolsHashEntities, epochStakesEntities);
   }
-
 
   /**
    * Update pool size by total UXTO staked to pool in active epoch

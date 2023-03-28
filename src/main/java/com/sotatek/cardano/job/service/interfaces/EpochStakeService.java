@@ -15,4 +15,5 @@ public interface EpochStakeService {
   @Transactional
   void handleLedgerState(Map<String, Object> map);
 
+  Integer findMaxEpochNoStaked();
 }

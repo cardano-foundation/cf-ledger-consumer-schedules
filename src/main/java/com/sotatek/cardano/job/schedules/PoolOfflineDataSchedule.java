@@ -45,9 +45,9 @@ public class PoolOfflineDataSchedule {
     successPools.add(fetchData.getPoolData());
   }
 
- /* @Transactional
+ @Transactional
   @Scheduled(fixedDelayString = "${jobs.insert-pool-offline-data.delay}",
-      initialDelayString = "${jobs.insert-pool-offline-data.innit}")*/
+      initialDelayString = "${jobs.insert-pool-offline-data.innit}")
   public void updatePoolOffline() throws InterruptedException {
     log.info("pool size {}", successPools.size());
 
@@ -72,7 +72,7 @@ public class PoolOfflineDataSchedule {
 
   }
 
-//  @Scheduled(fixedDelayString = "${jobs.fetch-pool-offline-data.delay}")
+  @Scheduled(fixedDelayString = "${jobs.fetch-pool-offline-data.delay}")
   public void fetchPoolOffline() {
     poolOfflineDataFetchingService.fetchBatch(BigInteger.ZERO.intValue());
   }

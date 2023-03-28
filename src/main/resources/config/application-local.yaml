@@ -100,35 +100,13 @@ docker:
     - 3001
   exposedPorts: 3001
 
-redis:
-  databaseIndex: 0
-  master: ${REDIS_MASTER_NAME:mymaster}
-  password: ${REDIS_SENTINEL_PASS:redis_sentinel_pass}
-  testOnBorrow: false
-  maxTotal: 10
-  maxIdle: 5
-  minIdle: 3
-  testOnReturn: false
-  testWhileIdle: false
-  sentinels:
-    - host: ${REDIS_SENTINEL_HOST:127.0.0.1}
-      port: 26379
-
 kafka:
   auto-create-topics: false
   admin:
     bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
   topics:
-    epochStake:
-      name: ${EPOCH_STAKE_TOPIC:dev.preprod.cli.epoch.stake}
-      partitions: 0
-      replicationFactor: 1
-    epochParam:
-      name: ${EPOCH_PARAM:epoch-param}
-      partitions: 0
-      replicationFactor: 1
-    reward:
-      name: ${REWARD:reward}
+    epoch:
+      name: ${EPOCH_TOPIC:dev.preprod.cli.epoch.stake}
       partitions: 0
       replicationFactor: 1
   producers:
