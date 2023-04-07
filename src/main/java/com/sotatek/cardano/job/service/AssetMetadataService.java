@@ -1,8 +1,10 @@
 package com.sotatek.cardano.job.service;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sotatek.cardano.common.entity.AssetMetadata;
 import com.sotatek.cardano.job.dto.AssetMetadataDTO;
+import com.sotatek.cardano.job.mapper.AssetMedataMapper;
 import com.sotatek.cardano.job.repository.AssetMetadataRepository;
 import java.io.File;
 import java.io.IOException;
@@ -33,16 +35,19 @@ public class AssetMetadataService {
 
     private final AssetMetadataRepository assetMetadataRepository;
 
+    private final AssetMedataMapper assetMedataMapper;
+
     @Value("${token.metadata.url}")
     private String url;
     @Value("${token.metadata.folder}")
     private String metadataFolder;
+    @Value("${application.network}")
+    private String network;
 
     @Transactional
     @Scheduled(fixedRate = 2000000, initialDelay = 2000)
-    @Async
     public void syncMetaData() throws IOException, GitAPIException {
-        String pathFolder = "./token-metadata";
+        String pathFolder = "./token-metadata-" + network;
         log.info("Clone metadata repository: " + url);
         File folder = new File(pathFolder);
         if (!folder.exists()) {
@@ -74,6 +79,7 @@ public class AssetMetadataService {
                         try {
                             ObjectMapper mapper = new ObjectMapper();
                             Reader reader = Files.newBufferedReader(file);
+                            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
                             AssetMetadataDTO assetMetadata = mapper.readValue(reader,
                                     AssetMetadataDTO.class);
                             log.info("Crawl token: {}", assetMetadata.getName().getValue());
@@ -81,17 +87,7 @@ public class AssetMetadataService {
                             if (file.getFileName().toString()
                                     .equals(assetMetadata.getSubject().concat(".json"))
                                     && assetMetadata.getSubject().length() >= 56) {
-                                assetMetadataList.add(
-                                        AssetMetadata.builder()
-                                                .subject(assetMetadata.getSubject())
-                                                .url(assetMetadata.getUrl().getValue())
-                                                .name(assetMetadata.getName().getValue())
-                                                .ticker(assetMetadata.getTicker().getValue())
-                                                .decimals(Integer.valueOf(assetMetadata.getDecimals().getValue()))
-                                                .policy(assetMetadata.getPolicy())
-                                                .logo(assetMetadata.getLogo().getValue())
-                                                .description(assetMetadata.getDescription().getValue())
-                                                .build());
+                                assetMetadataList.add(assetMedataMapper.fromDTO(assetMetadata));
                             }
                             reader.close();
                         } catch (Exception ex) {

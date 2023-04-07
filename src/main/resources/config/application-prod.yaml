@@ -83,6 +83,12 @@ jobs:
     delay: ${INSERT_POOL_DATA_DELAY:180000}
     innit: 5000
   install-batch: 100
+token:
+  metadata:
+    url: ${token-metdata-url:https://github.com/cardano-foundation/cardano-token-registry.git}
+    folder: ${token-metadata-folder:/mappings}
+application:
+  network: ${POSTGRES_SCHEMA:mainnet}
 
 application:
   network-magic: ${NETWORK_MAGIC:1}
