@@ -1,6 +1,6 @@
-package com.sotatek.cardano.job.listeners;
+package com.sotatek.cardano.job.event.listeners;
 
-import com.sotatek.cardano.job.event.KafkaRegistryEvent;
+import com.sotatek.cardano.job.event.message.KafkaRegistryEvent;
 import java.util.Objects;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

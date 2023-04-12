@@ -1,7 +1,7 @@
 package com.sotatek.cardano.job.schedules;
 
 import com.sotatek.cardano.job.dto.PoolData;
-import com.sotatek.cardano.job.event.FetchPoolDataSuccess;
+import com.sotatek.cardano.job.event.message.FetchPoolDataSuccess;
 import com.sotatek.cardano.job.service.interfaces.PoolOfflineDataFetchingService;
 import com.sotatek.cardano.job.service.interfaces.PoolOfflineDataStoringService;
 import java.math.BigInteger;
@@ -72,7 +72,7 @@ public class PoolOfflineDataSchedule {
 
   }
 
-  @Scheduled(fixedDelayString = "${jobs.fetch-pool-offline-data.delay}")
+ @Scheduled(fixedDelayString = "${jobs.fetch-pool-offline-data.delay}")
   public void fetchPoolOffline() {
     poolOfflineDataFetchingService.fetchBatch(BigInteger.ZERO.intValue());
   }

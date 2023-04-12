@@ -1,31 +1,28 @@
 package com.sotatek.cardano.job.service.impl;
 
+import com.sotatek.cardano.common.entity.Delegation;
 import com.sotatek.cardano.common.entity.EpochStake;
-import com.sotatek.cardano.common.entity.PoolHash;
-import com.sotatek.cardano.common.entity.StakeAddress;
+import com.sotatek.cardano.common.entity.TxOut;
+import com.sotatek.cardano.job.repository.BlockRepository;
+import com.sotatek.cardano.job.repository.DelegationRepository;
 import com.sotatek.cardano.job.repository.EpochStakeRepository;
 import com.sotatek.cardano.job.repository.PoolHashRepository;
 import com.sotatek.cardano.job.repository.StakeAddressRepository;
+import com.sotatek.cardano.job.repository.TxOutRepository;
+import com.sotatek.cardano.job.repository.TxRepository;
 import com.sotatek.cardano.job.service.interfaces.EpochStakeService;
-import com.sotatek.cardano.ledgersync.common.certs.StakeCredentialType;
-import com.sotatek.cardano.ledgersync.common.constant.Constant;
-import com.sotatek.cardano.ledgersync.common.dto.EpochStakes;
-import com.sotatek.cardano.ledgersync.common.dto.Stake;
-import com.sotatek.cardano.ledgersync.util.HexUtil;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
@@ -35,169 +32,81 @@ import org.springframework.util.ObjectUtils;
 @RequiredArgsConstructor
 public class EpochStakeServiceImpl implements EpochStakeService {
 
-  public static final String STATE_BEFORE = "stateBefore";
-  public static final String P_STAKE_SET = "pstakeSet";
-  public static final String ES_SNAPSHOTS = "esSnapshots";
-  public static final String STAKE = "stake";
-  public static final String SCRIPT_HASH = "script hash";
-  public static final String KEY_HASH = "key hash";
-  public static final String DELEGATIONS = "delegations";
-  public static final String LAST_EPOCH = "lastEpoch";
-
-  @Value("${application.network-magic}")
-  Integer network;
-  private final PoolHashRepository poolHashRepository;
-  private final StakeAddressRepository stakeAddressRepository;
   private final EpochStakeRepository epochStakeRepository;
 
+  final BlockRepository blockRepository;
+  final TxRepository txRepository;
+  final TxOutRepository txOutRepository;
+  final DelegationRepository delegationRepository;
+
+
   @Override
-  @SuppressWarnings("unchecked")
   @Transactional
-  public void handleLedgerState(Map<String, Object> ledgerState) {
-    int activeEpoch = (Integer) ledgerState.get(LAST_EPOCH);
-    var stateBefore = (LinkedHashMap<String, Object>) ledgerState.get(STATE_BEFORE);
-    var esSnapshots = (LinkedHashMap<String, Object>) stateBefore.get(ES_SNAPSHOTS);
-    var stakeSet = (LinkedHashMap<String, Object>) esSnapshots.get(P_STAKE_SET);
-    var stakes = (ArrayList<Object>) stakeSet.get(STAKE);
-    var delegations = (ArrayList<Object>) stakeSet.get(DELEGATIONS);
-    var delegationStakes = delegations.stream()
-        .map(delegation -> (ArrayList<Object>) delegation)
-        .collect(Collectors.toMap(delegation -> {
-              var hash = (LinkedHashMap<String, Object>) delegation.get(BigInteger.ZERO.intValue());
-              return getStakeHash(hash);
-            },
-            delegation -> delegation.get(BigInteger.ONE.intValue()).toString()));
+  public void handleEpoch(Integer epochNo) {
 
-    var epochStakes = stakes
+    var blockIdRange = blockRepository.findBlockIdsRangeInEpoch(epochNo);
+    var txIdRange = txRepository
+        .findBlockIdsRangeInEpoch(blockIdRange.getMinBlockId(), blockIdRange.getMaxBlockId());
+
+    List<EpochStake> epochStakes = epochStakeRepository.findEpochStakeByEpochNo(
+            epochNo + BigInteger.ONE.intValue())
         .stream()
-        .map(stake -> (ArrayList<Object>) stake)
-        .map(stake -> {
-          var amount = new BigInteger(stake.get(BigInteger.ONE.intValue()).toString());
-          var hash = ((LinkedHashMap<String, Object>) stake.get(BigInteger.ZERO.intValue()));
-          var stakeKey = getStakeHash(hash);
+        .map(epochStake -> EpochStake.builder()
+            .addr(epochStake.getAddr())
+            .pool(epochStake.getPool())
+            .amount(epochStake.getAmount())
+            .epochNo(epochStake.getEpochNo() + BigInteger.ONE.intValue())
+            .build())
+        .collect(Collectors.toList());
 
+    List<Delegation> previousEpochDelegations = new ArrayList<>(delegationRepository
+        .getDelegationsByRangeTxId(txIdRange.getMinTxId(), txIdRange.getMaxTxId())
+        .stream()
+        .collect(Collectors.toMap(delegation -> delegation.getAddress().getId(),
+            Function.identity(), (oldTxId, newTxId) -> newTxId)).values());
 
-          return Stake.builder()
-              .poolHash(delegationStakes.get(stakeKey))
-              .stakeKey(stakeKey)
+    List<TxOut> stakeUTXOs = txOutRepository
+        .findTxOutsByRangeTxIdAndStakeId(txIdRange.getMinTxId(),
+            txIdRange.getMaxTxId());
+
+    Map<Long, BigInteger> stakeDelegationUTXOs = stakeUTXOs.stream()
+        .collect(Collectors.toConcurrentMap(stakeUTXO ->
+                stakeUTXO.getStakeAddress().getId(),
+            TxOut::getValue,
+            BigInteger::add));
+
+    List<EpochStake> delegationEpochStake = previousEpochDelegations.stream()
+        .map(delegation -> {
+          var key = delegation.getAddress().getId();
+          var amount = stakeDelegationUTXOs.get(key);
+          stakeDelegationUTXOs.remove(key);
+          if (Objects.isNull(amount)) {
+            amount = BigInteger.ZERO;
+          }
+          return EpochStake.builder()
               .amount(amount)
+              .pool(delegation.getPoolHash())
+              .addr(delegation.getAddress())
+              .epochNo(epochNo + BigInteger.TWO.intValue())
               .build();
-        })
-        .collect(Collectors.toSet());
+        }).collect(Collectors.toList());
 
-    if (ObjectUtils.isEmpty(epochStakes)) {
-      return;
-    }
+    stakeDelegationUTXOs.forEach((stakeId, amount) -> epochStakes.stream()
+        .filter(epochStake -> epochStake.getAddr().getId().equals(stakeId))
+        .max(Comparator.comparing(EpochStake::getId))
+        .ifPresent(epochStake -> epochStake.setAmount(epochStake.getAmount().add(amount))));
 
-    insertEpochStake(EpochStakes.builder()
-        .epoch(activeEpoch)
-        .stakes(epochStakes)
-        .build());
+    epochStakes.addAll(delegationEpochStake);
+    epochStakeRepository.saveAll(epochStakes);
   }
 
   @Override
-  public Integer findMaxEpochNoStaked(){
+  public Integer findMaxEpochNoStaked() {
     var epochNo = epochStakeRepository.findMaxEpochNoStaked();
-    if(Objects.isNull(epochNo)){
+    if (Objects.isNull(epochNo)) {
       epochNo = BigInteger.ZERO.intValue();
     }
 
     return epochNo;
-  }
-
-  private String getStakeHash(LinkedHashMap<String, Object> stake) {
-    String key;
-    if (!stake.containsKey(SCRIPT_HASH)) {
-      key = getStakeAddressHash(stake.get(KEY_HASH).toString(),
-          StakeCredentialType.ADDR_KEYHASH);
-    } else {
-      key = getStakeAddressHash(stake.get(SCRIPT_HASH).toString(),
-          StakeCredentialType.SCRIPT_HASH);
-    }
-    return key;
-  }
-
-  /**
-   * Insert stake addresses delegations to pool on Epoch
-   *
-   * @param epochStake stake addresses delegation to pool
-   */
-  private void insertEpochStake(EpochStakes epochStake) {
-    var poolsHashRaw = epochStake.getStakes().stream()
-        .map(Stake::getPoolHash)
-        .collect(Collectors.toSet());
-
-    var stakeAddresses = epochStake.getStakes()
-        .stream()
-        .map(Stake::getStakeKey)
-        .collect(Collectors.toSet());
-
-    Map<String, PoolHash> poolsHashEntities = poolHashRepository.findByHashRawIn(poolsHashRaw)
-        .stream()
-        .collect(Collectors.toMap(PoolHash::getHashRaw, Function.identity()));
-
-    Map<String, StakeAddress> stakeAddressEntities = stakeAddressRepository.findByHashRawIn(
-            stakeAddresses)
-        .stream()
-        .collect(Collectors.toMap(StakeAddress::getHashRaw, Function.identity()));
-
-    var epochStakesEntities = epochStake.getStakes().stream()
-        .map(stake -> EpochStake.builder()
-            .epochNo(epochStake.getEpoch())
-            .pool(poolsHashEntities.get(stake.getPoolHash()))
-            .addr(stakeAddressEntities.get(stake.getStakeKey()))
-            .amount(stake.getAmount())
-            .build())
-        .map(EpochStake.class::cast)
-        .collect(Collectors.toList());
-
-    epochStakeRepository.saveAll(epochStakesEntities);
-    updatePoolSize(poolsHashEntities, epochStakesEntities);
-  }
-
-  /**
-   * Update pool size by total UXTO staked to pool in active epoch
-   *
-   * @param poolsHash   map pool hash with ket, value (hashRaw, PoolHash)
-   * @param epochStakes list epoch stake inserted in current batch
-   */
-  private void updatePoolSize(Map<String, PoolHash> poolsHash, List<EpochStake> epochStakes) {
-
-    Map<Pair<String, Integer>, Long> poolStake =
-        epochStakes.stream()
-            .collect(
-                Collectors.groupingBy(
-                    et -> Pair.of(et.getPool().getHashRaw(), et.getEpochNo()),
-                    Collectors.summingLong(et -> et.getAmount().longValue())));
-
-    var poolHashes = poolsHash.values();
-
-    poolHashes.forEach(poolHash -> {
-      var maxPoolSizeOnEpochs = poolStake.keySet()
-          .stream()
-          .filter(pair -> pair.getFirst().equals(poolHash.getHashRaw()))
-          .max(Comparator.comparing(Pair::getSecond))
-          .stream().findFirst().orElseThrow();
-
-      poolHash.setPoolSize(BigInteger.valueOf(poolStake.get(maxPoolSizeOnEpochs)));
-      poolHash.setEpochNo(maxPoolSizeOnEpochs.getSecond());
-    });
-
-    poolHashRepository.saveAll(poolHashes);
-  }
-
-  /**
-   * Get stake address from hash
-   *
-   * @param hash May be key hash or script hash
-   * @param type Stake credential type
-   * @return String stake address
-   */
-  private String getStakeAddressHash(String hash, StakeCredentialType type) {
-
-    int stakeHeader = type.equals(StakeCredentialType.ADDR_KEYHASH) ? 0b1110_0000 : 0b1111_0000;
-    int networkId = Constant.isTestnet(network) ? 0 : 1;
-    stakeHeader = stakeHeader | networkId;
-    return String.join("", HexUtil.encodeHexString(new byte[]{(byte) stakeHeader}), hash);
   }
 }

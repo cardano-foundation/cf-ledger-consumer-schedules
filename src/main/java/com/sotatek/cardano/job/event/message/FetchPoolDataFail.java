@@ -1,4 +1,4 @@
-package com.sotatek.cardano.job.event;
+package com.sotatek.cardano.job.event.message;
 
 import com.sotatek.cardano.job.dto.PoolData;
 import org.springframework.context.ApplicationEvent;
