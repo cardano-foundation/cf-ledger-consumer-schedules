@@ -1,13 +1,13 @@
 # Infrastructure domain
 infrastructure:
-  host: ${HOST:10.4.10.112}
+  host: ${HOST:127.0.0.1}
 spring:
   # Datasource specific configs
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:54321}/${POSTGRES_DB:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
     username: ${POSTGRES_USER:cardano-master}
-    password: ${POSTGRES_PASSWORD:secret@password}
+    password: ${POSTGRES_PASSWORD:secret@}
     driver-class-name: org.postgresql.Driver
     # Hikari specific configs
     hikari:
@@ -71,50 +71,12 @@ token:
     url: ${token-metdata-url:https://github.com/cardano-foundation/cardano-token-registry.git}
     folder: ${token-metadata-folder:/mappings}
 application:
-  network: ${POSTGRES_SCHEMA:mainnet}
-
-
-application:
-  network-magic: ${NETWORK_MAGIC:1}
-  magic-param: ${MAGIC_PARAM:--testnet-magic}
-  cli: cardano-cli
-  query: query
-
-  queries:
-    ledgerState:
-      - ${application.cli}
-      - ${application.query}
-      - ledger-state
-      - ${application.magic-param}
-      - ${application.network-magic}
-    tip:
-      - ${application.cli}
-      - ${application.query}
-      - tip
-      - ${application.magic-param}
-      - ${application.network-magic}
-
-docker:
-  host: ${DOCKER_HOST:unix:///var/run/docker.sock}
-  imageId: ${IMAGE_ID:bba793bf23cdd3a2ad8d2213f51c5b19a97a0745d8e77222c25322634b51e243}
-  environments:
-    - NETWORK=${NETWORK_NAME:preprod}
-    - node-ipc:/ipc
-    - CARDANO_NODE_SOCKET_PATH=/ipc/node.socket
-  cardanoNodeName: ${DOCKER_CONTAINER_NAME:cardano-node}
-  portSpecs:
-    - 3001
-  exposedPorts: 3001
+  network: ${NETWORK_NAME:mainnet}
 
 kafka:
   auto-create-topics: false
   admin:
     bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
-  topics:
-    epoch:
-      name: ${EPOCH_TOPIC:dev.preprod.cli.epoch.stake}
-      partitions: 0
-      replicationFactor: 1
   producers:
     json-producer:
       clientId: json-producer

@@ -35,9 +35,19 @@
 
     <dependency>
       <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webflux</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.eclipse.jgit</groupId>
+      <artifactId>org.eclipse.jgit</artifactId>
+      <version>6.5.0.202303070854-r</version>
+    </dependency>
 
     <dependency>
       <groupId>com.sotatek.cardano</groupId>
@@ -54,7 +64,7 @@
     <dependency>
       <groupId>com.sotatek.cardano</groupId>
       <artifactId>cardano-common-explorer</artifactId>
-      <version>1.0.3-SNAPSHOT</version>
+      <version>1.0.6-SNAPSHOT</version>
     </dependency>
 
     <dependency>

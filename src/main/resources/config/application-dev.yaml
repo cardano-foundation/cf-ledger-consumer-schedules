@@ -1,19 +1,19 @@
 # Infrastructure domain
 infrastructure:
-  host: ${HOST:10.4.10.231}
+  host: ${HOST:127.0.0.1}
 spring:
   # Datasource specific configs
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:54321}/${POSTGRES_DB:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
     username: ${POSTGRES_USER:cardano-master}
-    password: ${POSTGRES_PASSWORD:Y2FyZGFuby1kYXRhYmFzZS1tYXN0ZXI=}
+    password: ${POSTGRES_PASSWORD:secret@}
     driver-class-name: org.postgresql.Driver
     # Hikari specific configs
     hikari:
       pool-name: explorer-api-pool
       minimum-idle: 1 #minimum number of idle connections maintained by HikariCP in a connection pool
-      maximum-pool-size: 3 #maximum pool size
+      maximum-pool-size: 10 #maximum pool size
       idle-timeout: 300000 #maximum idle time for connection
       max-lifetime: 900000 #maximum lifetime in milliseconds of a connection in the pool after it is closed.
       connection-timeout: 50000 #maximum number of milliseconds that a client will wait for a connection
@@ -37,29 +37,11 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        default_schema: ${POSTGRES_SCHEMA:preprod}
+        default_schema: ${POSTGRES_SCHEMA:mainnet}
         show_sql: false
         format_sql: true
         jdbc:
           batch_size: 100
-  kafka:
-    bootstrap-servers: ${BOOTSTRAP_SERVER:127.0.0.1:29092}
-    #client-id:  crawler
-    producer:
-      acks: all
-      retries: 3
-      retryBackoff: 1000
-      properties:
-        enable:
-          idempotence: true
-        max:
-          pool:
-            interval: 60000
-          in:
-            flight:
-              requests:
-                per:
-                  connection: 1
   task:
     execution:
       pool:
@@ -67,6 +49,7 @@ spring:
         core-size: 2
         queue-capacity: 50
       thread-name-prefix: Executorxx-
+
 logging:
   level:
     com:
@@ -88,56 +71,38 @@ token:
     url: ${token-metdata-url:https://github.com/cardano-foundation/cardano-token-registry.git}
     folder: ${token-metadata-folder:/mappings}
 application:
-  network: ${POSTGRES_SCHEMA:mainnet}
+  network: ${NETWORK_NAME:mainnet}
 
-application:
-  network-magic: ${NETWORK_MAGIC:1}
-  magic-param: ${MAGIC_PARAM:--testnet-magic}
-  cli: cardano-cli
-  query: query
-  kafka:
-    topic:
-      epochStake: ${EPOCH_STAKE_TOPIC:dev.preprod.cli.epoch.stake}
-      epochParam: ${EPOCH_PARAM:epoch-param}
-      reward: ${REWARD:reward}
-
-  queries:
-    ledgerState:
-      - ${application.cli}
-      - ${application.query}
-      - ledger-state
-      - ${application.magic-param}
-      - ${application.network-magic}
-    tip:
-      - ${application.cli}
-      - ${application.query}
-      - tip
-      - ${application.magic-param}
-      - ${application.network-magic}
-
-docker:
-  host: ${DOCKER_HOST:unix:///var/run/docker.sock}
-  imageId: ${IMAGE_ID:bba793bf23cdd3a2ad8d2213f51c5b19a97a0745d8e77222c25322634b51e243}
-  environments:
-    - NETWORK=${NETWORK_NAME:preprod}
-    - node-ipc:/ipc
-    - CARDANO_NODE_SOCKET_PATH=/ipc/node.socket
-  cardanoNodeName: ${DOCKER_CONTAINER_NAME:cardano-node}
-  portSpecs:
-    - 3001
-  exposedPorts: 3001
-
-redis:
-  databaseIndex: 0
-  master: ${REDIS_MASTER_NAME:mymaster}
-  password: ${REDIS_SENTINEL_PASS:redis_sentinel_pass}
-  testOnBorrow: false
-  maxTotal: 10
-  maxIdle: 5
-  minIdle: 3
-  testOnReturn: false
-  testWhileIdle: false
-  sentinels:
-    - host: ${REDIS_SENTINEL_HOST:127.0.0.1}
-      port: 26379
-
+kafka:
+  auto-create-topics: false
+  admin:
+    bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
+  producers:
+    json-producer:
+      clientId: json-producer
+      retries: 3
+      bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
+      maxInFlightRequestsPerConnection: 1
+      requestTimeoutMs: 30000
+      batchSize: 16384
+      lingerMs: 5
+      bufferMemory: 33554432
+      acks: all
+      enableIdempotence: true
+      keySerializer: org.apache.kafka.common.serialization.StringSerializer
+      valueSerializer: org.springframework.kafka.support.serializer.JsonSerializer
+  consumers:
+    json-consumer:
+      clientId: json-consumer
+      bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
+      keyDeserializer: org.apache.kafka.common.serialization.StringDeserializer
+      valueDeserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      autoOffsetReset: earliest
+      enableAutoCommit: false
+      autoCommitIntervalMs: 1000
+      sessionTimeoutMs: 30000
+      trustedPackages: "*"
+      allowAutoCreateTopics: false
+      concurrency: 6
+      pollTimeout: 360000000
+      groupId: ${NETWORK_NAME:mainnet}
