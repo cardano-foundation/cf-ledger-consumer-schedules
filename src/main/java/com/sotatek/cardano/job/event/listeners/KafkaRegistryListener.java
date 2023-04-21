@@ -1,13 +1,16 @@
 package com.sotatek.cardano.job.event.listeners;
 
-import com.sotatek.cardano.job.event.message.KafkaRegistryEvent;
 import java.util.Objects;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.stereotype.Component;
+
+import com.sotatek.cardano.job.event.message.KafkaRegistryEvent;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -15,7 +18,6 @@ import org.springframework.stereotype.Component;
 public class KafkaRegistryListener {
 
   KafkaListenerEndpointRegistry registry;
-
 
   @EventListener
   public void controlKafkaRegistry(KafkaRegistryEvent event) {
@@ -30,9 +32,8 @@ public class KafkaRegistryListener {
       return;
     }
 
-    if(listenerContainer.isRunning()){
+    if (listenerContainer.isRunning()) {
       listenerContainer.stop();
     }
   }
-
 }

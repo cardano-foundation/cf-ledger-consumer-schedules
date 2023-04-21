@@ -1,8 +1,8 @@
 package com.sotatek.cardano.job.event.message;
 
 import lombok.Getter;
-import org.springframework.context.ApplicationEvent;
 
+import org.springframework.context.ApplicationEvent;
 
 @Getter
 public class KafkaRegistryEvent extends ApplicationEvent {
@@ -18,8 +18,7 @@ public class KafkaRegistryEvent extends ApplicationEvent {
     this.turningOn = turningOn;
   }
 
-  public String getListenerId(){
+  public String getListenerId() {
     return String.valueOf(this.getSource());
   }
-
 }

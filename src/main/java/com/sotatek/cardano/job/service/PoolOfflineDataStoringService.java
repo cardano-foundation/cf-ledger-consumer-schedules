@@ -1,15 +1,5 @@
 package com.sotatek.cardano.job.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sotatek.cardano.common.entity.PoolOfflineData;
-import com.sotatek.cardano.job.dto.PoolData;
-import com.sotatek.cardano.job.event.FetchPoolDataSuccess;
-import com.sotatek.cardano.job.projection.PoolOfflineHashProjection;
-import com.sotatek.cardano.job.repository.PoolHashRepository;
-import com.sotatek.cardano.job.repository.PoolMetadataRefRepository;
-import com.sotatek.cardano.job.repository.PoolOfflineDataRepository;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -20,9 +10,11 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.stream.Collectors;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -31,6 +23,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import com.sotatek.cardano.common.entity.PoolOfflineData;
+import com.sotatek.cardano.job.dto.PoolData;
+import com.sotatek.cardano.job.event.FetchPoolDataSuccess;
+import com.sotatek.cardano.job.projection.PoolOfflineHashProjection;
+import com.sotatek.cardano.job.repository.PoolHashRepository;
+import com.sotatek.cardano.job.repository.PoolMetadataRefRepository;
+import com.sotatek.cardano.job.repository.PoolOfflineDataRepository;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -45,10 +49,12 @@ public class PoolOfflineDataStoringService {
   final PoolHashRepository poolHashRepository;
   final ObjectMapper objectMapper;
   final Queue<PoolData> successPools;
+
   @Value("${jobs.install-batch}")
   private int batchSize;
 
-  public PoolOfflineDataStoringService(PoolOfflineDataRepository poolOfflineDataRepository,
+  public PoolOfflineDataStoringService(
+      PoolOfflineDataRepository poolOfflineDataRepository,
       PoolHashRepository poolHashRepository,
       ObjectMapper objectMapper,
       PoolMetadataRefRepository poolMetadataRefRepository) {
@@ -60,7 +66,8 @@ public class PoolOfflineDataStoringService {
   }
 
   @Transactional
-  @Scheduled(fixedDelayString = "${jobs.insert-pool-offline-data.delay}",
+  @Scheduled(
+      fixedDelayString = "${jobs.insert-pool-offline-data.delay}",
       initialDelayString = "${jobs.insert-pool-offline-data.innit}")
   public void updatePoolOffline() throws InterruptedException {
     log.info("pool size {}", successPools.size());
@@ -83,9 +90,7 @@ public class PoolOfflineDataStoringService {
       insertBatch(poolData);
       poolData.clear();
     }
-
   }
-
 
   @EventListener
   @Async
@@ -93,16 +98,12 @@ public class PoolOfflineDataStoringService {
     successPools.add(fetchData.getPoolData());
   }
 
-
   private void insertBatch(Set<PoolData> successPools) {
     log.info("Fetch Data size {}", successPools.size());
     Set<PoolOfflineData> savingPoolData = new HashSet<>();
-    var existedPoolData = poolOfflineDataRepository.
-        findPoolOfflineDataHashByPoolIds(
-            successPools
-                .stream()
-                .map(PoolData::getPoolId)
-                .collect(Collectors.toList()));
+    var existedPoolData =
+        poolOfflineDataRepository.findPoolOfflineDataHashByPoolIds(
+            successPools.stream().map(PoolData::getPoolId).collect(Collectors.toList()));
 
     handleExistedPoolOfflineData(successPools, savingPoolData, existedPoolData);
 
@@ -116,55 +117,60 @@ public class PoolOfflineDataStoringService {
    * @param savingPoolData
    * @param existedPoolData
    */
-  private void handleExistedPoolOfflineData(Set<PoolData> poolData,
+  private void handleExistedPoolOfflineData(
+      Set<PoolData> poolData,
       Set<PoolOfflineData> savingPoolData,
       Set<PoolOfflineHashProjection> existedPoolData) {
 
-    poolData.forEach(pod -> {
-      Optional<PoolOfflineHashProjection> poolOfflineHash = findPoolWithSameHash(existedPoolData,
-          pod);
+    poolData.forEach(
+        pod -> {
+          Optional<PoolOfflineHashProjection> poolOfflineHash =
+              findPoolWithSameHash(existedPoolData, pod);
 
-      poolOfflineHash.ifPresentOrElse(exPod -> {
+          poolOfflineHash.ifPresentOrElse(
+              exPod -> {
+                if (!exPod.getHash().equals(pod.getHash())) {
+                  poolOfflineDataRepository
+                      .findByPoolIdAndAndPmrId(pod.getPoolId(), pod.getMetadataRefId())
+                      .ifPresent(
+                          offlineData -> {
+                            offlineData.setJson(Arrays.toString(pod.getJson()));
+                            offlineData.setBytes(pod.getJson());
+                            offlineData.setHash(pod.getHash());
 
-            if (!exPod.getHash().equals(pod.getHash())) {
-              poolOfflineDataRepository.
-                  findByPoolIdAndAndPmrId(pod.getPoolId(), pod.getMetadataRefId())
-                  .ifPresent(offlineData -> {
-                    offlineData.setJson(Arrays.toString(pod.getJson()));
-                    offlineData.setBytes(pod.getJson());
-                    offlineData.setHash(pod.getHash());
+                            savingPoolData.add(offlineData);
+                          });
+                }
+              },
+              () -> {
+                Optional<PoolOfflineData> existSavingPoolData =
+                    savingPoolData.stream()
+                        .filter(
+                            exPod ->
+                                pod.getHash().equals(exPod.getHash())
+                                    && pod.getPoolId().equals(exPod.getPoolId()))
+                        .findFirst();
 
-                    savingPoolData.add(offlineData);
-                  });
-            }
-          }
-          , () -> {
-            Optional<PoolOfflineData> existSavingPoolData = savingPoolData.stream()
-                .filter(exPod -> pod.getHash().equals(exPod.getHash()) && pod.getPoolId()
-                    .equals(exPod.getPoolId()))
-                .findFirst();
-
-            if (existSavingPoolData.isEmpty()) {
-              mapPoolOfflineData(pod).ifPresent(savingPoolData::add);
-            }
-          }
-
-      );
-    });
+                if (existSavingPoolData.isEmpty()) {
+                  mapPoolOfflineData(pod).ifPresent(savingPoolData::add);
+                }
+              });
+        });
   }
 
   /**
    * Find pool have offline data of not
    *
    * @param existedPoolData Set of existed Pool Offline Data
-   * @param pod             data object transfer of pool offline data {
+   * @param pod data object transfer of pool offline data {
    * @return if existed Optional of {@link PoolOfflineHashProjection} projection of empty
    */
   private Optional<PoolOfflineHashProjection> findPoolWithSameHash(
       Set<PoolOfflineHashProjection> existedPoolData, PoolData pod) {
     return existedPoolData.stream()
-        .filter(exPod -> exPod.getHash().equals(pod.getHash()) &&
-            pod.getPoolId().equals(exPod.getPoolId()))
+        .filter(
+            exPod ->
+                exPod.getHash().equals(pod.getHash()) && pod.getPoolId().equals(exPod.getPoolId()))
         .findFirst();
   }
 
@@ -182,13 +188,11 @@ public class PoolOfflineDataStoringService {
 
     String json = new String(poolData.getJson());
     try {
-      Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {
-      });
+      Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {});
 
       if (CollectionUtils.isEmpty(map)) {
         log.error(
-            String.format("pool id %d response data can't convert to json",
-                poolData.getPoolId()));
+            String.format("pool id %d response data can't convert to json", poolData.getPoolId()));
         return Optional.empty();
       }
 
@@ -203,8 +207,9 @@ public class PoolOfflineDataStoringService {
 
   /**
    * Mapping pool offline data features input parameters
-   * @param poolData  data object transfer of pool offline data
-   * @param map       map contains features extracted from json
+   *
+   * @param poolData data object transfer of pool offline data
+   * @param map map contains features extracted from json
    * @return Optional of PoolOfflineData or empty
    */
   private Optional<PoolOfflineData> buildOfflineData(PoolData poolData, Map<String, Object> map) {
@@ -223,21 +228,24 @@ public class PoolOfflineDataStoringService {
     } else {
       name = String.valueOf(map.get(POOL_NAME));
     }
-    String jsonFormated = new String(poolData.getJson()).replace("\n", "")
-        .replace("\\t+", "")
-        .replace("\\s+", "")
-        .strip();
+    String jsonFormated =
+        new String(poolData.getJson())
+            .replace("\n", "")
+            .replace("\\t+", "")
+            .replace("\\s+", "")
+            .strip();
 
-    return Optional.of(PoolOfflineData.builder()
-        .poolId(poolData.getPoolId())
-        .pmrId(poolData.getMetadataRefId())
-        .pool(poolHash.get())
-        .poolMetadataRef(poolMetadataRef.get())
-        .hash(poolData.getHash())
-        .poolName(name)
-        .tickerName(String.valueOf(map.get(TICKER)))
-        .json(jsonFormated)
-        .bytes(poolData.getJson())
-        .build());
+    return Optional.of(
+        PoolOfflineData.builder()
+            .poolId(poolData.getPoolId())
+            .pmrId(poolData.getMetadataRefId())
+            .pool(poolHash.get())
+            .poolMetadataRef(poolMetadataRef.get())
+            .hash(poolData.getHash())
+            .poolName(name)
+            .tickerName(String.valueOf(map.get(TICKER)))
+            .json(jsonFormated)
+            .bytes(poolData.getJson())
+            .build());
   }
 }

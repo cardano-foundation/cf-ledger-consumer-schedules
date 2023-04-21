@@ -1,7 +1,8 @@
 package com.sotatek.cardano.job.event;
 
-import com.sotatek.cardano.job.dto.PoolData;
 import org.springframework.context.ApplicationEvent;
+
+import com.sotatek.cardano.job.dto.PoolData;
 
 public class FetchPoolDataFail extends ApplicationEvent {
 
@@ -9,7 +10,7 @@ public class FetchPoolDataFail extends ApplicationEvent {
     super(source);
   }
 
-  public PoolData getPoolData(){
+  public PoolData getPoolData() {
     return PoolData.class.cast(source);
   }
 }

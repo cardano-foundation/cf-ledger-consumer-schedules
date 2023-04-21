@@ -10,7 +10,7 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 public class JobApplication {
 
-  public static void main(String[] args){
+  public static void main(String[] args) {
     SpringApplication.run(JobApplication.class, args);
   }
 }

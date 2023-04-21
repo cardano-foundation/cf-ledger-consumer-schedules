@@ -8,6 +8,6 @@ import lombok.Setter;
 @Setter
 @Builder
 public class IdleInsert {
- private int size;
- private int retry;
+  private int size;
+  private int retry;
 }

@@ -1,6 +1,7 @@
 package com.sotatek.cardano.job.dto;
 
 import java.util.Objects;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,14 +10,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
-public class PoolData{
+public class PoolData {
 
   Long poolId;
   Long metadataRefId;
@@ -42,6 +42,3 @@ public class PoolData{
     return Objects.hash(poolId, metadataRefId);
   }
 }
-
-
-

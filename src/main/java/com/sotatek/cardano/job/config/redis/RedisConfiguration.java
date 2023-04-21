@@ -1,15 +1,15 @@
 package com.sotatek.cardano.job.config.redis;
 
-import com.sotatek.cardano.job.config.redis.RedisProperties.SentinelNode;
-import io.lettuce.core.ReadFrom;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
@@ -37,9 +37,11 @@ import org.springframework.data.redis.core.SetOperations;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.GenericToStringSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
+
+import io.lettuce.core.ReadFrom;
 import redis.clients.jedis.JedisPoolConfig;
+
+import com.sotatek.cardano.job.config.redis.RedisProperties.SentinelNode;
 
 /**
  * @author huynv
@@ -52,16 +54,13 @@ import redis.clients.jedis.JedisPoolConfig;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RedisConfiguration extends CachingConfigurerSupport {
 
-  /**
-   * Redis properties config
-   */
+  /** Redis properties config */
   RedisProperties redisProperties;
 
   @Autowired
   RedisConfiguration(RedisProperties redisProperties) {
     this.redisProperties = redisProperties;
   }
-
 
   @Bean
   @Primary
@@ -76,7 +75,6 @@ public class RedisConfiguration extends CachingConfigurerSupport {
     return jedisPoolConfig;
   }
 
-
   @Bean
   @Primary
   RedisSentinelConfiguration sentinelConfig() {
@@ -85,10 +83,10 @@ public class RedisConfiguration extends CachingConfigurerSupport {
     sentinelConfig.master(redisProperties.getMaster());
     sentinelConfig.setSentinelPassword(RedisPassword.of(redisProperties.getPassword()));
     sentinelConfig.setDatabase(redisProperties.getDatabaseIndex());
-    var sentinels = redisProperties.getSentinels()
-        .stream()
-        .map(getSentinelNodeRedisNodeFunction())
-        .collect(Collectors.toSet());
+    var sentinels =
+        redisProperties.getSentinels().stream()
+            .map(getSentinelNodeRedisNodeFunction())
+            .collect(Collectors.toSet());
 
     sentinelConfig.setSentinels(sentinels);
     return sentinelConfig;
@@ -117,9 +115,8 @@ public class RedisConfiguration extends CachingConfigurerSupport {
   @Bean(name = "lettuceConnectionFactory")
   @Autowired
   LettuceConnectionFactory lettuceConnectionFactory(RedisSentinelConfiguration sentinelConfig) {
-    LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
-        .readFrom(ReadFrom.REPLICA_PREFERRED)
-        .build();
+    LettuceClientConfiguration clientConfig =
+        LettuceClientConfiguration.builder().readFrom(ReadFrom.REPLICA_PREFERRED).build();
     return new LettuceConnectionFactory(sentinelConfig, clientConfig);
   }
 
@@ -130,7 +127,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
    */
   @Bean
   @Autowired
-  RedisTemplate<String, ?> redisTemplate(//NOSONAR
+  RedisTemplate<String, ?> redisTemplate( // NOSONAR
       final LettuceConnectionFactory lettuceConnectionFactory) {
     var redisTemplate = new RedisTemplate<String, Object>();
     redisTemplate.setConnectionFactory(lettuceConnectionFactory);
@@ -142,13 +139,13 @@ public class RedisConfiguration extends CachingConfigurerSupport {
    * Config bean hashOperations
    *
    * @param redisTemplate bean
-   * @param <HK>          hash key type
-   * @param <V>           value type
+   * @param <HK> hash key type
+   * @param <V> value type
    * @return bean hashOperations
    */
   @Bean
   <HK, V> HashOperations<String, HK, V> hashOperations(
-      final RedisTemplate<String, V> redisTemplate) { //NOSONAR
+      final RedisTemplate<String, V> redisTemplate) { // NOSONAR
     return redisTemplate.opsForHash();
   }
 
@@ -156,7 +153,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
    * ListOperations bean configuration
    *
    * @param redisTemplate inject bean
-   * @param <V>           value type
+   * @param <V> value type
    * @return listOperations
    */
   @Bean
@@ -168,7 +165,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
    * ZSetOperations configuration
    *
    * @param redisTemplate inject bean
-   * @param <V>           value type
+   * @param <V> value type
    * @return ZSetOperations<String, V>
    */
   @Bean
@@ -180,7 +177,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
    * SetOperations configuration
    *
    * @param redisTemplate inject bean
-   * @param <V>           value type
+   * @param <V> value type
    * @return SetOperations<String, V>
    */
   @Bean
@@ -192,7 +189,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
    * ValueOperations configuration
    *
    * @param redisTemplate inject bean
-   * @param <V>           value type
+   * @param <V> value type
    * @return ValueOperations<String, V>
    */
   @Bean
@@ -224,8 +221,10 @@ public class RedisConfiguration extends CachingConfigurerSupport {
    */
   @Bean
   RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
-    return builder -> builder.withCacheConfiguration("monolithic",
-        RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofSeconds(5)));
+    return builder ->
+        builder.withCacheConfiguration(
+            "monolithic",
+            RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofSeconds(5)));
   }
 
   /**

@@ -1,7 +1,8 @@
 package com.sotatek.cardano.job.service.interfaces;
 
-import com.sotatek.cardano.job.dto.PoolData;
 import java.util.Set;
+
+import com.sotatek.cardano.job.dto.PoolData;
 
 public interface PoolOfflineDataStoringService {
 

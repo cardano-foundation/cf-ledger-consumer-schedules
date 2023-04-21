@@ -68,8 +68,8 @@ jobs:
   install-batch: 100
 token:
   metadata:
-    url: ${token-metdata-url:https://github.com/cardano-foundation/cardano-token-registry.git}
-    folder: ${token-metadata-folder:/mappings}
+    url: ${TOKEN-METDATA-URL:https://github.com/cardano-foundation/cardano-token-registry.git}
+    folder: ${TOKEN-METADATA-FOLDER:/mappings}
 application:
   network: ${NETWORK_NAME:mainnet}
 
