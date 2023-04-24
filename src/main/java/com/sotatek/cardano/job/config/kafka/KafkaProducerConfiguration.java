@@ -12,12 +12,12 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
 @Configuration
-public class KafKaProducerConfiguration {
+public class KafkaProducerConfiguration {
 
   public static final String JSON_SERIALIZER = "json-producer";
   private final KafkaProperties kafkaProperties;
 
-  public KafKaProducerConfiguration(KafkaProperties kafkaProperties) {
+  public KafkaProducerConfiguration(KafkaProperties kafkaProperties) {
     this.kafkaProperties = kafkaProperties;
   }
 
