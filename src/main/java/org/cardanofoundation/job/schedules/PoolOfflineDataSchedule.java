@@ -11,6 +11,8 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -27,7 +29,7 @@ import org.cardanofoundation.job.service.interfaces.PoolOfflineDataStoringServic
 @Slf4j
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Profile("dev")
+@ConditionalOnProperty(value = "jobs.pool-offline-data.enabled", matchIfMissing = true, havingValue = "true")
 public class PoolOfflineDataSchedule {
 
   final Queue<PoolData> successPools;
@@ -53,8 +55,8 @@ public class PoolOfflineDataSchedule {
 
   @Transactional
   @Scheduled(
-      fixedDelayString = "${jobs.insert-pool-offline-data.delay}",
-      initialDelayString = "${jobs.insert-pool-offline-data.innit}")
+      fixedDelayString = "${jobs.pool-offline-data.insert.delay}",
+      initialDelayString = "${jobs.pool-offline-data.insert..innit}")
   public void updatePoolOffline() throws InterruptedException {
     log.info("pool size {}", successPools.size());
 
@@ -78,7 +80,7 @@ public class PoolOfflineDataSchedule {
     }
   }
 
-  @Scheduled(fixedDelayString = "${jobs.fetch-pool-offline-data.delay}")
+  @Scheduled(fixedDelayString = "${jobs.pool-offline-data.fetch.delay}")
   public void fetchPoolOffline() {
     poolOfflineDataFetchingService.fetchBatch(BigInteger.ZERO.intValue());
   }

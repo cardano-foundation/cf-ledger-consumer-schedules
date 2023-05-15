@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ import org.cardanofoundation.job.mapper.AssetMedataMapper;
 @Service
 @RequiredArgsConstructor
 @Log4j2
-@Profile("dev")
+@ConditionalOnProperty(value = "jobs.meta-data.enabled", matchIfMissing = true, havingValue = "true")
 public class AssetMetadataService {
 
   private final AssetMetadataRepository assetMetadataRepository;
