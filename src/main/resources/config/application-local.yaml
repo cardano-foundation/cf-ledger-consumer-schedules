@@ -1,23 +1,24 @@
 # Infrastructure domain
 infrastructure:
-  host: ${HOST:localhost}
+  host: ${HOST:10.4.10.112}
 spring:
   # Datasource specific configs
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:5432}/${POSTGRES_DB:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
-    username: ${POSTGRES_USER:postgres}
+    url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:54321}/${POSTGRES_DB:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
+    username: ${POSTGRES_USER:cardano_read}
     password: ${POSTGRES_PASSWORD:1}
     driver-class-name: org.postgresql.Driver
     # Hikari specific configs
     hikari:
-      pool-name: explorer-api-pool
+      pool-name: explorer-schedule-pool
       minimum-idle: 1 #minimum number of idle connections maintained by HikariCP in a connection pool
-      maximum-pool-size: 10 #maximum pool size
+      maximum-pool-size: ${MAXIMUM_POOL_SIZE:48} #maximum pool size
       idle-timeout: 300000 #maximum idle time for connection
       max-lifetime: 900000 #maximum lifetime in milliseconds of a connection in the pool after it is closed.
       connection-timeout: 50000 #maximum number of milliseconds that a client will wait for a connection
       auto-commit: false #default auto-commit behavior.
+      connection-init-sql: SELECT 1
       data-source-properties:
         cachePrepStmts: true
         prepStmtCacheSize: 250
@@ -33,15 +34,17 @@ spring:
   jpa:
     open-in-view: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        default_schema: ${POSTGRES_SCHEMA:mainnet}
+        jdbc.batch_size: 1000
+        default_schema: ${SCHEMA:mainnet}
         show_sql: false
         format_sql: true
-        jdbc:
-          batch_size: 100
+        order_inserts: true
+        order_updates: true
+        hbm2ddl:
+          auto: none
   task:
     execution:
       pool:
@@ -58,9 +61,6 @@ logging:
     root: INFO
 
 jobs:
-  cardano-cli:
-    enabled: ${CARDANO_CLI_JOB_ENABLED:false}
-    delay: ${CARDANO_CLI_DELAY:10}
   meta-data:
     enabled: ${META_DATA_JOB_ENABLED:false}
   pool-offline-data:
@@ -71,6 +71,7 @@ jobs:
       delay: ${INSERT_POOL_DATA_DELAY:180000}
       innit: 5000
   install-batch: 100
+
 token:
   metadata:
     url: ${TOKEN-METDATA-URL:https://github.com/cardano-foundation/cardano-token-registry.git}
@@ -80,6 +81,11 @@ application:
 
 kafka:
   auto-create-topics: false
+  topics:
+    reports:
+      name: reports
+      partitions: 1
+      replicationFactor: 1
   admin:
     bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
   producers:
@@ -110,4 +116,7 @@ kafka:
       allowAutoCreateTopics: false
       concurrency: 6
       pollTimeout: 360000000
-      groupId: ${NETWORK_NAME:preprod}
+      groupId: ${SCHEMA:mainnet}
+  listeners:
+    topics:
+      reports: ${REPORTS_TOPIC:dev.explorer.api.mainnet.reports}
