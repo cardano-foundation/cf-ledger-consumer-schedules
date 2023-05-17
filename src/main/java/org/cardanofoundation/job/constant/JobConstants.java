@@ -1,10 +1,6 @@
 package org.cardanofoundation.job.constant;
 
 public final class JobConstants {
-
-  public static final String DASH_DELIMITER = "_";
-  public static final int CHARACTERS = 1024;
-
   private JobConstants() {}
 
   public static final int DEFAULT_BATCH = 20;
