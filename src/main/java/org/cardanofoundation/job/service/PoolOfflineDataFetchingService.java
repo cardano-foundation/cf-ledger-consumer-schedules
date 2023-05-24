@@ -1,4 +1,4 @@
-package org.cardanofoundation.job.service.interfaces;
+package org.cardanofoundation.job.service;
 
 public interface PoolOfflineDataFetchingService {
 
