@@ -1,4 +1,4 @@
-package com.sotatek.cardano.job.event.message;
+package org.cardanofoundation.job.event.message;
 
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
