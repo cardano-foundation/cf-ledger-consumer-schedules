@@ -12,8 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,8 +21,8 @@ import org.springframework.util.CollectionUtils;
 
 import org.cardanofoundation.job.dto.PoolData;
 import org.cardanofoundation.job.event.message.FetchPoolDataSuccess;
-import org.cardanofoundation.job.service.interfaces.PoolOfflineDataFetchingService;
-import org.cardanofoundation.job.service.interfaces.PoolOfflineDataStoringService;
+import org.cardanofoundation.job.service.PoolOfflineDataFetchingService;
+import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
 
 @Slf4j
 @Component

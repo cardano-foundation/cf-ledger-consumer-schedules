@@ -34,7 +34,7 @@ import org.cardanofoundation.job.repository.PoolHashRepository;
 import org.cardanofoundation.job.dto.PoolData;
 import org.cardanofoundation.job.event.message.FetchPoolDataFail;
 import org.cardanofoundation.job.event.message.FetchPoolDataSuccess;
-import org.cardanofoundation.job.service.interfaces.PoolOfflineDataFetchingService;
+import org.cardanofoundation.job.service.PoolOfflineDataFetchingService;
 import org.cardanofoundation.ledgersync.common.util.UrlUtil;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandshakeTimeoutException;

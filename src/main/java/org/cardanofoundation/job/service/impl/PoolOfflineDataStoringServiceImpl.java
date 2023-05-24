@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import org.cardanofoundation.job.dto.PoolData;
-import org.cardanofoundation.job.service.interfaces.PoolOfflineDataStoringService;
+import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineData;
 
 @Component

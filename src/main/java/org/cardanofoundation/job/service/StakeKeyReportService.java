@@ -1,4 +1,4 @@
-package org.cardanofoundation.job.service.interfaces;
+package org.cardanofoundation.job.service;
 
 import org.cardanofoundation.explorer.consumercommon.entity.StakeKeyReportHistory;
 
@@ -9,5 +9,5 @@ public interface StakeKeyReportService {
    *
    * @param stakeKeyReportHistory stake key report history
    */
-  void exportStakeKeyReport(StakeKeyReportHistory stakeKeyReportHistory);
+  void exportStakeKeyReport(StakeKeyReportHistory stakeKeyReportHistory) throws Exception ;
 }
