@@ -47,7 +47,7 @@ import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
 import org.junit.jupiter.api.Test;
 
 @SpringBootTest
-class JobApplicationTests {
+class CardanoScheduleApplicationTests {
   @Autowired WebClient.Builder webClientBuilder;
 
   @Test
