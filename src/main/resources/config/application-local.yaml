@@ -48,21 +48,17 @@ spring:
   task:
     execution:
       pool:
-        max-size: 2
-        core-size: 2
-        queue-capacity: 50
+        core-size: 12
+        max-size: 20
       thread-name-prefix: Executorxx-
-
-logging:
-  level:
-    com:
-      cardano: INFO
-    io: OFF
-    root: INFO
 
 jobs:
   meta-data:
     enabled: ${META_DATA_JOB_ENABLED:false}
+  report-history:
+    enabled: ${REPORT_HISTORY_JOB_ENABLED:false}
+    expired:
+      rate: ${EXPIRED_REPORTS_RATE:604800000} # 7 days
   pool-offline-data:
     enabled: ${POOL_OFFLINE_DATA_JOB_ENABLED:false}
     fetch:
@@ -71,6 +67,7 @@ jobs:
       delay: ${INSERT_POOL_DATA_DELAY:180000}
       innit: 5000
   install-batch: 100
+  limit-content: 100000
 
 token:
   metadata:
@@ -120,3 +117,17 @@ kafka:
   listeners:
     topics:
       reports: ${REPORTS_TOPIC:dev.explorer.api.mainnet.reports}
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${S3_ACCESS_KEY:miniominio}
+      secret-key: ${S3_SECRET_KEY:sekritsekrit}
+    region:
+      static: ${S3_REGION:null}
+    s3:
+      bucket:
+        name: ${S3_BUCKET_NAME:cardano-explorer-api-storage}
+      path-style:
+        enabled: true
+      endpoint: ${STORAGE_ENDPOINT:http://172.22.0.2:9000}
