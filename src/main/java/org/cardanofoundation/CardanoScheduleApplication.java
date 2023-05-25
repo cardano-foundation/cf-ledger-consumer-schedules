@@ -6,9 +6,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 
 @EnableConfigurationProperties
 @SpringBootApplication
-public class JobApplication {
+public class CardanoScheduleApplication {
 
   public static void main(String[] args) {
-    SpringApplication.run(JobApplication.class, args);
+    SpringApplication.run(CardanoScheduleApplication.class, args);
   }
 }
