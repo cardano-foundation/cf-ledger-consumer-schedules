@@ -1,15 +1,16 @@
-FROM maven AS build
+FROM openjdk:17-jdk-slim AS build
 WORKDIR /app
 COPY .m2/settings.xml /root/.m2/settings.xml
 COPY pom.xml /app/pom.xml
-RUN mvn verify clean --fail-never
-COPY . /app
-RUN mvn clean package -DskipTests
+COPY mvnw /app/mvnw
+COPY .mvn /app/.mvn
 
-FROM openjdk:11-jdk-slim AS runtime
+RUN ./mvnw verify clean --fail-never
+COPY . /app
+RUN ./mvnw clean package -DskipTests
+
+FROM openjdk:17-jdk-slim AS runtime
 COPY --from=build /app/target/*.jar /app/job.jar
 WORKDIR /app
-
-ENV SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
 
 ENTRYPOINT ["java", "-jar", "job.jar"]
