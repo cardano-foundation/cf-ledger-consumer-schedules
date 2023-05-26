@@ -36,14 +36,12 @@ import org.cardanofoundation.job.util.report.ExportContent;
 @Log4j2
 public class ReportHistoryServiceAsync {
 
-  private static final String STAKE_KEY_REGISTRATION_TITLE = "Stake Key Registration";
   private static final String DELEGATION_HISTORY_TITLE = "Delegation History";
   private static final String REWARDS_DISTRIBUTION_TITLE = "Rewards Distribution";
   private static final String WITHDRAWAL_HISTORY_TITLE = "Withdrawal History";
-  private static final String STAKE_KEY_DEREGISTRATION_TITLE = "Stake Key Deregistration";
   private static final String WALLET_ACTIVITY_TITLE = "ADA Transfer";
   private static final String POOL_SIZE_TITLE = "Pool Size";
-  private static final String POOL_REGISTRATIONS_TITLE = "Pool Registrations";
+  private static final String REGISTRATIONS_TITLE = "Registrations";
   private static final String POOL_UPDATE_TITLE = "Pool Update";
   private static final String REWARD_DISTRIBUTION_TITLE = "Reward Distribution";
   private static final String DEREGISTRATION_TITLE = "Deregistration";
@@ -97,7 +95,7 @@ public class ReportHistoryServiceAsync {
 
     return CompletableFuture.completedFuture(ExportContent.builder()
                                                  .clazz(StakeRegistrationLifeCycle.class)
-                                                 .headerTitle(STAKE_KEY_REGISTRATION_TITLE)
+                                                 .headerTitle(REGISTRATIONS_TITLE)
                                                  .lstColumn(
                                                      StakeRegistrationLifeCycle.buildExportColumn())
                                                  .lstData(stakeRegistrations)
@@ -167,7 +165,7 @@ public class ReportHistoryServiceAsync {
 
     return CompletableFuture.completedFuture(ExportContent.builder()
                                                  .clazz(StakeRegistrationLifeCycle.class)
-                                                 .headerTitle(STAKE_KEY_DEREGISTRATION_TITLE)
+                                                 .headerTitle(DEREGISTRATION_TITLE)
                                                  .lstColumn(
                                                      StakeRegistrationLifeCycle.buildExportColumn())
                                                  .lstData(stakeDeRegistrations)
@@ -209,7 +207,7 @@ public class ReportHistoryServiceAsync {
 
     return CompletableFuture.completedFuture(ExportContent.builder()
                                                  .clazz(PoolRegistration.class)
-                                                 .headerTitle(POOL_REGISTRATIONS_TITLE)
+                                                 .headerTitle(REGISTRATIONS_TITLE)
                                                  .lstColumn(PoolRegistration.buildExportColumn())
                                                  .lstData(poolRegistrations)
                                                  .build());
