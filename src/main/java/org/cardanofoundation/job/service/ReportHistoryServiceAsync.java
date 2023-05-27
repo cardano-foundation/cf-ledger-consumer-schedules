@@ -65,7 +65,6 @@ public class ReportHistoryServiceAsync {
 
   @Async
   public CompletableFuture<ExportContent> exportStakeWalletActivitys(String stakeKey,
-                                                                     Boolean isFeesPaid,
                                                                      StakeLifeCycleFilterRequest condition) {
     log.info("Execute method {} asynchronously with thread {}",
              Thread.currentThread().getStackTrace()[1].getMethodName(),

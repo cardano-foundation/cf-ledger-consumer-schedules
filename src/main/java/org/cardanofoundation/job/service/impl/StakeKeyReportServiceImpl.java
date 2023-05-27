@@ -1,6 +1,10 @@
 package org.cardanofoundation.job.service.impl;
 
 import java.io.InputStream;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -8,7 +12,6 @@ import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.explorer.consumercommon.entity.StakeKeyReportHistory;
@@ -30,20 +33,21 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
   private final StorageService storageService;
   private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
+  private final ExcelHelper excelHelper;
 
   @Override
   public void exportStakeKeyReport(StakeKeyReportHistory stakeKeyReportHistory) throws Exception {
     var startTime = System.currentTimeMillis();
     try {
-      log.info("Start generating report for ReportHistory {}",
-               stakeKeyReportHistory.getReportHistory().getId());
       List<ExportContent> exportContents = getExportContents(stakeKeyReportHistory);
       String storageKey = generateStorageKey(stakeKeyReportHistory);
       String excelFileName = storageKey + ExportType.EXCEL.getValue();
-      InputStream excelInputStream = ExcelHelper.writeContent(exportContents);
+      InputStream excelInputStream = excelHelper.writeContent(exportContents);
       storageService.uploadFile(excelInputStream.readAllBytes(), excelFileName);
       stakeKeyReportHistory.getReportHistory().setStatus(ReportStatus.GENERATED);
       stakeKeyReportHistory.getReportHistory().setStorageKey(storageKey);
+      stakeKeyReportHistory.getReportHistory().setUploadedAt(Timestamp.valueOf(
+          LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)));
     } catch (Exception e) {
       stakeKeyReportHistory.getReportHistory().setStatus(ReportStatus.FAILED);
       log.error("Error while generating report", e);
@@ -95,7 +99,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
     if (Boolean.TRUE.equals(stakeKeyReportHistory.getIsADATransfer())) {
       exportContents.add(
           reportHistoryServiceAsync.exportStakeWalletActivitys(
-              stakeKeyReportHistory.getStakeKey(), stakeKeyReportHistory.getIsFeesPaid(),
+              stakeKeyReportHistory.getStakeKey(),
               stakeLifeCycleFilterRequest));
     }
 

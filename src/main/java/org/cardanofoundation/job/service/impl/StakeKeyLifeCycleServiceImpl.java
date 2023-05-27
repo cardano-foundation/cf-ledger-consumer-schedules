@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -16,7 +15,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,7 +30,6 @@ import org.cardanofoundation.job.dto.report.stake.StakeRewardResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWalletActivityResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWithdrawalFilterResponse;
 import org.cardanofoundation.job.projection.StakeTxProjection;
-import org.cardanofoundation.job.repository.AddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.DelegationRepository;
 import org.cardanofoundation.job.repository.RewardRepository;
 import org.cardanofoundation.job.repository.StakeAddressRepository;
@@ -68,7 +65,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
 
     List<CompletableFuture<List<StakeTxProjection>>> txAmountListFuture = new ArrayList<>();
 
-    int subPageSize = 10000;
+    int subPageSize = 2000;
     int pagesize = pageable.getPageSize();
 
     for (int i = 0; ; i++) {
@@ -96,7 +93,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
     List<CompletableFuture<List<Long>>> delegationFutureList = new ArrayList<>();
     List<CompletableFuture<List<Long>>> withdrawalFutureList = new ArrayList<>();
 
-    int subListSize = 10000;
+    int subListSize = 2000;
     for (int i = 0; i < txIds.size(); i += subListSize) {
       List<Long> subTxList = txIds.subList(i, Math.min(txIds.size(), i + subListSize));
       txFutureList.add(asyncService.findTxByIdIn(subTxList));
@@ -121,11 +118,9 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
     var withdrawalList = withdrawalFutureList.stream().map(CompletableFuture::join)
         .flatMap(List::stream).toList();
 
-    LinkedHashMap<Long, Tx> txMap = txList.stream().collect(Collectors.toMap(Tx::getId, tx -> tx,
-                                                                             (o, n) -> n,
-                                                                             LinkedHashMap::new));
+    Map<Long, Tx> txMap = txList.stream().collect(Collectors.toMap(Tx::getId, Function.identity()));
 
-    return txAmountList.stream().parallel().map(item -> {
+    return txAmountList.stream().map(item -> {
       StakeWalletActivityResponse stakeWalletActivity = new StakeWalletActivityResponse();
       stakeWalletActivity.setTxHash(txMap.get(item.getTxId()).getHash());
       stakeWalletActivity.setAmount(item.getAmount());
