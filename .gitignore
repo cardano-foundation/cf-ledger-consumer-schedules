@@ -40,9 +40,11 @@ build/
 !Dockerfile
 
 ### Environment variables ###
-.env
+.env*
+!.env.example
 
 ### Maven ###
 .m2/
 !.m2/settings.default.xml
 !mvnw
+!Makefile
