@@ -48,7 +48,7 @@ spring:
   task:
     execution:
       pool:
-        core-size: 12
+        core-size: 20
         max-size: 20
       thread-name-prefix: Executorxx-
 
@@ -67,7 +67,7 @@ jobs:
       delay: ${INSERT_POOL_DATA_DELAY:180000}
       innit: 5000
   install-batch: 100
-  limit-content: 100000
+  limit-content: 10000
 
 token:
   metadata:
@@ -121,13 +121,13 @@ kafka:
 cloud:
   aws:
     credentials:
-      access-key: ${S3_ACCESS_KEY:miniominio}
-      secret-key: ${S3_SECRET_KEY:sekritsekrit}
+      access-key: ${S3_ACCESS_KEY:minio_access_key}
+      secret-key: ${S3_SECRET_KEY:minio_secret_key}
     region:
       static: ${S3_REGION:null}
     s3:
       bucket:
-        name: ${S3_BUCKET_NAME:cardano-explorer-api-storage}
+        name: ${S3_BUCKET_NAME:cardano-explorer-api-storage-mainnet}
       path-style:
         enabled: true
-      endpoint: ${STORAGE_ENDPOINT:http://172.22.0.2:9000}
+      endpoint: ${STORAGE_ENDPOINT:http://10.4.10.112:9000}

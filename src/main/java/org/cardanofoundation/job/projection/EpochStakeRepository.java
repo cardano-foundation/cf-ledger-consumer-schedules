@@ -13,12 +13,11 @@ import org.cardanofoundation.explorer.consumercommon.entity.EpochStake;
 public interface EpochStakeRepository extends JpaRepository<EpochStake, Long> {
 
   @Query(value =
-      "SELECT es.epochNo as epochNo, pu.fixedCost as fee, sum(es.amount) as size "
+      "SELECT es.epochNo as epochNo, sum(es.amount) as size "
           + "FROM EpochStake es "
-          + "LEFT JOIN PoolUpdate pu ON pu.poolHashId = es.pool.id "
           + "where es.pool.view = :poolView "
           + "and es.epochNo between :epochBegin and :epochEnd "
-          + "group by es.epochNo, pu.fixedCost")
+          + "group by es.epochNo")
   Page<PoolReportProjection> getEpochSizeByPoolReport(@Param("poolView") String poolView,
                                                       @Param("epochBegin") int epochBegin,
                                                       @Param("epochEnd") int epochEnd,

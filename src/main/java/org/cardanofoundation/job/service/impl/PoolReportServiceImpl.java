@@ -1,6 +1,10 @@
 package org.cardanofoundation.job.service.impl;
 
 import java.io.InputStream;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -28,21 +32,22 @@ public class PoolReportServiceImpl implements PoolReportService {
 
   private final StorageService storageService;
   private final PoolReportHistoryRepository poolReportRepository;
+  private final ExcelHelper excelHelper;
 
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
   @Override
   public void exportPoolReport(PoolReportHistory poolReportHistory) throws Exception{
     var startTime = System.currentTimeMillis();
     try {
-      log.info("Start generating report for {}", poolReportHistory.getReportHistory().getId());
       List<ExportContent> exportContents = getExportContents(poolReportHistory);
       String storageKey = generateStorageKey(poolReportHistory);
       String excelFileName = storageKey + ExportType.EXCEL.getValue();
-      InputStream excelInputStream = ExcelHelper.writeContent(exportContents);
+      InputStream excelInputStream = excelHelper.writeContent(exportContents);
       storageService.uploadFile(excelInputStream.readAllBytes(), excelFileName);
       poolReportHistory.getReportHistory().setStatus(ReportStatus.GENERATED);
       poolReportHistory.getReportHistory().setStorageKey(storageKey);
-      poolReportRepository.save(poolReportHistory);
+      poolReportHistory.getReportHistory().setUploadedAt(Timestamp.valueOf(
+          LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)));
     } catch (Exception e) {
       poolReportHistory.getReportHistory().setStatus(ReportStatus.FAILED);
       log.error("Error while generating report", e);
@@ -58,6 +63,7 @@ public class PoolReportServiceImpl implements PoolReportService {
 
   private List<ExportContent> getExportContents(PoolReportHistory poolReportHistory) {
     List<CompletableFuture<ExportContent>> exportContents = new ArrayList<>();
+    var currentTime = System.currentTimeMillis();
     if (Boolean.TRUE.equals(poolReportHistory.getEventRegistration())) {
       exportContents.add(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory));
     }
@@ -73,8 +79,10 @@ public class PoolReportServiceImpl implements PoolReportService {
     if (Boolean.TRUE.equals(poolReportHistory.getIsPoolSize())) {
       exportContents.add(reportHistoryServiceAsync.exportEpochSize(poolReportHistory));
     }
-
-    return exportContents.stream().map(CompletableFuture::join).toList();
+    var response = exportContents.stream().map(CompletableFuture::join).toList();
+    log.info("Get all pool report data time taken: {} ms",
+             System.currentTimeMillis() - currentTime);
+    return response;
   }
 
 

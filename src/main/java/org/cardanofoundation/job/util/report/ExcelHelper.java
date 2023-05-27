@@ -14,6 +14,9 @@ import java.util.Map;
 
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.BuiltinFormats;
@@ -34,11 +37,15 @@ import org.cardanofoundation.job.util.DataUtil;
 import org.cardanofoundation.job.util.ReflectorUtil;
 
 @Log4j2
+@Component
 public class ExcelHelper {
 
   private static final String DATE_TIME_PATTERN = "MM/dd/yyyy HH:mm:ss";
 
-  public static ByteArrayInputStream writeContent(List<ExportContent> exportContents) {
+  @Value("${jobs.limit-content}")
+  private int limitSize;
+
+  public ByteArrayInputStream writeContent(List<ExportContent> exportContents) {
     var currentTime = System.currentTimeMillis();
     try (SXSSFWorkbook workbook = new SXSSFWorkbook(100)){
       CellStyle cellStyleHeader = createStyleHeader(workbook);
@@ -69,7 +76,7 @@ public class ExcelHelper {
     }
   }
 
-  private static void writeDataReport(SXSSFWorkbook workbook, ExportContent exportContent,
+  private void writeDataReport(SXSSFWorkbook workbook, ExportContent exportContent,
                                       SXSSFSheet sheet,
                                       List<ExportColumn> lstColumn, List<?> lstData)
       throws IllegalAccessException {
@@ -83,17 +90,7 @@ public class ExcelHelper {
             .forEach(f -> mapField.put(exportColumn.getColumnField().getValue(), f)));
 
     if (DataUtil.isNullOrEmpty(lstData)) {
-      Row row = sheet.createRow(1);
-      Cell cell = row.createCell(0);
-      CellStyle cellStyle = workbook.getXSSFWorkbook().createCellStyle();
-      cellStyle.setAlignment(HorizontalAlignment.CENTER);
-      Font font = workbook.createFont();
-      font.setFontName(HSSFFont.FONT_ARIAL);
-      font.setFontHeightInPoints((short) 11);
-      cellStyle.setFont(font);
-      cell.setCellStyle(cellStyle);
-      cell.setCellValue(richTextString("No records"));
-      sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, lstColumn.size() - 1));
+      writeNoRecordContents(workbook, sheet, lstColumn);
       return;
     }
 
@@ -147,16 +144,49 @@ public class ExcelHelper {
     for (int i = 0; i < lstColumn.size(); i++) {
       sheet.trackColumnForAutoSizing(i);
       sheet.autoSizeColumn(i);
+      sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 100);
     }
 
-    for(int i = 0; i < lstColumn.size(); i++){
-      int columnWidth = sheet.getColumnWidth(i);
-      sheet.setColumnWidth(i, columnWidth + 100);
+    if(lstData.size() == limitSize) {
+      writeOutOfLimitContents(workbook, sheet, lstColumn);
     }
   }
 
+  private void writeOutOfLimitContents(SXSSFWorkbook workbook, SXSSFSheet sheet,
+                                     List<ExportColumn> lstColumn) {
+    Row row = sheet.createRow(limitSize + 2);
+    Cell cell = row.createCell(0);
+    CellStyle cellStyle = workbook.getXSSFWorkbook().createCellStyle();
+    cellStyle.setAlignment(HorizontalAlignment.CENTER);
+    Font font = workbook.createFont();
+    font.setFontName(HSSFFont.FONT_ARIAL);
+    font.setFontHeightInPoints((short) 11);
+    font.setColor(IndexedColors.RED.getIndex());
+    font.setItalic(true);
+    cellStyle.setFont(font);
+    cell.setCellStyle(cellStyle);
+    cell.setCellValue(richTextString("***This sheet only exports the earliest " + limitSize + " records.***"));
+    sheet.addMergedRegion(new CellRangeAddress(limitSize + 2, limitSize + 2, 0, lstColumn.size() - 1));
+  }
 
-  private static CellStyle createStyleHeader(SXSSFWorkbook workbook) {
+
+  private void writeNoRecordContents(SXSSFWorkbook workbook, SXSSFSheet sheet,
+                                List<ExportColumn> lstColumn) {
+    Row row = sheet.createRow(1);
+    Cell cell = row.createCell(0);
+    CellStyle cellStyle = workbook.getXSSFWorkbook().createCellStyle();
+    cellStyle.setAlignment(HorizontalAlignment.CENTER);
+    Font font = workbook.createFont();
+    font.setFontName(HSSFFont.FONT_ARIAL);
+    font.setFontHeightInPoints((short) 11);
+    cellStyle.setFont(font);
+    cell.setCellStyle(cellStyle);
+    cell.setCellValue(richTextString("No records"));
+    sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, lstColumn.size() - 1));
+  }
+
+
+  private CellStyle createStyleHeader(SXSSFWorkbook workbook) {
     CellStyle cellStyleHeader = createCellStyleHeader(workbook);
     Font fontHeader = workbook.createFont();
     fontHeader.setFontName(HSSFFont.FONT_ARIAL);
@@ -166,7 +196,7 @@ public class ExcelHelper {
     return cellStyleHeader;
   }
 
-  private static CellStyle createCellStyleHeader(SXSSFWorkbook workbook) {
+  private CellStyle createCellStyleHeader(SXSSFWorkbook workbook) {
     CellStyle cellStyleHeader = workbook.getXSSFWorkbook().createCellStyle();
     cellStyleHeader.setAlignment(HorizontalAlignment.CENTER);
     cellStyleHeader.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -180,7 +210,7 @@ public class ExcelHelper {
     return cellStyleHeader;
   }
 
-  private static CellStyle createCellStyle(SXSSFWorkbook workbook,
+  private CellStyle createCellStyle(SXSSFWorkbook workbook,
                                            HorizontalAlignment horizontalAlignment) {
     CellStyle cellStyle = workbook.getXSSFWorkbook().createCellStyle();
     cellStyle.setAlignment(horizontalAlignment);
@@ -199,7 +229,7 @@ public class ExcelHelper {
     return cellStyle;
   }
 
-  public static XSSFRichTextString richTextString(Object object) {
+  public XSSFRichTextString richTextString(Object object) {
     return new XSSFRichTextString(object.toString());
   }
 }
