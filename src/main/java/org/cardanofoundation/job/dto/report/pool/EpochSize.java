@@ -25,11 +25,14 @@ public class EpochSize {
 
   private BigDecimal size;
 
+  private Double rawSize;
+
   public static EpochSize toDomain(PoolReportProjection projection) {
     return EpochSize.builder()
         .epoch(projection.getEpochNo().toString())
         .fee(projection.getFee())
         .size(new BigDecimal(projection.getSize()))
+        .rawSize(new BigDecimal(projection.getSize()).doubleValue() / 1000000)
         .build();
   }
 

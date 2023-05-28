@@ -9,7 +9,6 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
-import org.cardanofoundation.job.common.enumeration.StakeTxType;
 import org.cardanofoundation.job.common.enumeration.TxStatus;
 import org.cardanofoundation.job.util.report.ColumnFieldEnum;
 import org.cardanofoundation.job.util.report.ColumnTitleEnum;
@@ -23,6 +22,7 @@ public class StakeWalletActivityResponse implements Serializable {
 
   private String txHash;
   private BigInteger amount;
+  private Double rawAmount;
   private BigInteger fee;
   private LocalDateTime time;
   private String type;

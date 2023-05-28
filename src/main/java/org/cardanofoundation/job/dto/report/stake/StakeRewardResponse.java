@@ -23,6 +23,7 @@ public class StakeRewardResponse {
   private Integer epoch;
   private Date time;
   private BigInteger amount;
+  private Double rawAmount;
 
   public static List<ExportColumn> buildExportColumn() {
     List<ExportColumn> columns = new ArrayList<>();

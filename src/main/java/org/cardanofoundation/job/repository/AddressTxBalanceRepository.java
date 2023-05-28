@@ -21,7 +21,8 @@ public interface AddressTxBalanceRepository extends JpaRepository<AddressTxBalan
       + " WHERE addrTxBalance.address IN "
       + " (SELECT addr FROM Address addr WHERE addr.stakeAddress.view = :stakeAddress)"
       + " AND addrTxBalance.time >= :fromDate AND addrTxBalance.time <= :toDate"
-      + " GROUP BY addrTxBalance.tx.id, addrTxBalance.time")
+      + " GROUP BY addrTxBalance.tx.id, addrTxBalance.time"
+      + " ORDER BY addrTxBalance.time DESC")
   Page<StakeTxProjection> findTxAndAmountByStake(@Param("stakeAddress") String stakeAddress,
                                                  @Param("fromDate") Timestamp fromDate,
                                                  @Param("toDate") Timestamp toDate,

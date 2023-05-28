@@ -18,22 +18,22 @@ import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
 import org.cardanofoundation.job.dto.report.stake.StakeRewardResponse;
 import org.cardanofoundation.job.projection.EpochRewardProjection;
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;
+import org.cardanofoundation.job.projection.StakeRewardProjection;
 
 @Repository
 public interface RewardRepository extends JpaRepository<Reward, Long> {
 
 
-  @Query("SELECT new org.cardanofoundation.job.dto.report.stake.StakeRewardResponse"
-      + "(rw.spendableEpoch, epoch.startTime, rw.amount)"
+  @Query("SELECT rw.spendableEpoch as epoch, e.startTime as time, rw.amount as amount"
       + " FROM Reward rw"
-      + " INNER JOIN Epoch epoch ON rw.spendableEpoch = epoch.no"
+      + " INNER JOIN Epoch e ON rw.spendableEpoch = e.no"
       + " WHERE rw.addr = :stakeAddress"
-      + " AND (epoch.startTime >= :fromDate )"
-      + " AND (epoch.startTime <= :toDate )")
-  Page<StakeRewardResponse> findRewardByStake(@Param("stakeAddress") StakeAddress stakeAddress,
-                                              @Param("fromDate") Timestamp fromDate,
-                                              @Param("toDate") Timestamp toDate,
-                                              Pageable pageable);
+      + " AND (e.startTime >= :fromDate )"
+      + " AND (e.startTime <= :toDate )")
+  Page<StakeRewardProjection> findRewardByStake(@Param("stakeAddress") StakeAddress stakeAddress,
+                                                @Param("fromDate") Timestamp fromDate,
+                                                @Param("toDate") Timestamp toDate,
+                                                Pageable pageable);
 
   @Query(value =
       "SELECT rw.earnedEpoch AS epochNo, e.startTime AS time, rw.amount AS amount, sa.view AS address "

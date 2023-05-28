@@ -21,6 +21,7 @@ public class StakeDelegationFilterResponse {
   private String txHash;
   private BigInteger outSum;
   private BigInteger fee;
+  private Double rawFee;
   private LocalDateTime time;
 
   public static List<ExportColumn> buildExportColumn() {
@@ -29,7 +30,7 @@ public class StakeDelegationFilterResponse {
                                  Alignment.LEFT));
     columns.add(new ExportColumn(ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE,
                                  Alignment.CENTER));
-    columns.add(new ExportColumn(ColumnFieldEnum.OUT_SUM_COLUMN, ColumnTitleEnum.FEES_TITLE,
+    columns.add(new ExportColumn(ColumnFieldEnum.FEE_COLUMN, ColumnTitleEnum.FEES_TITLE,
                                  Alignment.RIGHT));
     return columns;
   }
