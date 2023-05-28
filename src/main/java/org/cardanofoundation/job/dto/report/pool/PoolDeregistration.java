@@ -30,6 +30,10 @@ public class PoolDeregistration {
 
   private BigDecimal adaValue;
 
+  private Double rawAdaValueHold;
+
+  private Double rawAdaValueFee;
+
   private String owner;
 
   public static PoolDeregistration toDomain(DeRegistrationResponse response) {
@@ -43,6 +47,8 @@ public class PoolDeregistration {
         .build();
 
     result.setAdaValue(new BigDecimal(response.getTotalFee()));
+    result.setRawAdaValueHold(result.getAdaValueHold().doubleValue() / 1000000);
+    result.setRawAdaValueFee(result.getAdaValueFee().doubleValue() / 1000000);
     return result;
   }
 

@@ -22,6 +22,8 @@ public class StakeRegistrationLifeCycle {
 
   private String txHash;
   private BigInteger fee;
+  private Double rawFee;
+  private Double rawDeposit;
   private Long deposit;
   private LocalDateTime time;
 

@@ -27,6 +27,8 @@ public class RewardDistribution {
 
   private BigDecimal operatorReward;
 
+  private Double rawOperatorReward;
+
   private String rewardAccount;
 
   public static RewardDistribution toDomain(RewardResponse response) {
@@ -35,6 +37,7 @@ public class RewardDistribution {
         .time(response.getTime())
         .operatorReward(new BigDecimal(response.getAmount()))
         .rewardAccount(response.getRewardAccount())
+        .rawOperatorReward(new BigDecimal(response.getAmount()).doubleValue() / 1000000)
         .build();
   }
 

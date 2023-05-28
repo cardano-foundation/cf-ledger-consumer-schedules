@@ -22,7 +22,9 @@ public class StakeWithdrawalFilterResponse {
 
   private String txHash;
   private BigInteger value;
+  private Double rawValue;
   private BigInteger fee;
+  private Double rawFee;
   private LocalDateTime time;
 
   public static List<ExportColumn> buildExportColumn() {

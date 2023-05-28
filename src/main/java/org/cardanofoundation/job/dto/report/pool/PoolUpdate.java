@@ -29,6 +29,8 @@ public class PoolUpdate {
 
   private BigDecimal adaValueFee;
 
+  private Double rawAdaValueFee;
+
   private BigDecimal adaValue;
 
   public static PoolUpdate toDomain(PoolUpdateDetailResponse response) {
@@ -39,6 +41,7 @@ public class PoolUpdate {
         .adaValueFee(new BigDecimal(response.getFee()))
         .build();
     result.setAdaValue(result.getAdaValueHold().subtract(result.getAdaValueFee()));
+    result.setRawAdaValueFee(result.getAdaValueFee().doubleValue() / 1000000);
     return result;
   }
 

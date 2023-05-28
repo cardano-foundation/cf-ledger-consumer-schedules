@@ -126,6 +126,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
       StakeWalletActivityResponse stakeWalletActivity = new StakeWalletActivityResponse();
       stakeWalletActivity.setTxHash(txMap.get(item.getTxId()).getHash());
       stakeWalletActivity.setAmount(item.getAmount());
+      stakeWalletActivity.setRawAmount(item.getAmount().doubleValue() / 1000000);
       stakeWalletActivity.setTime(item.getTime().toLocalDateTime());
       stakeWalletActivity.setFee(txMap.get(item.getTxId()).getFee());
       if (Boolean.TRUE.equals(txMap.get(item.getTxId()).getValidContract())) {
@@ -157,6 +158,8 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
             .txHash(item.getTxHash())
             .fee(item.getFee())
             .deposit(item.getDeposit())
+            .rawFee(item.getFee().doubleValue() / 1000000)
+            .rawDeposit(item.getDeposit().doubleValue() / 1000000)
             .time(item.getTime().toLocalDateTime())
             .build()
         ).collect(Collectors.toList());
@@ -177,6 +180,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
             .fee(item.getFee())
             .time(item.getTime().toLocalDateTime())
             .outSum(item.getOutSum())
+            .rawFee(item.getFee().doubleValue() / 1000000)
             .build()
         ).collect(Collectors.toList());
   }
@@ -187,8 +191,18 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
     StakeAddress stakeAddress = stakeAddressRepository.findByView(stakeKey);
     makeCondition(condition);
     fetchReward(stakeKey);
+
     return rewardRepository.findRewardByStake(stakeAddress, condition.getFromDate(),
-                                              condition.getToDate(), pageable).getContent();
+                                              condition.getToDate(), pageable)
+        .getContent()
+        .stream()
+        .map(item -> StakeRewardResponse.builder()
+            .amount(item.getAmount())
+            .rawAmount(item.getAmount().doubleValue() / 1000000)
+            .epoch(item.getEpoch())
+            .time(item.getTime())
+            .build()
+        ).collect(Collectors.toList());
   }
 
   @Override
@@ -206,6 +220,8 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
             .fee(item.getFee())
             .time(item.getTime().toLocalDateTime())
             .value(item.getAmount())
+            .rawValue(item.getAmount().doubleValue() / 1000000)
+            .rawFee(item.getFee().doubleValue() / 1000000)
             .build()
         ).collect(Collectors.toList());
   }
@@ -224,6 +240,8 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
         .map(item -> StakeRegistrationLifeCycle.builder()
             .txHash(item.getTxHash())
             .fee(item.getFee())
+            .rawFee(item.getFee().doubleValue() / 1000000)
+            .rawDeposit(makePositive(item.getDeposit()).doubleValue() / 1000000)
             .deposit(makePositive(item.getDeposit()))
             .time(item.getTime().toLocalDateTime())
             .build()

@@ -83,7 +83,7 @@ public class DataUtil {
     if (value == null) {
       return "";
     }
-    DecimalFormat doubleFormat = new DecimalFormat("#.##");
+    DecimalFormat doubleFormat = new DecimalFormat("#.######");
     String result = doubleFormat.format(value);
     if (result.endsWith(".0")) {
       result = result.split("\\.")[0];

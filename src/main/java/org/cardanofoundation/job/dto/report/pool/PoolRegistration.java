@@ -29,6 +29,8 @@ public class PoolRegistration {
 
   private BigDecimal adaValue;
 
+  private Double rawAdaValue;
+
   private String owner;
 
   public static PoolRegistration toDomain(TabularRegisResponse response) {
@@ -39,7 +41,8 @@ public class PoolRegistration {
         .adaValueFee(new BigDecimal(response.getFee()))
         .owner(String.join("\n", response.getStakeKeys()))
         .build();
-    result.setAdaValue(result.getAdaValueHold().subtract(result.getAdaValueFee()));
+    result.setAdaValue(result.getAdaValueHold().add(result.getAdaValueFee()));
+    result.setRawAdaValue(result.getAdaValue().doubleValue() / 1000000);
     return result;
   }
 
