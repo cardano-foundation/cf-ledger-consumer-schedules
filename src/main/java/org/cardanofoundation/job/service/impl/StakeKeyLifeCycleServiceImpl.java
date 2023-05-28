@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +37,7 @@ import org.cardanofoundation.job.repository.StakeAddressRepository;
 import org.cardanofoundation.job.repository.StakeDeRegistrationRepository;
 import org.cardanofoundation.job.repository.StakeRegistrationRepository;
 import org.cardanofoundation.job.repository.WithdrawalRepository;
+import org.cardanofoundation.job.service.FetchRewardDataService;
 import org.cardanofoundation.job.service.StakeKeyLifeCycleService;
 import org.cardanofoundation.job.service.StakeKeyLifeCycleServiceAsync;
 import org.cardanofoundation.job.util.DataUtil;
@@ -52,7 +54,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
   private final DelegationRepository delegationRepository;
   private final RewardRepository rewardRepository;
   private final WithdrawalRepository withdrawalRepository;
-
+  private final FetchRewardDataService fetchRewardDataService;
   private final StakeKeyLifeCycleServiceAsync asyncService;
 
   @Override
@@ -65,7 +67,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
 
     List<CompletableFuture<List<StakeTxProjection>>> txAmountListFuture = new ArrayList<>();
 
-    int subPageSize = 2000;
+    int subPageSize = 10000;
     int pagesize = pageable.getPageSize();
 
     for (int i = 0; ; i++) {
@@ -93,7 +95,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
     List<CompletableFuture<List<Long>>> delegationFutureList = new ArrayList<>();
     List<CompletableFuture<List<Long>>> withdrawalFutureList = new ArrayList<>();
 
-    int subListSize = 2000;
+    int subListSize = 10000;
     for (int i = 0; i < txIds.size(); i += subListSize) {
       List<Long> subTxList = txIds.subList(i, Math.min(txIds.size(), i + subListSize));
       txFutureList.add(asyncService.findTxByIdIn(subTxList));
@@ -184,7 +186,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
                                                    StakeLifeCycleFilterRequest condition) {
     StakeAddress stakeAddress = stakeAddressRepository.findByView(stakeKey);
     makeCondition(condition);
-
+    fetchReward(stakeKey);
     return rewardRepository.findRewardByStake(stakeAddress, condition.getFromDate(),
                                               condition.getToDate(), pageable).getContent();
   }
@@ -272,5 +274,17 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
       condition.setToDate(Timestamp.from(LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)
                                              .toInstant(ZoneOffset.UTC)));
     }
+  }
+
+  private void fetchReward(String stakeKey) {
+    var startTime = System.currentTimeMillis();
+    if (!fetchRewardDataService.checkRewardAvailable(stakeKey)) {
+      boolean fetchRewardResponse = fetchRewardDataService.fetchReward(Collections.singleton(stakeKey));
+      if (!fetchRewardResponse) {
+        throw new RuntimeException("Fetch reward failed");
+      }
+    }
+    log.info("Time taken to fetch reward for stakeKey {} is {} ms", stakeKey,
+             System.currentTimeMillis() - startTime);
   }
 }

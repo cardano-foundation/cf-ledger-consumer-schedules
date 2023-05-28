@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
+import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
 import org.cardanofoundation.job.dto.report.pool.DeRegistrationResponse;
 import org.cardanofoundation.job.dto.report.pool.PoolUpdateDetailResponse;
 import org.cardanofoundation.job.dto.report.pool.RewardResponse;
@@ -29,10 +31,12 @@ import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
 import org.cardanofoundation.job.projection.StakeKeyProjection;
+import org.cardanofoundation.job.repository.DelegationRepository;
 import org.cardanofoundation.job.repository.PoolHashRepository;
 import org.cardanofoundation.job.repository.PoolRetireRepository;
 import org.cardanofoundation.job.repository.PoolUpdateRepository;
 import org.cardanofoundation.job.repository.RewardRepository;
+import org.cardanofoundation.job.service.FetchRewardDataService;
 import org.cardanofoundation.job.service.PoolLifecycleService;
 
 @Service
@@ -44,6 +48,8 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
   private final PoolUpdateRepository poolUpdateRepository;
   private final RewardRepository rewardRepository;
   private final PoolRetireRepository poolRetireRepository;
+  private final FetchRewardDataService fetchRewardDataService;
+  private final DelegationRepository delegationRepository;
 
   @Override
   public List<TabularRegisResponse> registrationList(String poolView, Pageable pageable) {
@@ -96,6 +102,9 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
   @Override
   public List<RewardResponse> listReward(String poolView, Pageable pageable) {
     List<RewardResponse> rewardRes = new ArrayList<>();
+
+    fetchReward(poolView);
+
     Page<LifeCycleRewardProjection> projections = rewardRepository.getRewardInfoByPool(poolView,
                                                                                        pageable);
     if (Objects.nonNull(projections)) {
@@ -121,6 +130,9 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
         deRegistrations.add(deRegistrationRes);
         epochNos.add(projection.getRetiringEpoch());
       });
+
+      fetchReward(poolView);
+
       List<EpochRewardProjection> epochRewardProjections = rewardRepository.getRewardRefundByEpoch(
           poolView, epochNos);
       Map<Integer, BigInteger> refundAmountMap = new HashMap<>();
@@ -143,5 +155,29 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
       });
     }
     return deRegistrations;
+  }
+
+  private void fetchReward(String poolView) {
+    var startTime = System.currentTimeMillis();
+    List<String> stakeKeyList = delegationRepository
+        .findStakeAddressByPoolViewAndRewardCheckPoint(poolView)
+        .stream().map(StakeAddress::getView).collect(Collectors.toList());
+
+    log.info("Total stake keys to fetch reward for pool {} is {}", poolView, stakeKeyList.size());
+
+    int subListSize = 300;
+    List<CompletableFuture<Boolean>> fetchRewardResult = new ArrayList<>();
+
+    for (int i = 0; i < stakeKeyList.size(); i += subListSize) {
+      int toIndex = Math.min(i + subListSize, stakeKeyList.size());
+      List<String> subList = stakeKeyList.subList(i, toIndex);
+      fetchRewardResult.add(CompletableFuture.supplyAsync(
+          () -> fetchRewardDataService.fetchReward(new HashSet<>(subList))));
+    }
+
+    fetchRewardResult.forEach(CompletableFuture::join);
+
+    log.info("Time taken to fetch reward for pool {} is {} ms", poolView,
+             System.currentTimeMillis() - startTime);
   }
 }
