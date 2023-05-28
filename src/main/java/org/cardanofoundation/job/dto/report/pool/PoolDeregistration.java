@@ -40,7 +40,7 @@ public class PoolDeregistration {
     PoolDeregistration result = PoolDeregistration.builder()
         .txHash(response.getTxHash())
         .time(response.getTime())
-        .adaValueHold(DataUtil.isNullOrEmpty(response.getPoolHold()) ? null : new BigDecimal(
+        .adaValueHold(DataUtil.isNullOrEmpty(response.getPoolHold()) ? new BigDecimal(0) : new BigDecimal(
             response.getPoolHold()))
         .adaValueFee(new BigDecimal(response.getFee()))
         .owner(String.join("\n", response.getStakeKeys()))

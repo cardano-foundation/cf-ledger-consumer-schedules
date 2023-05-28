@@ -43,6 +43,8 @@ public interface DelegationRepository extends JpaRepository<Delegation, Long> {
       + " LEFT JOIN RewardCheckpoint rewardCheckpoint ON delegation.address.view = rewardCheckpoint.stakeAddress"
       + " WHERE delegation.poolHash.view = :poolView"
       + " AND (rewardCheckpoint.epochCheckpoint IS NULL) "
-      + " OR (rewardCheckpoint.epochCheckpoint < (SELECT MAX(epoch.no) - 1 FROM Epoch epoch))")
-  List<StakeAddress> findStakeAddressByPoolViewAndRewardCheckPoint(@Param("poolView") String poolView);
+      + " OR (rewardCheckpoint.epochCheckpoint < :epochNo)")
+  List<StakeAddress> findStakeAddressByPoolViewAndRewardCheckPoint(
+      @Param("poolView") String poolView,
+      @Param("epochNo") Integer epochNo);
 }

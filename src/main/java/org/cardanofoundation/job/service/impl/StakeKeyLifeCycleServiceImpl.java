@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -260,28 +261,32 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
     boolean isWithdraw = withdrawList.contains(tx.getId());
     BigInteger fee = tx.getFee();
     BigInteger amount = stakeWalletActivity.getAmount();
-    Long deposit = tx.getDeposit();
-    if(deposit != null && deposit != 0 && (isRegistration || isDeRegistration)) {
+    if (isWithdraw) {
+      if (isRegistration) {
+        return StakeTxType.REWARD_WITHDRAWN_AND_CERTIFICATE_HOLD_PAID.getValue();
+      } else if (isDeRegistration) {
+        return StakeTxType.REWARD_WITHDRAWN_AND_CERTIFICATE_HOLD_DEPOSIT_REFUNDED.getValue();
+      } else {
+        return StakeTxType.REWARD_WITHDRAWN.getValue();
+      }
+    } else {
       if(isRegistration) {
         return StakeTxType.CERTIFICATE_HOLD_PAID.getValue();
       }
-      else {
+      else if(isDeRegistration) {
         return StakeTxType.CERTIFICATE_HOLD_DEPOSIT_REFUNDED.getValue();
-      }
-    } else if(fee != null && fee.abs().compareTo(stakeWalletActivity.getAmount().abs()) == 0) {
-      if (isRegistration || isDeRegistration || isDelegation) {
+      } else if (isDelegation) {
         return StakeTxType.CERTIFICATE_FEE_PAID.getValue();
-      } else {
+      } else if (Objects.nonNull(fee) &&
+          fee.abs().compareTo(stakeWalletActivity.getAmount().abs()) == 0) {
         return StakeTxType.FEE_PAID.getValue();
+      } else if (amount != null && amount.compareTo(BigInteger.ZERO) < 0) {
+        return StakeTxType.SENT.getValue();
+      } else  if (amount != null && amount.compareTo(BigInteger.ZERO) > 0) {
+        return StakeTxType.RECEIVED.getValue();
       }
-    } else if(amount != null && amount.compareTo(BigInteger.ZERO) < 0) {
-      return StakeTxType.SENT.getValue();
-    } else if (isWithdraw) {
-      return StakeTxType.REWARD_WITHDRAWN.getValue();
     }
-    else {
-      return StakeTxType.RECEIVED.getValue();
-    }
+    return StakeTxType.UNKNOWN.getValue();
   }
 
   private void makeCondition(StakeLifeCycleFilterRequest condition) {
