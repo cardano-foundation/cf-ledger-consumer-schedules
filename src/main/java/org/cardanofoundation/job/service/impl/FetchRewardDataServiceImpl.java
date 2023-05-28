@@ -24,4 +24,9 @@ public class FetchRewardDataServiceImpl implements FetchRewardDataService {
   public Boolean fetchReward(Set<String> stakeKeySet){
     return true;
   }
+
+  @Override
+  public Boolean fetchReward(String poolView) {
+    return true;
+  }
 }

@@ -49,7 +49,6 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
   private final RewardRepository rewardRepository;
   private final PoolRetireRepository poolRetireRepository;
   private final FetchRewardDataService fetchRewardDataService;
-  private final DelegationRepository delegationRepository;
 
   @Override
   public List<TabularRegisResponse> registrationList(String poolView, Pageable pageable) {
@@ -103,7 +102,9 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
   public List<RewardResponse> listReward(String poolView, Pageable pageable) {
     List<RewardResponse> rewardRes = new ArrayList<>();
 
-    fetchReward(poolView);
+    if(!fetchRewardDataService.fetchReward(poolView)){
+      throw new RuntimeException("Fetch reward failed");
+    }
 
     Page<LifeCycleRewardProjection> projections = rewardRepository.getRewardInfoByPool(poolView,
                                                                                        pageable);
@@ -131,7 +132,9 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
         epochNos.add(projection.getRetiringEpoch());
       });
 
-      fetchReward(poolView);
+      if(!fetchRewardDataService.fetchReward(poolView)){
+        throw new RuntimeException("Fetch reward failed");
+      }
 
       List<EpochRewardProjection> epochRewardProjections = rewardRepository.getRewardRefundByEpoch(
           poolView, epochNos);
@@ -155,29 +158,5 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
       });
     }
     return deRegistrations;
-  }
-
-  private void fetchReward(String poolView) {
-    var startTime = System.currentTimeMillis();
-    List<String> stakeKeyList = delegationRepository
-        .findStakeAddressByPoolViewAndRewardCheckPoint(poolView)
-        .stream().map(StakeAddress::getView).collect(Collectors.toList());
-
-    log.info("Total stake keys to fetch reward for pool {} is {}", poolView, stakeKeyList.size());
-
-    int subListSize = 300;
-    List<CompletableFuture<Boolean>> fetchRewardResult = new ArrayList<>();
-
-    for (int i = 0; i < stakeKeyList.size(); i += subListSize) {
-      int toIndex = Math.min(i + subListSize, stakeKeyList.size());
-      List<String> subList = stakeKeyList.subList(i, toIndex);
-      fetchRewardResult.add(CompletableFuture.supplyAsync(
-          () -> fetchRewardDataService.fetchReward(new HashSet<>(subList))));
-    }
-
-    fetchRewardResult.forEach(CompletableFuture::join);
-
-    log.info("Time taken to fetch reward for pool {} is {} ms", poolView,
-             System.currentTimeMillis() - startTime);
   }
 }
