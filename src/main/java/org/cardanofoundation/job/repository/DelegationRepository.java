@@ -38,4 +38,11 @@ public interface DelegationRepository extends JpaRepository<Delegation, Long> {
                                                           @Param("fromTime") Timestamp fromTime,
                                                           @Param("toTime") Timestamp toTime,
                                                           Pageable pageable);
+
+  @Query("SELECT delegation.address FROM Delegation delegation"
+      + " LEFT JOIN RewardCheckpoint rewardCheckpoint ON delegation.address.view = rewardCheckpoint.stakeAddress"
+      + " WHERE delegation.poolHash.view = :poolView"
+      + " AND (rewardCheckpoint.epochCheckpoint IS NULL) "
+      + " OR (rewardCheckpoint.epochCheckpoint < (SELECT MAX(epoch.no) - 1 FROM Epoch epoch))")
+  List<StakeAddress> findStakeAddressByPoolViewAndRewardCheckPoint(@Param("poolView") String poolView);
 }

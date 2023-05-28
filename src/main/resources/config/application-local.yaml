@@ -75,6 +75,9 @@ token:
     folder: ${TOKEN-METADATA-FOLDER:/mappings}
 application:
   network: ${NETWORK_NAME:mainnet}
+  api:
+    check-reward:
+      base-url: ${API_CHECK_REWARD_URL:http://10.4.10.112:8888/api/v1/rewards/fetch}
 
 kafka:
   auto-create-topics: false
