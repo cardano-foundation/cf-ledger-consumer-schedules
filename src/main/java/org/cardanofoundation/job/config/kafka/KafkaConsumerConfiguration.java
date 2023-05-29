@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -22,6 +23,7 @@ import org.cardanofoundation.job.config.properties.KafkaProperties;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 
 @Configuration
+@ConditionalOnProperty(value = "kafka.configuration-enabled", matchIfMissing = true, havingValue = "true")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class KafkaConsumerConfiguration {

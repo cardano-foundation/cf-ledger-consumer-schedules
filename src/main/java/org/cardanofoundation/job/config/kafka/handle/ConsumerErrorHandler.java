@@ -8,6 +8,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.listener.ConsumerAwareListenerErrorHandler;
@@ -16,6 +17,7 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.apache.kafka.common.TopicPartition;
 
 @Configuration
+@ConditionalOnProperty(value = "kafka.configuration-enabled", matchIfMissing = true, havingValue = "true")
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ConsumerErrorHandler {
