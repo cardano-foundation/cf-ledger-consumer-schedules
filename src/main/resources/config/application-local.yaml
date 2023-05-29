@@ -80,6 +80,7 @@ application:
       base-url: ${API_CHECK_REWARD_URL:http://10.4.10.112:8888/api/v1/rewards/fetch}
 
 kafka:
+  configuration-enabled: ${KAFKA_CONFIGURATION_ENABLED:true}
   auto-create-topics: false
   topics:
     reports:

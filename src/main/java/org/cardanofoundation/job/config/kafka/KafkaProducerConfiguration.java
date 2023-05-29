@@ -5,6 +5,7 @@ import java.util.Map;
 
 import lombok.SneakyThrows;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -15,6 +16,7 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.cardanofoundation.job.config.properties.KafkaProperties;
 
 @Configuration
+@ConditionalOnProperty(value = "kafka.configuration-enabled", matchIfMissing = true, havingValue = "true")
 public class KafkaProducerConfiguration {
 
   public static final String JSON_SERIALIZER = "json-producer";

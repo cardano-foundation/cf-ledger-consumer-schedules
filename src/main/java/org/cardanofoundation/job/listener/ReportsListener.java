@@ -1,10 +1,9 @@
 package org.cardanofoundation.job.listener;
 
-import java.time.Duration;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -21,6 +20,7 @@ import org.cardanofoundation.job.service.StakeKeyReportService;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(value = "kafka.configuration-enabled", matchIfMissing = true, havingValue = "true")
 public class ReportsListener {
 
   private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
