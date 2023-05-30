@@ -23,9 +23,9 @@ jobs:
         run: |
           if [[ "${{ github.event.head_commit.message }}" =~ .*release-please--branches--main.* ]]
           then
-            echo "TARGET_BRANCH=${{ env.RELEASES_BRANCH }}" >> $GITHUB_OUTPUT
-          else
             echo "TARGET_BRANCH=${{ env.DEVELOPMENT_BRANCH }}" >> $GITHUB_OUTPUT
+          else
+            echo "TARGET_BRANCH=${{ env.RELEASES_BRANCH }}" >> $GITHUB_OUTPUT
           fi
 
       - name: 🚀 release-please-action
