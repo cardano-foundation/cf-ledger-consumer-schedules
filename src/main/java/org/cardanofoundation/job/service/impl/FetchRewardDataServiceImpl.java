@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 
 
-@Profile("not-koios")
+@Profile("!koios")
 @Service
 @RequiredArgsConstructor
 public class FetchRewardDataServiceImpl implements FetchRewardDataService {
