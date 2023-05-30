@@ -14,7 +14,6 @@ env:
   PRIVATE_DOCKER_REGISTRY_PASS: ${{ secrets.GITLAB_PKG_REGISTRY_TOKEN }}
   PRIVATE_MVN_REGISTRY_TOKEN: ${{ secrets.GITLAB_PKG_REGISTRY_TOKEN }}
   PRIVATE_MVN_REGISTRY_URL: ${{ secrets.GITLAB_MAVEN_REGISTRY_URL }}
-  PRIVATE_MVN_REGISTRY_USER: Deploy-Token
   PRIVATE_MVN_REGISTRY_PASS: ${{ secrets.GITLAB_PKG_REGISTRY_TOKEN }}
 
 jobs:
@@ -59,6 +58,11 @@ jobs:
             echo "ARTIFACT_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_ENV"
             echo "DOCKER_LATEST_IMAGE_TAG=${{ env.PRIVATE_DOCKER_REGISTRY_URL }}/${DOCKER_IMAGE_NAME}:latest" >> "$GITHUB_ENV"
           fi
+
+      - name: Setup mvn settings.yml
+        uses: s4u/maven-settings-action@v2.5.0
+        with:
+          servers: '[{"id": "private-registry","configuration": {"httpHeaders": {"property": {"name": "PRIVATE-TOKEN","value": "${{ env.PRIVATE_MVN_REGISTRY_TOKEN }}"}}}}]'
 
       - name: Build
         run: |
