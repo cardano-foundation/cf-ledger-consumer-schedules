@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.2](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.0.2...v0.0.2) (2023-05-30)
+
+
+### Features
+
+* force 0.0.3 release and testing snapshot version update for develop branch ([58a98ff](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/58a98ff99bd53b6812322d6c3c4bc643739d3ebc))
+
 ## [0.0.2](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.0.1...v0.0.2) (2023-05-30)
 
 
