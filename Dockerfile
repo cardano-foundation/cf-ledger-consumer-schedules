@@ -1,8 +1,14 @@
 FROM openjdk:17-jdk-slim AS build
 RUN apt-get update && apt-get install -y fontconfig libfreetype6 && rm -rf /var/lib/apt/lists/*
 
+ARG PRIVATE_MVN_REGISTRY_URL
+ARG PRIVATE_MVN_REGISTRY_USER
+ARG PRIVATE_MVN_REGISTRY_PASS
+ARG SETTINGS_XML_TPL=.m2/settings.default.xml.tpl
 WORKDIR /app
-COPY .m2/settings.xml /root/.m2/settings.xml
+COPY ${SETTINGS_XML_TPL} /root/${SETTINGS_XML_TPL}
+RUN envsubst < /root/${SETTINGS_XML_TPL} > /root/.m2/settings.xml
+
 COPY pom.xml /app/pom.xml
 COPY mvnw /app/mvnw
 COPY .mvn /app/.mvn
