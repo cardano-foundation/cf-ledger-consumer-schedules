@@ -24,17 +24,17 @@ jobs:
           if [[ "${{ github.event.head_commit.message }}" =~ .*chore.${{ env.RELEASES_BRANCH }}.*release.* ]]
           then
             echo "TARGET_BRANCH=${{ env.DEVELOPMENT_BRANCH }}" >> $GITHUB_OUTPUT
-            echo "PRERELEASE=true" >> $GITHUB_OUTPUT
+            echo "SNAPSHOT=true" >> $GITHUB_OUTPUT
           else
             echo "TARGET_BRANCH=${{ env.RELEASES_BRANCH }}" >> $GITHUB_OUTPUT
-            echo "PRERELEASE=false" >> $GITHUB_OUTPUT
+            echo "SNAPSHOT=false" >> $GITHUB_OUTPUT
           fi
 
       - name: 🚀 release-please-action
         uses: google-github-actions/release-please-action@v3
         with:
-          release-type: maven
+          release-type: java
           bump-minor-pre-major: true
           bump-patch-for-minor-pre-major: true
-          prerelease: ${{ steps.snapshot.outputs.PRERELEASE }}
+          snapshot: ${{ steps.snapshot.outputs.SNAPSHOT }}
           default-branch: ${{ steps.snapshot.outputs.TARGET_BRANCH }}
