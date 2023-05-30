@@ -47,7 +47,8 @@ jobs:
       - name: Set extra environment and metadata
         id: metadata
         run: |
-          echo "DOCKER_IMAGE_NAME=$(basename ${GITHUB_REPOSITORY})" >> "$GITHUB_ENV"
+          DOCKER_IMAGE_NAME=$(basename ${GITHUB_REPOSITORY})
+          echo "DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}" >> "$GITHUB_ENV"
 
           if [ ${{github.event_name}} == "pull_request" ]
           then
