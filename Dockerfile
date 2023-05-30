@@ -1,5 +1,5 @@
 FROM openjdk:17-jdk-slim AS build
-RUN apt-get update && apt-get install -y fontconfig libfreetype6 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y fontconfig libfreetype6 gettext-base && rm -rf /var/lib/apt/lists/*
 
 ARG PRIVATE_MVN_REGISTRY_URL
 ARG PRIVATE_MVN_REGISTRY_USER
