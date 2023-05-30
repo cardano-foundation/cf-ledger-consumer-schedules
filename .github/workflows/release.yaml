@@ -34,5 +34,4 @@ jobs:
           release-type: maven
           bump-minor-pre-major: true
           bump-patch-for-minor-pre-major: true
-          release-as: 0.0.2
           default-branch: ${{ steps.snapshot.outputs.TARGET_BRANCH }}
