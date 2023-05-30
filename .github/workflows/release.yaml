@@ -21,7 +21,7 @@ jobs:
       - name: Set target branch
         id: snapshot
         run: |
-          if [[ "${{ github.event.head_commit.message }}" =~ .*chore.${RELEASES_BRANCH}.release.* ]]
+          if [[ "${{ github.event.head_commit.message }}" =~ .*chore.${{ env.RELEASES_BRANCH }}.*release.* ]]
           then
             echo "TARGET_BRANCH=${{ env.DEVELOPMENT_BRANCH }}" >> $GITHUB_OUTPUT
           else
