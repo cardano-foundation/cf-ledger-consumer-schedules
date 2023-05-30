@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.0](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.0.1...v0.1.0) (2023-05-30)
+
+
+### Features
+
+* force 0.0.2 release and testing snapshot version update for develop branch ([67b0a21](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/67b0a21eb16f7aeed65feb205d1255f5641ac44c))
+* force 0.0.2 release and testing snapshot version update for develop branch ([607f27d](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/607f27da2f3f89f5cf471d406aeb2192fa289355))
+* force 0.0.2 release and testing snapshot version update for develop branch ([e6ea242](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/e6ea2421f18ba7cc9852190191d11e06b6440053))
+* force 0.0.3 release and testing snapshot version update for develop branch ([58a98ff](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/58a98ff99bd53b6812322d6c3c4bc643739d3ebc))
+
+
+### Bug Fixes
+
+* **gha:** fixed docker image tag env var ([19f3efd](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/19f3efd03f9caffd9c1caa5c52e02aaa421e1e27))
+
 ## [0.0.3](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.0.2...v0.0.3) (2023-05-30)
 
 
