@@ -120,4 +120,4 @@ CREATE INDEX IF NOT EXISTS pool_report_history_report_id_idx on pool_report_hist
 
 CREATE INDEX IF NOT EXISTS pool_report_history_pool_id_report_id_idx on pool_report_history (pool_id, report_id);
 
-ALTER TABLE report_history ADD COLUMN IF NOT EXISTS uploaded_at INTEGER;
+ALTER TABLE report_history ADD COLUMN IF NOT EXISTS uploaded_at timestamp;
