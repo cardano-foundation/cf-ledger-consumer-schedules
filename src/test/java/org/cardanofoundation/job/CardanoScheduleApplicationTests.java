@@ -20,6 +20,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.web.reactive.function.client.WebClientAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -46,7 +47,7 @@ import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
 
 import org.junit.jupiter.api.Test;
 
-@SpringBootTest
+@SpringBootTest(classes = WebClientAutoConfiguration.class)
 class CardanoScheduleApplicationTests {
   @Autowired WebClient.Builder webClientBuilder;
 
