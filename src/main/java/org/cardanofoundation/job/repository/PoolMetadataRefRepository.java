@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolMetadataRef;
 
-
 @Repository
 public interface PoolMetadataRefRepository extends JpaRepository<PoolMetadataRef, Long> {
 

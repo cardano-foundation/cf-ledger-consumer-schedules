@@ -5,8 +5,8 @@ import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.consumercommon.entity.StakeKeyReportHistory;
 
-public interface StakeKeyReportHistoryRepository extends
-    JpaRepository<StakeKeyReportHistory, Long> {
+public interface StakeKeyReportHistoryRepository
+    extends JpaRepository<StakeKeyReportHistory, Long> {
 
   StakeKeyReportHistory findByReportHistoryId(@Param("reportHistoryId") Long reportHistoryId);
 }

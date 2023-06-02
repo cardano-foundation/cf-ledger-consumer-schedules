@@ -1,5 +1,11 @@
 package org.cardanofoundation.job.service.impl;
 
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
+
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -28,14 +34,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.bloxbean.cardano.client.crypto.Blake2bUtil;
 import com.bloxbean.cardano.client.util.HexUtil;
-import org.cardanofoundation.job.constant.JobConstants;
-import org.cardanofoundation.job.projection.PoolHashUrlProjection;
-import org.cardanofoundation.job.repository.PoolHashRepository;
-import org.cardanofoundation.job.dto.PoolData;
-import org.cardanofoundation.job.event.message.FetchPoolDataFail;
-import org.cardanofoundation.job.event.message.FetchPoolDataSuccess;
-import org.cardanofoundation.job.service.PoolOfflineDataFetchingService;
-import org.cardanofoundation.ledgersync.common.util.UrlUtil;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandshakeTimeoutException;
 import io.netty.handler.ssl.SslProvider;
@@ -44,11 +42,14 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import reactor.netty.http.client.HttpClient;
 
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
+import org.cardanofoundation.job.constant.JobConstants;
+import org.cardanofoundation.job.dto.PoolData;
+import org.cardanofoundation.job.event.message.FetchPoolDataFail;
+import org.cardanofoundation.job.event.message.FetchPoolDataSuccess;
+import org.cardanofoundation.job.projection.PoolHashUrlProjection;
+import org.cardanofoundation.job.repository.PoolHashRepository;
+import org.cardanofoundation.job.service.PoolOfflineDataFetchingService;
+import org.cardanofoundation.ledgersync.common.util.UrlUtil;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -152,20 +153,17 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
                               contentType.contains(MediaType.APPLICATION_JSON_VALUE)
                                   || contentType.contains(MediaType.TEXT_PLAIN_VALUE)
                                   || contentType.contains(
-                                  MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
+                                      MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
                     return Optional.empty();
                   }
 
-                  if (Objects.requireNonNull(response.getBody()).getBytes().length
-                      > LIMIT_BYTES) {
+                  if (Objects.requireNonNull(response.getBody()).getBytes().length > LIMIT_BYTES) {
                     return Optional.empty();
                   }
                   return Optional.of(response);
                 }
                 log.info(
-                    "unhandled code {} for url: {}",
-                    response.getStatusCode(),
-                    poolHash.getUrl());
+                    "unhandled code {} for url: {}", response.getStatusCode(), poolHash.getUrl());
                 return Optional.of(response);
               })
           .toFuture()

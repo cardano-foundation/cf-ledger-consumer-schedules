@@ -44,19 +44,21 @@ public class RewardDistribution {
   public static List<ExportColumn> buildExportColumn() {
     List<ExportColumn> rewardDistributionColumns = new ArrayList<>();
     rewardDistributionColumns.add(
-        new ExportColumn(ColumnFieldEnum.EPOCH_COLUMN, ColumnTitleEnum.EPOCH_TITLE,
-                         Alignment.RIGHT));
+        new ExportColumn(
+            ColumnFieldEnum.EPOCH_COLUMN, ColumnTitleEnum.EPOCH_TITLE, Alignment.RIGHT));
     rewardDistributionColumns.add(
-        new ExportColumn(ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE,
-                         Alignment.CENTER));
+        new ExportColumn(
+            ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE, Alignment.CENTER));
     rewardDistributionColumns.add(
-        new ExportColumn(ColumnFieldEnum.OPERATOR_REWARD_COLUMN,
-                         ColumnTitleEnum.OPERATOR_REWARD_TITLE,
-                         Alignment.RIGHT));
+        new ExportColumn(
+            ColumnFieldEnum.OPERATOR_REWARD_COLUMN,
+            ColumnTitleEnum.OPERATOR_REWARD_TITLE,
+            Alignment.RIGHT));
     rewardDistributionColumns.add(
-        new ExportColumn(ColumnFieldEnum.REWARD_ACCOUNT_COLUMN,
-                         ColumnTitleEnum.REWARD_ACCOUNT_TITLE,
-                         Alignment.LEFT));
+        new ExportColumn(
+            ColumnFieldEnum.REWARD_ACCOUNT_COLUMN,
+            ColumnTitleEnum.REWARD_ACCOUNT_TITLE,
+            Alignment.LEFT));
     return rewardDistributionColumns;
   }
 }

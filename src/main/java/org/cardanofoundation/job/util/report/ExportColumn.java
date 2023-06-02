@@ -16,10 +16,13 @@ public class ExportColumn {
   private int columnWidth;
 
   public enum Alignment {
-    LEFT, RIGHT, CENTER
+    LEFT,
+    RIGHT,
+    CENTER
   }
 
-  public ExportColumn(ColumnFieldEnum column, ColumnTitleEnum title, Alignment align, int columnWidth) {
+  public ExportColumn(
+      ColumnFieldEnum column, ColumnTitleEnum title, Alignment align, int columnWidth) {
     this.columnField = column;
     this.columnTitle = title;
     this.align = align;
@@ -32,7 +35,7 @@ public class ExportColumn {
     this.align = align;
   }
 
-  public ExportColumn(ColumnFieldEnum column, ColumnTitleEnum title){
+  public ExportColumn(ColumnFieldEnum column, ColumnTitleEnum title) {
     this.columnField = column;
     this.columnTitle = title;
     this.align = Alignment.LEFT;

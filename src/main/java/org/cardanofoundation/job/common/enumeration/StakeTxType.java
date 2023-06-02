@@ -17,7 +17,8 @@ public enum StakeTxType {
   CERTIFICATE_HOLD_DEPOSIT_REFUNDED("Certificate hold deposit refunded"),
   REWARD_WITHDRAWN("Reward withdrawn"),
   REWARD_WITHDRAWN_AND_CERTIFICATE_HOLD_PAID("Reward withdrawn and certificate hold paid"),
-  REWARD_WITHDRAWN_AND_CERTIFICATE_HOLD_DEPOSIT_REFUNDED("Reward withdrawn and certificate hold deposit refunded"),
+  REWARD_WITHDRAWN_AND_CERTIFICATE_HOLD_DEPOSIT_REFUNDED(
+      "Reward withdrawn and certificate hold deposit refunded"),
   UNKNOWN("Unknown");
   String value;
 }

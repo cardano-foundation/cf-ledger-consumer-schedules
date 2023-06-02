@@ -11,7 +11,6 @@ import lombok.Setter;
 
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
 
-
 @Getter
 @Setter
 @NoArgsConstructor

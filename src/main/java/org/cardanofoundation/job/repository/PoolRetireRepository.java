@@ -13,15 +13,14 @@ import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 @Repository
 public interface PoolRetireRepository extends JpaRepository<PoolRetire, Long> {
 
-  @Query(value =
-      "SELECT tx.fee AS fee, pr.retiringEpoch AS retiringEpoch, tx.hash AS txHash, bk.time AS time "
-          + "FROM PoolRetire pr "
-          + "JOIN PoolHash ph ON pr.poolHash.id  = ph.id "
-          + "JOIN Tx tx ON pr.announcedTx.id  = tx.id "
-          + "JOIN Block bk ON tx.block.id = bk.id "
-          + "WHERE ph.view = :poolView ")
-  Page<PoolDeRegistrationProjection> getPoolDeRegistration(@Param("poolView") String poolView,
-                                                           Pageable pageable);
-
-
+  @Query(
+      value =
+          "SELECT tx.fee AS fee, pr.retiringEpoch AS retiringEpoch, tx.hash AS txHash, bk.time AS time "
+              + "FROM PoolRetire pr "
+              + "JOIN PoolHash ph ON pr.poolHash.id  = ph.id "
+              + "JOIN Tx tx ON pr.announcedTx.id  = tx.id "
+              + "JOIN Block bk ON tx.block.id = bk.id "
+              + "WHERE ph.view = :poolView ")
+  Page<PoolDeRegistrationProjection> getPoolDeRegistration(
+      @Param("poolView") String poolView, Pageable pageable);
 }

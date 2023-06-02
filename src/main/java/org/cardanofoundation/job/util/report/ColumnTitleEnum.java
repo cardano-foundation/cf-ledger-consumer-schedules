@@ -9,8 +9,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
 /**
- * This Enum class is used to map the column name in the CSV file to the title of the column
- * Each enum value should use for one field name of the one specific data object
+ * This Enum class is used to map the column name in the CSV file to the title of the column Each
+ * enum value should use for one field name of the one specific data object
  */
 public enum ColumnTitleEnum {
   TX_HASH_TITLE("Transaction Hash"),

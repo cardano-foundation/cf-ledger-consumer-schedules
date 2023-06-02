@@ -15,8 +15,8 @@ public class ReflectorUtil {
   }
 
   /**
-   * As {@link #getAllFields(Class)} but acts on a list of {@link Class}s and uses only
-   * {@link Class#getDeclaredFields()}.
+   * As {@link #getAllFields(Class)} but acts on a list of {@link Class}s and uses only {@link
+   * Class#getDeclaredFields()}.
    *
    * @param classes The list of classes to reflect on
    * @return The complete list of fields
@@ -47,5 +47,4 @@ public class ReflectorUtil {
 
     return classes;
   }
-
 }

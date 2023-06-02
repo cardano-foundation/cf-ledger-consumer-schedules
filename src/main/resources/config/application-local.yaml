@@ -56,9 +56,9 @@ jobs:
   meta-data:
     enabled: ${META_DATA_JOB_ENABLED:false}
   report-history:
-    enabled: ${REPORT_HISTORY_JOB_ENABLED:false}
+    enabled: ${REPORT_HISTORY_JOB_ENABLED:true}
     expired:
-      rate: ${EXPIRED_REPORTS_RATE:604800000} # 7 days
+      rate: ${EXPIRED_REPORTS_RATE:86400000} # 1 day
   pool-offline-data:
     enabled: ${POOL_OFFLINE_DATA_JOB_ENABLED:false}
     fetch:
@@ -67,7 +67,7 @@ jobs:
       delay: ${INSERT_POOL_DATA_DELAY:180000}
       innit: 5000
   install-batch: 100
-  limit-content: 10000
+  limit-content: 1000000
 
 token:
   metadata:

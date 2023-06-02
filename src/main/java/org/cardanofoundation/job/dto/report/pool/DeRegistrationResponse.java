@@ -10,7 +10,6 @@ import lombok.Setter;
 
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 
-
 @Getter
 @Setter
 public class DeRegistrationResponse implements Serializable {

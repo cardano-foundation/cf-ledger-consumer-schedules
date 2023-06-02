@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.job.service.FetchRewardDataService;
 
-
 @Profile("!koios")
 @Service
 @RequiredArgsConstructor
@@ -21,7 +20,7 @@ public class FetchRewardDataServiceImpl implements FetchRewardDataService {
   }
 
   @Override
-  public Boolean fetchReward(Set<String> stakeKeySet){
+  public Boolean fetchReward(Set<String> stakeKeySet) {
     return true;
   }
 

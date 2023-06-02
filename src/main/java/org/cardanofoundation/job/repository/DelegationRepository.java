@@ -18,33 +18,36 @@ import org.cardanofoundation.job.projection.StakeDelegationProjection;
 @Repository
 public interface DelegationRepository extends JpaRepository<Delegation, Long> {
 
-  @Query("SELECT delegation.tx.id"
-      + " FROM Delegation delegation"
-      + " WHERE delegation.address = :stakeKey AND delegation.tx.id IN :txIds")
-  List<Long> findDelegationByAddressAndTxIn(@Param("stakeKey") StakeAddress stakeKey,
-                                            @Param("txIds") Collection<Long> txIds);
+  @Query(
+      "SELECT delegation.tx.id"
+          + " FROM Delegation delegation"
+          + " WHERE delegation.address = :stakeKey AND delegation.tx.id IN :txIds")
+  List<Long> findDelegationByAddressAndTxIn(
+      @Param("stakeKey") StakeAddress stakeKey, @Param("txIds") Collection<Long> txIds);
 
-  @Query("SELECT tx.hash as txHash, block.time as time, block.epochSlotNo as epochSlotNo,"
-      + " block.blockNo as blockNo, block.epochNo as epochNo, tx.fee as fee, tx.outSum as outSum"
-      + " FROM Delegation delegation"
-      + " INNER JOIN Tx tx ON delegation.tx = tx"
-      + " INNER JOIN Block block ON tx.block = block"
-      + " WHERE delegation.address = :stakeKey"
-      + " AND (block.time >= :fromTime ) "
-      + " AND (block.time <= :toTime)"
-      + " AND ( :txHash IS NULL OR tx.hash = :txHash)")
-  Page<StakeDelegationProjection> findDelegationByAddress(@Param("stakeKey") StakeAddress stakeKey,
-                                                          @Param("txHash") String txHash,
-                                                          @Param("fromTime") Timestamp fromTime,
-                                                          @Param("toTime") Timestamp toTime,
-                                                          Pageable pageable);
+  @Query(
+      "SELECT tx.hash as txHash, block.time as time, block.epochSlotNo as epochSlotNo,"
+          + " block.blockNo as blockNo, block.epochNo as epochNo, tx.fee as fee, tx.outSum as outSum"
+          + " FROM Delegation delegation"
+          + " INNER JOIN Tx tx ON delegation.tx = tx"
+          + " INNER JOIN Block block ON tx.block = block"
+          + " WHERE delegation.address = :stakeKey"
+          + " AND (block.time >= :fromTime ) "
+          + " AND (block.time <= :toTime)"
+          + " AND ( :txHash IS NULL OR tx.hash = :txHash)")
+  Page<StakeDelegationProjection> findDelegationByAddress(
+      @Param("stakeKey") StakeAddress stakeKey,
+      @Param("txHash") String txHash,
+      @Param("fromTime") Timestamp fromTime,
+      @Param("toTime") Timestamp toTime,
+      Pageable pageable);
 
-  @Query("SELECT delegation.address FROM Delegation delegation"
-      + " LEFT JOIN RewardCheckpoint rewardCheckpoint ON delegation.address.view = rewardCheckpoint.stakeAddress"
-      + " WHERE delegation.poolHash.view = :poolView"
-      + " AND (rewardCheckpoint.epochCheckpoint IS NULL) "
-      + " OR (rewardCheckpoint.epochCheckpoint < :epochNo)")
+  @Query(
+      "SELECT delegation.address FROM Delegation delegation"
+          + " LEFT JOIN RewardCheckpoint rewardCheckpoint ON delegation.address.view = rewardCheckpoint.stakeAddress"
+          + " WHERE delegation.poolHash.view = :poolView"
+          + " AND (rewardCheckpoint.epochCheckpoint IS NULL) "
+          + " OR (rewardCheckpoint.epochCheckpoint < :epochNo)")
   List<StakeAddress> findStakeAddressByPoolViewAndRewardCheckPoint(
-      @Param("poolView") String poolView,
-      @Param("epochNo") Integer epochNo);
+      @Param("poolView") String poolView, @Param("epochNo") Integer epochNo);
 }

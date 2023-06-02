@@ -4,6 +4,7 @@ public interface StorageService {
 
   /**
    * Upload file to storage
+   *
    * @param bytes bytes of file
    * @param filename filename
    */
@@ -11,6 +12,7 @@ public interface StorageService {
 
   /**
    * Delete file from storage
+   *
    * @param fileName filename
    */
   void deleteFile(String fileName);

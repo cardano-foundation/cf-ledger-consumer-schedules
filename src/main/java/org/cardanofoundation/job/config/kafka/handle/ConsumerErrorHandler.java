@@ -17,7 +17,10 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.apache.kafka.common.TopicPartition;
 
 @Configuration
-@ConditionalOnProperty(value = "kafka.configuration-enabled", matchIfMissing = true, havingValue = "true")
+@ConditionalOnProperty(
+    value = "kafka.configuration-enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ConsumerErrorHandler {
@@ -27,8 +30,7 @@ public class ConsumerErrorHandler {
     return (message, exception, consumer) -> {
       var headers = message.getHeaders();
 
-      var currentReceivedPartitionId =
-          headers.get(KafkaHeaders.RECEIVED_PARTITION, Integer.class);
+      var currentReceivedPartitionId = headers.get(KafkaHeaders.RECEIVED_PARTITION, Integer.class);
 
       var currentOffset = headers.get(KafkaHeaders.RECEIVED_PARTITION, Long.class);
 
