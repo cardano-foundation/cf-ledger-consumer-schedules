@@ -33,6 +33,7 @@
     <version.apache.poi>5.2.0</version.apache.poi>
     <version.spotless-maven-plugin>2.36.0</version.spotless-maven-plugin>
     <version.google-java-format>1.15.0</version.google-java-format>
+    <version.flyway>9.4.0</version.flyway>
   </properties>
 
   <repositories>
@@ -157,6 +158,11 @@
       <groupId>org.apache.poi</groupId>
       <artifactId>poi-ooxml</artifactId>
       <version>${version.apache.poi}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+      <version>${version.flyway}</version>
     </dependency>
   </dependencies>
 
