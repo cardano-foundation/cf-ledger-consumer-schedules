@@ -17,26 +17,28 @@ import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.job.repository.AssetMetadataRepository;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.cardanofoundation.explorer.consumercommon.entity.AssetMetadata;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
+import org.cardanofoundation.explorer.consumercommon.entity.AssetMetadata;
 import org.cardanofoundation.job.dto.AssetMetadataDTO;
 import org.cardanofoundation.job.mapper.AssetMedataMapper;
+import org.cardanofoundation.job.repository.AssetMetadataRepository;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
-@ConditionalOnProperty(value = "jobs.meta-data.enabled", matchIfMissing = true, havingValue = "true")
+@ConditionalOnProperty(
+    value = "jobs.meta-data.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class AssetMetadataService {
 
   private final AssetMetadataRepository assetMetadataRepository;

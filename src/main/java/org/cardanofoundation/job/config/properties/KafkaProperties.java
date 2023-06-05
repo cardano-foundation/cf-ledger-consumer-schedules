@@ -13,7 +13,10 @@ import org.springframework.context.annotation.Configuration;
 
 @Data
 @Configuration
-@ConditionalOnProperty(value = "kafka.configuration-enabled", matchIfMissing = true, havingValue = "true")
+@ConditionalOnProperty(
+    value = "kafka.configuration-enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 @ConfigurationProperties(prefix = "kafka")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class KafkaProperties {

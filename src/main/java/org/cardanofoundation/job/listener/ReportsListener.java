@@ -9,6 +9,7 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+
 import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
 import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeKeyReportHistory;
@@ -20,7 +21,10 @@ import org.cardanofoundation.job.service.StakeKeyReportService;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-@ConditionalOnProperty(value = "kafka.configuration-enabled", matchIfMissing = true, havingValue = "true")
+@ConditionalOnProperty(
+    value = "kafka.configuration-enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class ReportsListener {
 
   private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
@@ -29,22 +33,22 @@ public class ReportsListener {
   private final PoolReportService poolReportService;
 
   @KafkaListener(topics = "${kafka.listeners.topics.reports}")
-  public void consume(ConsumerRecord<String, ReportHistory> consumerRecord,
-                      Acknowledgment acknowledgment) {
+  public void consume(
+      ConsumerRecord<String, ReportHistory> consumerRecord, Acknowledgment acknowledgment) {
     try {
       ReportHistory reportHistory = consumerRecord.value();
-      log.info("Receive report history {} with type {}", reportHistory.getId(),
-               reportHistory.getType());
+      log.info(
+          "Receive report history {} with type {}", reportHistory.getId(), reportHistory.getType());
 
       switch (reportHistory.getType()) {
         case STAKE_KEY:
-          StakeKeyReportHistory stakeKeyReportHistory = stakeKeyReportHistoryRepository.findByReportHistoryId(
-              reportHistory.getId());
+          StakeKeyReportHistory stakeKeyReportHistory =
+              stakeKeyReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
           stakeKeyReportService.exportStakeKeyReport(stakeKeyReportHistory);
           break;
         case POOL_ID:
-          PoolReportHistory poolReportHistory = poolReportHistoryRepository.findByReportHistoryId(
-              reportHistory.getId());
+          PoolReportHistory poolReportHistory =
+              poolReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
           poolReportService.exportPoolReport(poolReportHistory);
           break;
         default:

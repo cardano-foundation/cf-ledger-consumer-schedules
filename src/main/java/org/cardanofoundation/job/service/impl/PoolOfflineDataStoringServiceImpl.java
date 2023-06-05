@@ -16,19 +16,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
-import org.cardanofoundation.job.constant.JobConstants;
-import org.cardanofoundation.job.projection.PoolOfflineHashProjection;
-import org.cardanofoundation.job.repository.PoolHashRepository;
-import org.cardanofoundation.job.repository.PoolMetadataRefRepository;
-import org.cardanofoundation.job.repository.PoolOfflineDataRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
-import org.cardanofoundation.job.dto.PoolData;
-import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineData;
+import org.cardanofoundation.job.constant.JobConstants;
+import org.cardanofoundation.job.dto.PoolData;
+import org.cardanofoundation.job.projection.PoolOfflineHashProjection;
+import org.cardanofoundation.job.repository.PoolHashRepository;
+import org.cardanofoundation.job.repository.PoolMetadataRefRepository;
+import org.cardanofoundation.job.repository.PoolOfflineDataRepository;
+import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)

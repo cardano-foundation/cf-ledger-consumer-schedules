@@ -16,7 +16,10 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.cardanofoundation.job.config.properties.KafkaProperties;
 
 @Configuration
-@ConditionalOnProperty(value = "kafka.configuration-enabled", matchIfMissing = true, havingValue = "true")
+@ConditionalOnProperty(
+    value = "kafka.configuration-enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class KafkaProducerConfiguration {
 
   public static final String JSON_SERIALIZER = "json-producer";

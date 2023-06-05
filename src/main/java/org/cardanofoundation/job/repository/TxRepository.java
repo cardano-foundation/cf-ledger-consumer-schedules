@@ -12,6 +12,5 @@ import org.cardanofoundation.explorer.consumercommon.entity.Tx;
 public interface TxRepository extends JpaRepository<Tx, Long>, JpaSpecificationExecutor<Tx> {
 
   @Query("SELECT tx FROM Tx tx WHERE tx.id IN :ids ORDER BY tx.blockId DESC, tx.blockIndex DESC")
-  List<Tx> findByIdIn(@Param("ids")  List<Long> ids);
-
+  List<Tx> findByIdIn(@Param("ids") List<Long> ids);
 }

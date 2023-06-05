@@ -29,14 +29,14 @@ import org.cardanofoundation.job.util.report.ExportContent;
 @RequiredArgsConstructor
 public class PoolReportServiceImpl implements PoolReportService {
 
-
   private final StorageService storageService;
   private final PoolReportHistoryRepository poolReportRepository;
   private final ExcelHelper excelHelper;
 
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
+
   @Override
-  public void exportPoolReport(PoolReportHistory poolReportHistory) throws Exception{
+  public void exportPoolReport(PoolReportHistory poolReportHistory) throws Exception {
     var startTime = System.currentTimeMillis();
     try {
       List<ExportContent> exportContents = getExportContents(poolReportHistory);
@@ -46,8 +46,9 @@ public class PoolReportServiceImpl implements PoolReportService {
       storageService.uploadFile(excelInputStream.readAllBytes(), excelFileName);
       poolReportHistory.getReportHistory().setStatus(ReportStatus.GENERATED);
       poolReportHistory.getReportHistory().setStorageKey(storageKey);
-      poolReportHistory.getReportHistory().setUploadedAt(Timestamp.valueOf(
-          LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)));
+      poolReportHistory
+          .getReportHistory()
+          .setUploadedAt(Timestamp.valueOf(LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC)));
     } catch (Exception e) {
       poolReportHistory.getReportHistory().setStatus(ReportStatus.FAILED);
       log.error("Error while generating report", e);
@@ -55,15 +56,25 @@ public class PoolReportServiceImpl implements PoolReportService {
     } finally {
       poolReportRepository.save(poolReportHistory);
       var endTime = System.currentTimeMillis();
-      log.info("Persist ReportHistory {} to storage time taken: {} ms",
-               poolReportHistory.getReportHistory().getId(), endTime - startTime);
-
+      log.info(
+          "Persist ReportHistory {} to storage time taken: {} ms",
+          poolReportHistory.getReportHistory().getId(),
+          endTime - startTime);
     }
   }
 
   private List<ExportContent> getExportContents(PoolReportHistory poolReportHistory) {
     List<CompletableFuture<ExportContent>> exportContents = new ArrayList<>();
     var currentTime = System.currentTimeMillis();
+
+    /* Check all events are enabled or not then get content correspondingly to each event
+     * Each data of event will be stored in a different sheet.
+     * Due to retrieving data for each sheet is independent of one another,
+     * so we can use CompletableFuture
+     * to retrieve data concurrently.
+     * ReportHistoryServiceAsync is used to retrieve data concurrently.
+     */
+
     if (Boolean.TRUE.equals(poolReportHistory.getEventRegistration())) {
       exportContents.add(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory));
     }
@@ -80,16 +91,20 @@ public class PoolReportServiceImpl implements PoolReportService {
       exportContents.add(reportHistoryServiceAsync.exportEpochSize(poolReportHistory));
     }
     var response = exportContents.stream().map(CompletableFuture::join).toList();
-    log.info("Get all pool report data time taken: {} ms",
-             System.currentTimeMillis() - currentTime);
+    log.info(
+        "Get all pool report data time taken: {} ms", System.currentTimeMillis() - currentTime);
     return response;
   }
 
-
-
-
+  /**
+   * Generate storage key for report storage key = report_history_id + report_name
+   *
+   * @param poolReport PoolReportHistory
+   * @return storage key
+   */
   private String generateStorageKey(PoolReportHistory poolReport) {
-    return poolReport.getReportHistory().getId() + "_" + poolReport.getReportHistory()
-        .getReportName();
+    return poolReport.getReportHistory().getId()
+        + "_"
+        + poolReport.getReportHistory().getReportName();
   }
 }

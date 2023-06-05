@@ -51,14 +51,28 @@ spring:
         core-size: 20
         max-size: 20
       thread-name-prefix: Executorxx-
+  ## Flyway config
+  flyway:
+    enabled: ${FLYWAY_ENABLE:true}
+    url: ${spring.datasource.url}
+    user: ${spring.datasource.username}
+    password: ${spring.datasource.password}
+    group: true
+    sql-migration-prefix: V
+    sql-migration-separator: __
+    sql-migration-suffixes: .sql
+    locations: db/migration
+    default-schema: ${spring.jpa.properties.hibernate.default_schema}
+    schemas: ${spring.jpa.properties.hibernate.default_schema}
+    validate-on-migrate: ${FLYWAY_VALIDATE:false}
 
 jobs:
   meta-data:
     enabled: ${META_DATA_JOB_ENABLED:false}
   report-history:
-    enabled: ${REPORT_HISTORY_JOB_ENABLED:false}
+    enabled: ${REPORT_HISTORY_JOB_ENABLED:true}
     expired:
-      rate: ${EXPIRED_REPORTS_RATE:604800000} # 7 days
+      rate: ${EXPIRED_REPORTS_RATE:86400000} # 1 day
   pool-offline-data:
     enabled: ${POOL_OFFLINE_DATA_JOB_ENABLED:false}
     fetch:
@@ -67,7 +81,7 @@ jobs:
       delay: ${INSERT_POOL_DATA_DELAY:180000}
       innit: 5000
   install-batch: 100
-  limit-content: 10000
+  limit-content: 1000000
 
 token:
   metadata:

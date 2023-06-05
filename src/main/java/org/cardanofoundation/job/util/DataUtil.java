@@ -66,7 +66,7 @@ public class DataUtil {
   }
 
   public static String enumToString(Enum<?> value) {
-    if(value == null){
+    if (value == null) {
       return "";
     }
     String text = value.name();

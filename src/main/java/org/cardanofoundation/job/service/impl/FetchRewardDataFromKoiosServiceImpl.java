@@ -7,8 +7,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import jakarta.validation.constraints.Max;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -17,13 +15,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import org.cardanofoundation.explorer.consumercommon.entity.Epoch;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
 import org.cardanofoundation.job.repository.DelegationRepository;
 import org.cardanofoundation.job.repository.EpochRepository;
 import org.cardanofoundation.job.repository.RewardCheckpointRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
-
 
 @Profile("koios")
 @Service
@@ -39,7 +35,6 @@ public class FetchRewardDataFromKoiosServiceImpl implements FetchRewardDataServi
   private final DelegationRepository delegationRepository;
   private final EpochRepository epochRepository;
 
-
   @Override
   public boolean checkRewardAvailable(String stakeKey) {
     return rewardCheckpointRepository.checkRewardByStakeAddressAndEpoch(stakeKey);
@@ -47,17 +42,26 @@ public class FetchRewardDataFromKoiosServiceImpl implements FetchRewardDataServi
 
   @Override
   public Boolean fetchReward(Set<String> stakeKeySet) {
-    return restTemplate.postForObject(apiCheckRewardUrl, stakeKeySet, Boolean.class);
+    var startTime = System.currentTimeMillis();
+    Boolean result = restTemplate.postForObject(apiCheckRewardUrl, stakeKeySet, Boolean.class);
+    log.info(
+        "Time taken to fetch reward for stake key list with size {} is {} ms",
+        stakeKeySet.size(),
+        System.currentTimeMillis() - startTime);
+    return result;
   }
 
   @Override
   public Boolean fetchReward(String poolView) {
     var startTime = System.currentTimeMillis();
-    var maxEpochReward = Math.max(0,epochRepository.findMaxEpochNo() - 1);
+    var maxEpochReward = Math.max(0, epochRepository.findMaxEpochNo() - 1);
 
-    List<String> stakeKeyList = delegationRepository
-        .findStakeAddressByPoolViewAndRewardCheckPoint(poolView, maxEpochReward)
-        .stream().map(StakeAddress::getView).collect(Collectors.toList());
+    List<String> stakeKeyList =
+        delegationRepository
+            .findStakeAddressByPoolViewAndRewardCheckPoint(poolView, maxEpochReward)
+            .stream()
+            .map(StakeAddress::getView)
+            .collect(Collectors.toList());
 
     log.info("Total stake keys to fetch reward for pool {} is {}", poolView, stakeKeyList.size());
 
@@ -67,14 +71,16 @@ public class FetchRewardDataFromKoiosServiceImpl implements FetchRewardDataServi
     for (int i = 0; i < stakeKeyList.size(); i += subListSize) {
       int toIndex = Math.min(i + subListSize, stakeKeyList.size());
       List<String> subList = stakeKeyList.subList(i, toIndex);
-      fetchRewardResult.add(CompletableFuture.supplyAsync(
-          () -> fetchReward(new HashSet<>(subList))));
+      fetchRewardResult.add(
+          CompletableFuture.supplyAsync(() -> fetchReward(new HashSet<>(subList))));
     }
 
     Boolean response = fetchRewardResult.stream().allMatch(CompletableFuture::join);
 
-    log.info("Time taken to fetch reward for pool {} is {} ms", poolView,
-             System.currentTimeMillis() - startTime);
+    log.info(
+        "Time taken to fetch reward for pool {} is {} ms",
+        poolView,
+        System.currentTimeMillis() - startTime);
     return response;
   }
 }

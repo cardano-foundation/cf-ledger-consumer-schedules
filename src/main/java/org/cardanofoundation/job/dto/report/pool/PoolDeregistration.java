@@ -37,14 +37,17 @@ public class PoolDeregistration {
   private String owner;
 
   public static PoolDeregistration toDomain(DeRegistrationResponse response) {
-    PoolDeregistration result = PoolDeregistration.builder()
-        .txHash(response.getTxHash())
-        .time(response.getTime())
-        .adaValueHold(DataUtil.isNullOrEmpty(response.getPoolHold()) ? new BigDecimal(0) : new BigDecimal(
-            response.getPoolHold()))
-        .adaValueFee(new BigDecimal(response.getFee()))
-        .owner(String.join("\n", response.getStakeKeys()))
-        .build();
+    PoolDeregistration result =
+        PoolDeregistration.builder()
+            .txHash(response.getTxHash())
+            .time(response.getTime())
+            .adaValueHold(
+                DataUtil.isNullOrEmpty(response.getPoolHold())
+                    ? new BigDecimal(0)
+                    : new BigDecimal(response.getPoolHold()))
+            .adaValueFee(new BigDecimal(response.getFee()))
+            .owner(String.join("\n", response.getStakeKeys()))
+            .build();
 
     result.setAdaValue(new BigDecimal(response.getTotalFee()));
     result.setRawAdaValueHold(result.getAdaValueHold().doubleValue() / 1000000);
@@ -55,17 +58,21 @@ public class PoolDeregistration {
   public static List<ExportColumn> buildExportColumn() {
     List<ExportColumn> deregistrationColumns = new ArrayList<>();
     deregistrationColumns.add(
-        new ExportColumn(ColumnFieldEnum.TX_HASH_COLUMN, ColumnTitleEnum.TX_HASH_TITLE,
-                         Alignment.LEFT));
+        new ExportColumn(
+            ColumnFieldEnum.TX_HASH_COLUMN, ColumnTitleEnum.TX_HASH_TITLE, Alignment.LEFT));
     deregistrationColumns.add(
-        new ExportColumn(ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE,
-                         Alignment.CENTER));
+        new ExportColumn(
+            ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE, Alignment.CENTER));
     deregistrationColumns.add(
-        new ExportColumn(ColumnFieldEnum.ADA_VALUE_HOLD_COLUMN, ColumnTitleEnum.ADA_VALUE_HOLD_TITLE,
-                         Alignment.RIGHT));
+        new ExportColumn(
+            ColumnFieldEnum.ADA_VALUE_HOLD_COLUMN,
+            ColumnTitleEnum.ADA_VALUE_HOLD_TITLE,
+            Alignment.RIGHT));
     deregistrationColumns.add(
-        new ExportColumn(ColumnFieldEnum.ADA_VALUE_FEE_COLUMN, ColumnTitleEnum.ADA_VALUE_FEE_TITLE,
-                         Alignment.RIGHT));
+        new ExportColumn(
+            ColumnFieldEnum.ADA_VALUE_FEE_COLUMN,
+            ColumnTitleEnum.ADA_VALUE_FEE_TITLE,
+            Alignment.RIGHT));
     return deregistrationColumns;
   }
 }

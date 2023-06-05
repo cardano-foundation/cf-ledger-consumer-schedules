@@ -34,13 +34,14 @@ public class PoolRegistration {
   private String owner;
 
   public static PoolRegistration toDomain(TabularRegisResponse response) {
-    PoolRegistration result = PoolRegistration.builder()
-        .txHash(response.getTxHash())
-        .time(response.getTime())
-        .adaValueHold(new BigDecimal(response.getDeposit()))
-        .adaValueFee(new BigDecimal(response.getFee()))
-        .owner(String.join("\n", response.getStakeKeys()))
-        .build();
+    PoolRegistration result =
+        PoolRegistration.builder()
+            .txHash(response.getTxHash())
+            .time(response.getTime())
+            .adaValueHold(new BigDecimal(response.getDeposit()))
+            .adaValueFee(new BigDecimal(response.getFee()))
+            .owner(String.join("\n", response.getStakeKeys()))
+            .build();
     result.setAdaValue(result.getAdaValueHold().add(result.getAdaValueFee()));
     result.setRawAdaValue(result.getAdaValue().doubleValue() / 1000000);
     return result;
@@ -49,17 +50,17 @@ public class PoolRegistration {
   public static List<ExportColumn> buildExportColumn() {
     List<ExportColumn> poolRegistrationsColumns = new ArrayList<>();
     poolRegistrationsColumns.add(
-        new ExportColumn(ColumnFieldEnum.TX_HASH_COLUMN, ColumnTitleEnum.TX_HASH_TITLE,
-                         Alignment.LEFT));
+        new ExportColumn(
+            ColumnFieldEnum.TX_HASH_COLUMN, ColumnTitleEnum.TX_HASH_TITLE, Alignment.LEFT));
     poolRegistrationsColumns.add(
-        new ExportColumn(ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE,
-                         Alignment.CENTER));
+        new ExportColumn(
+            ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE, Alignment.CENTER));
     poolRegistrationsColumns.add(
-        new ExportColumn(ColumnFieldEnum.ADA_VALUE_COLUMN, ColumnTitleEnum.ADA_VALUE_TITLE,
-                         Alignment.RIGHT));
+        new ExportColumn(
+            ColumnFieldEnum.ADA_VALUE_COLUMN, ColumnTitleEnum.ADA_VALUE_TITLE, Alignment.RIGHT));
     poolRegistrationsColumns.add(
-        new ExportColumn(ColumnFieldEnum.OWNER_COLUMN, ColumnTitleEnum.OWNER_TITLE,
-                         Alignment.LEFT));
+        new ExportColumn(
+            ColumnFieldEnum.OWNER_COLUMN, ColumnTitleEnum.OWNER_TITLE, Alignment.LEFT));
     return poolRegistrationsColumns;
   }
 }

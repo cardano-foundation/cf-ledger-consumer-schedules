@@ -27,7 +27,10 @@ import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
 @Slf4j
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@ConditionalOnProperty(value = "jobs.pool-offline-data.enabled", matchIfMissing = true, havingValue = "true")
+@ConditionalOnProperty(
+    value = "jobs.pool-offline-data.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class PoolOfflineDataSchedule {
 
   final Queue<PoolData> successPools;
