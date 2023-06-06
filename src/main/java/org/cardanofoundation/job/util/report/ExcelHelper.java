@@ -33,6 +33,7 @@ import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+
 import org.cardanofoundation.job.util.DataUtil;
 import org.cardanofoundation.job.util.ReflectorUtil;
 
@@ -47,7 +48,7 @@ public class ExcelHelper {
 
   public ByteArrayInputStream writeContent(List<ExportContent> exportContents) {
     var currentTime = System.currentTimeMillis();
-    try (SXSSFWorkbook workbook = new SXSSFWorkbook(100)){
+    try (SXSSFWorkbook workbook = new SXSSFWorkbook(100)) {
       CellStyle cellStyleHeader = createStyleHeader(workbook);
       for (ExportContent exportContent : exportContents) {
         SXSSFSheet sheet = workbook.createSheet(exportContent.getHeaderTitle());
@@ -66,9 +67,9 @@ public class ExcelHelper {
         }
         writeDataReport(workbook, exportContent, sheet, lstColumn, lstData);
       }
-      try (ByteArrayOutputStream out = new ByteArrayOutputStream()){
+      try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
         workbook.write(out);
-        log.info("Export excel taken time: {}", System.currentTimeMillis() - currentTime);
+        log.info("Export excel time taken: {}", System.currentTimeMillis() - currentTime);
         return new ByteArrayInputStream(out.toByteArray());
       }
     } catch (final IOException | IllegalAccessException e) {
@@ -76,18 +77,24 @@ public class ExcelHelper {
     }
   }
 
-  private void writeDataReport(SXSSFWorkbook workbook, ExportContent exportContent,
-                                      SXSSFSheet sheet,
-                                      List<ExportColumn> lstColumn, List<?> lstData)
+  private void writeDataReport(
+      SXSSFWorkbook workbook,
+      ExportContent exportContent,
+      SXSSFSheet sheet,
+      List<ExportColumn> lstColumn,
+      List<?> lstData)
       throws IllegalAccessException {
     List<Field> fields = ReflectorUtil.getAllFields(exportContent.getClazz());
     Map<String, Field> mapField = new HashMap<>();
 
-    exportContent.getLstColumn()
-        .forEach(exportColumn -> fields.stream()
-            .peek(f -> f.setAccessible(true))
-            .filter(f -> f.getName().equals(exportColumn.getColumnField().getValue()))
-            .forEach(f -> mapField.put(exportColumn.getColumnField().getValue(), f)));
+    exportContent
+        .getLstColumn()
+        .forEach(
+            exportColumn ->
+                fields.stream()
+                    .peek(f -> f.setAccessible(true))
+                    .filter(f -> f.getName().equals(exportColumn.getColumnField().getValue()))
+                    .forEach(f -> mapField.put(exportColumn.getColumnField().getValue(), f)));
 
     if (DataUtil.isNullOrEmpty(lstData)) {
       writeNoRecordContents(workbook, sheet, lstColumn);
@@ -119,7 +126,7 @@ public class ExcelHelper {
           text = DataUtil.dateToString(((Date) value), DATE_TIME_PATTERN);
         } else if (value instanceof LocalDateTime) {
           text = DataUtil.localDateTimeToString(((LocalDateTime) value), DATE_TIME_PATTERN);
-        } else if (value instanceof Enum<?>){
+        } else if (value instanceof Enum<?>) {
           text = DataUtil.enumToString((Enum<?>) value);
         } else {
           text = DataUtil.objectToString(value);
@@ -147,13 +154,13 @@ public class ExcelHelper {
       sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 100);
     }
 
-    if(lstData.size() == limitSize) {
+    if (lstData.size() == limitSize) {
       writeOutOfLimitContents(workbook, sheet, lstColumn);
     }
   }
 
-  private void writeOutOfLimitContents(SXSSFWorkbook workbook, SXSSFSheet sheet,
-                                     List<ExportColumn> lstColumn) {
+  private void writeOutOfLimitContents(
+      SXSSFWorkbook workbook, SXSSFSheet sheet, List<ExportColumn> lstColumn) {
     Row row = sheet.createRow(limitSize + 2);
     Cell cell = row.createCell(0);
     CellStyle cellStyle = workbook.getXSSFWorkbook().createCellStyle();
@@ -165,13 +172,14 @@ public class ExcelHelper {
     font.setItalic(true);
     cellStyle.setFont(font);
     cell.setCellStyle(cellStyle);
-    cell.setCellValue(richTextString("***This sheet only exports the earliest " + limitSize + " records.***"));
-    sheet.addMergedRegion(new CellRangeAddress(limitSize + 2, limitSize + 2, 0, lstColumn.size() - 1));
+    cell.setCellValue(
+        richTextString("***This sheet only exports the earliest " + limitSize + " records.***"));
+    sheet.addMergedRegion(
+        new CellRangeAddress(limitSize + 2, limitSize + 2, 0, lstColumn.size() - 1));
   }
 
-
-  private void writeNoRecordContents(SXSSFWorkbook workbook, SXSSFSheet sheet,
-                                List<ExportColumn> lstColumn) {
+  private void writeNoRecordContents(
+      SXSSFWorkbook workbook, SXSSFSheet sheet, List<ExportColumn> lstColumn) {
     Row row = sheet.createRow(1);
     Cell cell = row.createCell(0);
     CellStyle cellStyle = workbook.getXSSFWorkbook().createCellStyle();
@@ -184,7 +192,6 @@ public class ExcelHelper {
     cell.setCellValue(richTextString("No records"));
     sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, lstColumn.size() - 1));
   }
-
 
   private CellStyle createStyleHeader(SXSSFWorkbook workbook) {
     CellStyle cellStyleHeader = createCellStyleHeader(workbook);
@@ -210,8 +217,8 @@ public class ExcelHelper {
     return cellStyleHeader;
   }
 
-  private CellStyle createCellStyle(SXSSFWorkbook workbook,
-                                           HorizontalAlignment horizontalAlignment) {
+  private CellStyle createCellStyle(
+      SXSSFWorkbook workbook, HorizontalAlignment horizontalAlignment) {
     CellStyle cellStyle = workbook.getXSSFWorkbook().createCellStyle();
     cellStyle.setAlignment(horizontalAlignment);
     cellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
@@ -233,4 +240,3 @@ public class ExcelHelper {
     return new XSSFRichTextString(object.toString());
   }
 }
-

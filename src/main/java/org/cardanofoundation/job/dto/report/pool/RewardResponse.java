@@ -10,7 +10,6 @@ import lombok.Setter;
 
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;
 
-
 @Getter
 @Setter
 @AllArgsConstructor

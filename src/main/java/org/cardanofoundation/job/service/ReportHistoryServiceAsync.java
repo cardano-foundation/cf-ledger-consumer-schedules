@@ -52,9 +52,9 @@ public class ReportHistoryServiceAsync {
 
   @Value("${jobs.limit-content}")
   private int limitSize;
+
   private Pageable defPageableStake;
   private Pageable defPageablePool;
-
 
   @PostConstruct
   public void init() {
@@ -62,211 +62,257 @@ public class ReportHistoryServiceAsync {
     defPageablePool = PageRequest.of(0, limitSize, Sort.by("id").descending());
   }
 
-
+  /**
+   * Get stake wallet activitys export content
+   *
+   * @param stakeKey stake key
+   * @param condition filter condition
+   * @param pageable page request
+   * @param subTitle sub title
+   * @return export content
+   */
   @Async
-  public CompletableFuture<ExportContent> exportStakeWalletActivitys(String stakeKey,
-                                                                     StakeLifeCycleFilterRequest condition) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
+  public CompletableFuture<ExportContent> exportStakeWalletActivitys(
+      String stakeKey, StakeLifeCycleFilterRequest condition, Pageable pageable, String subTitle) {
 
-    List<StakeWalletActivityResponse> walletActivityResponses = stakeKeyLifeCycleService
-        .getStakeWalletActivities(stakeKey, defPageableStake, condition);
+    List<StakeWalletActivityResponse> walletActivityResponses =
+        stakeKeyLifeCycleService.getStakeWalletActivities(stakeKey, pageable, condition);
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(StakeWalletActivityResponse.class)
-                                                 .headerTitle(WALLET_ACTIVITY_TITLE)
-                                                 .lstColumn(
-                                                     StakeWalletActivityResponse.buildExportColumn())
-                                                 .lstData(walletActivityResponses)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(StakeWalletActivityResponse.class)
+            .headerTitle(WALLET_ACTIVITY_TITLE + subTitle)
+            .lstColumn(StakeWalletActivityResponse.buildExportColumn())
+            .lstData(walletActivityResponses)
+            .build());
   }
 
-
+  /**
+   * Get stake withdrawals export content
+   *
+   * @param stakeKey stake key
+   * @param condition filter condition
+   * @return export content
+   */
   @Async
-  public CompletableFuture<ExportContent> exportStakeRegistrations(String stakeKey,
-                                                                   StakeLifeCycleFilterRequest condition) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
-    List<StakeRegistrationLifeCycle> stakeRegistrations = stakeKeyLifeCycleService
-        .getStakeRegistrations(stakeKey, defPageableStake, condition);
+  public CompletableFuture<ExportContent> exportStakeRegistrations(
+      String stakeKey, StakeLifeCycleFilterRequest condition) {
+    List<StakeRegistrationLifeCycle> stakeRegistrations =
+        stakeKeyLifeCycleService.getStakeRegistrations(stakeKey, defPageableStake, condition);
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(StakeRegistrationLifeCycle.class)
-                                                 .headerTitle(REGISTRATIONS_TITLE)
-                                                 .lstColumn(
-                                                     StakeRegistrationLifeCycle.buildExportColumn())
-                                                 .lstData(stakeRegistrations)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(StakeRegistrationLifeCycle.class)
+            .headerTitle(REGISTRATIONS_TITLE)
+            .lstColumn(StakeRegistrationLifeCycle.buildExportColumn())
+            .lstData(stakeRegistrations)
+            .build());
   }
 
+  /**
+   * Get stake delegations export content
+   *
+   * @param stakeKey stake key
+   * @param condition filter condition
+   * @return export content
+   */
   @Async
-  public CompletableFuture<ExportContent> exportStakeDelegations(String stakeKey,
-                                                                 StakeLifeCycleFilterRequest condition) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
-    List<StakeDelegationFilterResponse> stakeDelegations = stakeKeyLifeCycleService
-        .getStakeDelegations(stakeKey, defPageableStake, condition);
+  public CompletableFuture<ExportContent> exportStakeDelegations(
+      String stakeKey, StakeLifeCycleFilterRequest condition) {
+    List<StakeDelegationFilterResponse> stakeDelegations =
+        stakeKeyLifeCycleService.getStakeDelegations(stakeKey, defPageableStake, condition);
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(StakeDelegationFilterResponse.class)
-                                                 .headerTitle(DELEGATION_HISTORY_TITLE)
-                                                 .lstColumn(
-                                                     StakeDelegationFilterResponse.buildExportColumn())
-                                                 .lstData(stakeDelegations)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(StakeDelegationFilterResponse.class)
+            .headerTitle(DELEGATION_HISTORY_TITLE)
+            .lstColumn(StakeDelegationFilterResponse.buildExportColumn())
+            .lstData(stakeDelegations)
+            .build());
   }
 
+  /**
+   * Get stake rewards export content
+   *
+   * @param stakeKey stake key
+   * @param condition filter condition
+   * @return export content
+   */
   @Async
-  public CompletableFuture<ExportContent> exportStakeRewards(String stakeKey,
-                                                             StakeLifeCycleFilterRequest condition) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
-    List<StakeRewardResponse> stakeRewards = stakeKeyLifeCycleService.getStakeRewards(
-        stakeKey, defPageablePool, condition);
+  public CompletableFuture<ExportContent> exportStakeRewards(
+      String stakeKey, StakeLifeCycleFilterRequest condition) {
+    List<StakeRewardResponse> stakeRewards =
+        stakeKeyLifeCycleService.getStakeRewards(stakeKey, defPageablePool, condition);
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(StakeRewardResponse.class)
-                                                 .headerTitle(REWARDS_DISTRIBUTION_TITLE)
-                                                 .lstColumn(StakeRewardResponse.buildExportColumn())
-                                                 .lstData(stakeRewards)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(StakeRewardResponse.class)
+            .headerTitle(REWARDS_DISTRIBUTION_TITLE)
+            .lstColumn(StakeRewardResponse.buildExportColumn())
+            .lstData(stakeRewards)
+            .build());
   }
 
+  /**
+   * Get stake withdrawals export content
+   *
+   * @param stakeKey stake key
+   * @param stakeLifeCycleFilterRequest filter condition
+   * @return export content
+   */
   @Async
-  public CompletableFuture<ExportContent> exportStakeWithdrawals(String stakeKey,
-                                                                 StakeLifeCycleFilterRequest stakeLifeCycleFilterRequest) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
-    List<StakeWithdrawalFilterResponse> stakeWithdrawals = stakeKeyLifeCycleService.getStakeWithdrawals(
-        stakeKey, defPageableStake, stakeLifeCycleFilterRequest);
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(StakeWithdrawalFilterResponse.class)
-                                                 .headerTitle(WITHDRAWAL_HISTORY_TITLE)
-                                                 .lstColumn(
-                                                     StakeWithdrawalFilterResponse.buildExportColumn())
-                                                 .lstData(stakeWithdrawals)
-                                                 .build());
+  public CompletableFuture<ExportContent> exportStakeWithdrawals(
+      String stakeKey, StakeLifeCycleFilterRequest stakeLifeCycleFilterRequest) {
+    List<StakeWithdrawalFilterResponse> stakeWithdrawals =
+        stakeKeyLifeCycleService.getStakeWithdrawals(
+            stakeKey, defPageableStake, stakeLifeCycleFilterRequest);
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(StakeWithdrawalFilterResponse.class)
+            .headerTitle(WITHDRAWAL_HISTORY_TITLE)
+            .lstColumn(StakeWithdrawalFilterResponse.buildExportColumn())
+            .lstData(stakeWithdrawals)
+            .build());
   }
 
+  /**
+   * Get stake de-registrations export content
+   *
+   * @param stakeKey stake key
+   * @param stakeLifeCycleFilterRequest filter condition
+   * @return export content
+   */
   @Async
-  public CompletableFuture<ExportContent> exportStakeDeregistrations(String stakeKey,
-                                                                     StakeLifeCycleFilterRequest stakeLifeCycleFilterRequest) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
-    List<StakeRegistrationLifeCycle> stakeDeRegistrations = stakeKeyLifeCycleService.getStakeDeRegistrations(
-        stakeKey, defPageableStake, stakeLifeCycleFilterRequest);
+  public CompletableFuture<ExportContent> exportStakeDeregistrations(
+      String stakeKey, StakeLifeCycleFilterRequest stakeLifeCycleFilterRequest) {
+    List<StakeRegistrationLifeCycle> stakeDeRegistrations =
+        stakeKeyLifeCycleService.getStakeDeRegistrations(
+            stakeKey, defPageableStake, stakeLifeCycleFilterRequest);
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(StakeRegistrationLifeCycle.class)
-                                                 .headerTitle(DEREGISTRATION_TITLE)
-                                                 .lstColumn(
-                                                     StakeRegistrationLifeCycle.buildExportColumn())
-                                                 .lstData(stakeDeRegistrations)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(StakeRegistrationLifeCycle.class)
+            .headerTitle(DEREGISTRATION_TITLE)
+            .lstColumn(StakeRegistrationLifeCycle.buildExportColumn())
+            .lstData(stakeDeRegistrations)
+            .build());
   }
 
+  /**
+   * Get pool size export content
+   *
+   * @param poolReport pool report
+   * @return export content
+   */
   @Async
   public CompletableFuture<ExportContent> exportEpochSize(PoolReportHistory poolReport) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
     Pageable epochSizePage = PageRequest.of(0, limitSize, Sort.by("epochNo").descending());
-    List<EpochSize> epochSizes = epochStakeRepository
-        .getEpochSizeByPoolReport(poolReport.getPoolView(), poolReport.getBeginEpoch(),
-                                  poolReport.getEndEpoch(), epochSizePage)
-        .getContent()
-        .stream()
-        .map(EpochSize::toDomain)
-        .collect(Collectors.toList());
+    List<EpochSize> epochSizes =
+        epochStakeRepository
+            .getEpochSizeByPoolReport(
+                poolReport.getPoolView(),
+                poolReport.getBeginEpoch(),
+                poolReport.getEndEpoch(),
+                epochSizePage)
+            .getContent()
+            .stream()
+            .map(EpochSize::toDomain)
+            .collect(Collectors.toList());
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(EpochSize.class)
-                                                 .headerTitle(POOL_SIZE_TITLE)
-                                                 .lstColumn(EpochSize.buildExportColumn())
-                                                 .lstData(epochSizes)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(EpochSize.class)
+            .headerTitle(POOL_SIZE_TITLE)
+            .lstColumn(EpochSize.buildExportColumn())
+            .lstData(epochSizes)
+            .build());
   }
 
+  /**
+   * Get pool registration export content
+   *
+   * @param poolReport pool report
+   * @return export content
+   */
   @Async
   public CompletableFuture<ExportContent> exportPoolRegistration(PoolReportHistory poolReport) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
-    List<PoolRegistration> poolRegistrations = poolLifecycleService.registrationList(
-            poolReport.getPoolView(), defPageablePool)
-        .stream()
-        .map(PoolRegistration::toDomain)
-        .collect(Collectors.toList());
+    List<PoolRegistration> poolRegistrations =
+        poolLifecycleService.registrationList(poolReport.getPoolView(), defPageablePool).stream()
+            .map(PoolRegistration::toDomain)
+            .collect(Collectors.toList());
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(PoolRegistration.class)
-                                                 .headerTitle(REGISTRATIONS_TITLE)
-                                                 .lstColumn(PoolRegistration.buildExportColumn())
-                                                 .lstData(poolRegistrations)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(PoolRegistration.class)
+            .headerTitle(REGISTRATIONS_TITLE)
+            .lstColumn(PoolRegistration.buildExportColumn())
+            .lstData(poolRegistrations)
+            .build());
   }
 
+  /**
+   * Get pool update export content
+   *
+   * @param poolReport pool report
+   * @return export content
+   */
   @Async
   public CompletableFuture<ExportContent> exportPoolUpdate(PoolReportHistory poolReport) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
-    List<PoolUpdate> poolRegistrations = poolLifecycleService.poolUpdateList(
-            poolReport.getPoolView(), defPageablePool)
-        .stream()
-        .map(PoolUpdate::toDomain)
-        .collect(Collectors.toList());
+    List<PoolUpdate> poolRegistrations =
+        poolLifecycleService.poolUpdateList(poolReport.getPoolView(), defPageablePool).stream()
+            .map(PoolUpdate::toDomain)
+            .collect(Collectors.toList());
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(PoolUpdate.class)
-                                                 .headerTitle(POOL_UPDATE_TITLE)
-                                                 .lstColumn(PoolUpdate.buildExportColumn())
-                                                 .lstData(poolRegistrations)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(PoolUpdate.class)
+            .headerTitle(POOL_UPDATE_TITLE)
+            .lstColumn(PoolUpdate.buildExportColumn())
+            .lstData(poolRegistrations)
+            .build());
   }
 
+  /**
+   * Get pool rewards distribution export content
+   *
+   * @param poolReport pool report
+   * @return export content
+   */
   @Async
   public CompletableFuture<ExportContent> exportRewardsDistribution(PoolReportHistory poolReport) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
-    List<RewardDistribution> poolRegistrations = poolLifecycleService.listReward(
-            poolReport.getPoolView(), defPageablePool)
-        .stream()
-        .map(RewardDistribution::toDomain)
-        .collect(Collectors.toList());
+    List<RewardDistribution> poolRegistrations =
+        poolLifecycleService.listReward(poolReport.getPoolView(), defPageablePool).stream()
+            .map(RewardDistribution::toDomain)
+            .collect(Collectors.toList());
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(RewardDistribution.class)
-                                                 .headerTitle(REWARD_DISTRIBUTION_TITLE)
-                                                 .lstColumn(RewardDistribution.buildExportColumn())
-                                                 .lstData(poolRegistrations)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(RewardDistribution.class)
+            .headerTitle(REWARD_DISTRIBUTION_TITLE)
+            .lstColumn(RewardDistribution.buildExportColumn())
+            .lstData(poolRegistrations)
+            .build());
   }
 
-
+  /**
+   * Get pool de-registration export content
+   *
+   * @param poolReport pool report
+   * @return export content
+   */
   @Async
   public CompletableFuture<ExportContent> exportPoolDeregistration(PoolReportHistory poolReport) {
-    log.info("Execute method {} asynchronously with thread {}",
-             Thread.currentThread().getStackTrace()[1].getMethodName(),
-             Thread.currentThread().getName());
-    List<PoolDeregistration> poolRegistrations = poolLifecycleService.deRegistration(
-            poolReport.getPoolView(), defPageablePool)
-        .stream()
-        .map(PoolDeregistration::toDomain)
-        .collect(Collectors.toList());
+    List<PoolDeregistration> poolRegistrations =
+        poolLifecycleService.deRegistration(poolReport.getPoolView(), defPageablePool).stream()
+            .map(PoolDeregistration::toDomain)
+            .collect(Collectors.toList());
 
-    return CompletableFuture.completedFuture(ExportContent.builder()
-                                                 .clazz(PoolDeregistration.class)
-                                                 .headerTitle(DEREGISTRATION_TITLE)
-                                                 .lstColumn(PoolDeregistration.buildExportColumn())
-                                                 .lstData(poolRegistrations)
-                                                 .build());
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(PoolDeregistration.class)
+            .headerTitle(DEREGISTRATION_TITLE)
+            .lstColumn(PoolDeregistration.buildExportColumn())
+            .lstData(poolRegistrations)
+            .build());
   }
 }

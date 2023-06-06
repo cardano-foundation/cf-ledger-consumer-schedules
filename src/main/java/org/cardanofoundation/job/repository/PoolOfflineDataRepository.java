@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import org.cardanofoundation.job.projection.PoolOfflineHashProjection;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineData;
+import org.cardanofoundation.job.projection.PoolOfflineHashProjection;
 
 public interface PoolOfflineDataRepository extends JpaRepository<PoolOfflineData, Long> {
   @Query(

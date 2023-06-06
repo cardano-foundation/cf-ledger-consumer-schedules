@@ -9,5 +9,4 @@ public interface FetchRewardDataService {
   Boolean fetchReward(Set<String> stakeKeySet);
 
   Boolean fetchReward(String poolView);
-
 }

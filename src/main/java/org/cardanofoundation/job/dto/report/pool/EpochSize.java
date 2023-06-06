@@ -39,8 +39,8 @@ public class EpochSize {
   public static List<ExportColumn> buildExportColumn() {
     List<ExportColumn> epochSizeColumns = new ArrayList<>();
     epochSizeColumns.add(
-        new ExportColumn(ColumnFieldEnum.EPOCH_COLUMN, ColumnTitleEnum.EPOCH_TITLE,
-                         Alignment.RIGHT));
+        new ExportColumn(
+            ColumnFieldEnum.EPOCH_COLUMN, ColumnTitleEnum.EPOCH_TITLE, Alignment.RIGHT));
     epochSizeColumns.add(
         new ExportColumn(ColumnFieldEnum.SIZE_COLUMN, ColumnTitleEnum.SIZE_TITLE, Alignment.RIGHT));
     return epochSizeColumns;

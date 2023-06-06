@@ -1,5 +1,11 @@
 package org.cardanofoundation.job;
 
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -38,12 +44,6 @@ import io.netty.handler.timeout.WriteTimeoutHandler;
 import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.transport.logging.AdvancedByteBufFormat;
-
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
 
 import org.junit.jupiter.api.Test;
 
@@ -92,13 +92,15 @@ class CardanoScheduleApplicationTests {
               if (statusCode.equals(NOT_FOUND)) {
                 return Optional.empty();
               } else if (statusCode.equals(
-                  FORBIDDEN)) {// log.error("FORBIDDEN for url: {}", poolHash.getUrl());
+                  FORBIDDEN)) { // log.error("FORBIDDEN for url: {}", poolHash.getUrl());
                 return Optional.empty();
               } else if (statusCode.equals(
-                  REQUEST_TIMEOUT)) {// log.error("REQUEST_TIMEOUT for url: {}", poolHash.getUrl());
+                  REQUEST_TIMEOUT)) { // log.error("REQUEST_TIMEOUT for url: {}",
+                // poolHash.getUrl());
                 return Optional.empty();
               } else if (statusCode.equals(
-                  MOVED_PERMANENTLY)) {// log.error("MOVED PERMANENTLY for url: {}", poolHash.getUrl());
+                  MOVED_PERMANENTLY)) { // log.error("MOVED PERMANENTLY for url: {}",
+                // poolHash.getUrl());
                 return Optional.empty();
               } else if (statusCode.equals(OK)) {
                 if (response.getHeaders().get(HttpHeaders.CONTENT_TYPE).stream()
@@ -107,7 +109,7 @@ class CardanoScheduleApplicationTests {
                             contentType.contains(MediaType.APPLICATION_JSON_VALUE)
                                 || contentType.contains(MediaType.TEXT_PLAIN_VALUE)
                                 || contentType.contains(
-                                MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
+                                    MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
                   return Optional.empty();
                 }
 

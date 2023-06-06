@@ -34,12 +34,13 @@ public class PoolUpdate {
   private BigDecimal adaValue;
 
   public static PoolUpdate toDomain(PoolUpdateDetailResponse response) {
-    PoolUpdate result = PoolUpdate.builder()
-        .txHash(response.getTxHash())
-        .time(response.getTime())
-        .adaValueHold(new BigDecimal(response.getPledge()))
-        .adaValueFee(new BigDecimal(response.getFee()))
-        .build();
+    PoolUpdate result =
+        PoolUpdate.builder()
+            .txHash(response.getTxHash())
+            .time(response.getTime())
+            .adaValueHold(new BigDecimal(response.getPledge()))
+            .adaValueFee(new BigDecimal(response.getFee()))
+            .build();
     result.setAdaValue(result.getAdaValueHold().subtract(result.getAdaValueFee()));
     result.setRawAdaValueFee(result.getAdaValueFee().doubleValue() / 1000000);
     return result;
@@ -48,15 +49,16 @@ public class PoolUpdate {
   public static List<ExportColumn> buildExportColumn() {
     List<ExportColumn> poolUpdateColumns = new ArrayList<>();
     poolUpdateColumns.add(
-        new ExportColumn(ColumnFieldEnum.TX_HASH_COLUMN, ColumnTitleEnum.TX_HASH_TITLE,
-                         Alignment.LEFT));
+        new ExportColumn(
+            ColumnFieldEnum.TX_HASH_COLUMN, ColumnTitleEnum.TX_HASH_TITLE, Alignment.LEFT));
     poolUpdateColumns.add(
-        new ExportColumn(ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE,
-                         Alignment.CENTER));
+        new ExportColumn(
+            ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE, Alignment.CENTER));
     poolUpdateColumns.add(
-        new ExportColumn(ColumnFieldEnum.ADA_VALUE_FEE_COLUMN,
-                         ColumnTitleEnum.ADA_VALUE_FEE_TITLE,
-                         Alignment.RIGHT));
+        new ExportColumn(
+            ColumnFieldEnum.ADA_VALUE_FEE_COLUMN,
+            ColumnTitleEnum.ADA_VALUE_FEE_TITLE,
+            Alignment.RIGHT));
     return poolUpdateColumns;
   }
 }

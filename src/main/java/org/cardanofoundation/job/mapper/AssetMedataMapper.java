@@ -1,10 +1,9 @@
 package org.cardanofoundation.job.mapper;
 
-import org.cardanofoundation.explorer.consumercommon.entity.AssetMetadata;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-
+import org.cardanofoundation.explorer.consumercommon.entity.AssetMetadata;
 import org.cardanofoundation.job.dto.AssetMetadataDTO;
 
 @Mapper(componentModel = "spring")

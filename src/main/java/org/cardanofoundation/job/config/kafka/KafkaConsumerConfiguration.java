@@ -19,11 +19,15 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ContainerProperties.AckMode;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
-import org.cardanofoundation.job.config.properties.KafkaProperties;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 
+import org.cardanofoundation.job.config.properties.KafkaProperties;
+
 @Configuration
-@ConditionalOnProperty(value = "kafka.configuration-enabled", matchIfMissing = true, havingValue = "true")
+@ConditionalOnProperty(
+    value = "kafka.configuration-enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @Slf4j
 public class KafkaConsumerConfiguration {

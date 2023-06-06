@@ -9,5 +9,5 @@ public interface StakeKeyReportService {
    *
    * @param stakeKeyReportHistory stake key report history
    */
-  void exportStakeKeyReport(StakeKeyReportHistory stakeKeyReportHistory) throws Exception ;
+  void exportStakeKeyReport(StakeKeyReportHistory stakeKeyReportHistory) throws Exception;
 }

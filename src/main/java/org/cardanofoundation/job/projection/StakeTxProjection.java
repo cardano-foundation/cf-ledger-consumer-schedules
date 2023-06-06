@@ -3,10 +3,17 @@ package org.cardanofoundation.job.projection;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 
-public interface StakeTxProjection {
-  Long getTxId();
-  BigInteger getAmount();
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.experimental.FieldDefaults;
 
-  Timestamp getTime();
+@Getter
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
+public class StakeTxProjection {
 
+  Long txId;
+  BigInteger amount;
+  Timestamp time;
 }
