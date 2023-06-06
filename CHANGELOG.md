@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.2.1](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.0.1...v0.2.1) (2023-06-06)
+
+
+### Features
+
+* add unit test for export func ([2512fd6](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/2512fd68774f015b00f90ba5772e63fc7661bfeb))
+* force 0.0.2 release and testing snapshot version update for develop branch ([67b0a21](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/67b0a21eb16f7aeed65feb205d1255f5641ac44c))
+* force 0.0.2 release and testing snapshot version update for develop branch ([607f27d](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/607f27da2f3f89f5cf471d406aeb2192fa289355))
+* force 0.0.2 release and testing snapshot version update for develop branch ([e6ea242](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/e6ea2421f18ba7cc9852190191d11e06b6440053))
+* force 0.0.3 release and testing snapshot version update for develop branch ([58a98ff](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/58a98ff99bd53b6812322d6c3c4bc643739d3ebc))
+* MET-1076 enable flyway, add scrip migration for report function ([a8ff9bc](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/a8ff9bc0ab6c4c5cb8fbc09056901bdc306c785c))
+
+
+### Bug Fixes
+
+* fix wrong uploaded_at datatype ([cc038db](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/cc038dbb46ce48d780e1ace4b7867a4fd68f4dae))
+* **gha:** fixed docker image tag env var ([19f3efd](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/19f3efd03f9caffd9c1caa5c52e02aaa421e1e27))
+
 ## [0.1.0](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.0.1...v0.1.0) (2023-05-30)
 
 
