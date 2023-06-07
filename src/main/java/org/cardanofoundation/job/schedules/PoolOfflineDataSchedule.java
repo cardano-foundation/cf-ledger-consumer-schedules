@@ -83,6 +83,7 @@ public class PoolOfflineDataSchedule {
 
   @Scheduled(fixedDelayString = "${jobs.pool-offline-data.fetch.delay}")
   public void fetchPoolOffline() {
+    log.info("Start fetching pool metadata ");
     poolOfflineDataFetchingService.fetchBatch(BigInteger.ZERO.intValue());
   }
 }

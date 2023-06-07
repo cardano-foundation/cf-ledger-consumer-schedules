@@ -148,3 +148,7 @@ cloud:
       path-style:
         enabled: true
       endpoint: ${S3_STORAGE_ENDPOINT:http://172.22.0.2:9000}
+
+logging:
+  level:
+    org.cardanofoundation: ${LOG:INFO}

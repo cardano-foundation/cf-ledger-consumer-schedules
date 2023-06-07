@@ -148,3 +148,7 @@ cloud:
       path-style:
         enabled: true
       endpoint: ${STORAGE_ENDPOINT:http://10.4.10.112:9000}
+
+logging:
+  level:
+    org.cardanofoundation: ${LOG:INFO}
