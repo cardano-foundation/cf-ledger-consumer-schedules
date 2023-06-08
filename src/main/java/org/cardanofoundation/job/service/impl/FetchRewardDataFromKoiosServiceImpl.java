@@ -3,6 +3,7 @@ package org.cardanofoundation.job.service.impl;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -18,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
 import org.cardanofoundation.job.repository.DelegationRepository;
 import org.cardanofoundation.job.repository.EpochRepository;
+import org.cardanofoundation.job.repository.PoolHistoryCheckpointRepository;
 import org.cardanofoundation.job.repository.RewardCheckpointRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 
@@ -30,13 +32,17 @@ public class FetchRewardDataFromKoiosServiceImpl implements FetchRewardDataServi
   @Value("${application.api.check-reward.base-url}")
   private String apiCheckRewardUrl;
 
+  @Value("${application.api.check-pool-history.base-url}")
+  private String apiCheckPoolHistoryUrl;
+
   private final RestTemplate restTemplate = new RestTemplate();
   private final RewardCheckpointRepository rewardCheckpointRepository;
   private final DelegationRepository delegationRepository;
   private final EpochRepository epochRepository;
+  private final PoolHistoryCheckpointRepository poolHistoryCheckpointRepository;
 
   @Override
-  public boolean checkRewardAvailable(String stakeKey) {
+  public Boolean checkRewardAvailable(String stakeKey) {
     return rewardCheckpointRepository.checkRewardByStakeAddressAndEpoch(stakeKey);
   }
 
@@ -82,5 +88,23 @@ public class FetchRewardDataFromKoiosServiceImpl implements FetchRewardDataServi
         poolView,
         System.currentTimeMillis() - startTime);
     return response;
+  }
+
+  @Override
+  public Boolean checkPoolHistoryForPool(Set<String> poolIds) {
+    Integer countCheckPoint =
+        poolHistoryCheckpointRepository.checkRewardByPoolViewAndEpoch(poolIds);
+    Integer sizeCheck = poolIds.size();
+    return Objects.equals(countCheckPoint, sizeCheck);
+  }
+
+  @Override
+  public Boolean fetchPoolHistoryForPool(Set<String> poolIds) {
+    return restTemplate.postForObject(apiCheckPoolHistoryUrl, poolIds, Boolean.class);
+  }
+
+  @Override
+  public Boolean isKoiOs() {
+    return true;
   }
 }
