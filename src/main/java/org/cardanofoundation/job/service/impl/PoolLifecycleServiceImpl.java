@@ -17,19 +17,24 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
 import org.cardanofoundation.job.dto.report.pool.DeRegistrationResponse;
+import org.cardanofoundation.job.dto.report.pool.EpochSize;
 import org.cardanofoundation.job.dto.report.pool.PoolUpdateDetailResponse;
 import org.cardanofoundation.job.dto.report.pool.RewardResponse;
 import org.cardanofoundation.job.dto.report.pool.TabularRegisResponse;
 import org.cardanofoundation.job.projection.EpochRewardProjection;
+import org.cardanofoundation.job.projection.EpochStakeRepository;
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
+import org.cardanofoundation.job.projection.PoolHistoryKoiOsProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
 import org.cardanofoundation.job.projection.StakeKeyProjection;
 import org.cardanofoundation.job.repository.PoolHashRepository;
+import org.cardanofoundation.job.repository.PoolHistoryRepository;
 import org.cardanofoundation.job.repository.PoolRetireRepository;
 import org.cardanofoundation.job.repository.PoolUpdateRepository;
 import org.cardanofoundation.job.repository.RewardRepository;
@@ -46,6 +51,8 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
   private final RewardRepository rewardRepository;
   private final PoolRetireRepository poolRetireRepository;
   private final FetchRewardDataService fetchRewardDataService;
+  private final PoolHistoryRepository poolHistoryRepository;
+  private final EpochStakeRepository epochStakeRepository;
 
   @Override
   public List<TabularRegisResponse> registrationList(String poolView, Pageable pageable) {
@@ -168,5 +175,45 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
           });
     }
     return deRegistrations;
+  }
+
+  @Override
+  public List<EpochSize> getPoolSizes(PoolReportHistory poolReportHistory, Pageable pageable) {
+
+    boolean isKoiOs = fetchRewardDataService.isKoiOs();
+    if (isKoiOs) {
+      Set<String> poolReportSet = Set.of(poolReportHistory.getPoolView());
+      boolean isHistory = fetchRewardDataService.checkPoolHistoryForPool(poolReportSet);
+      List<PoolHistoryKoiOsProjection> poolHistoryProjections = new ArrayList<>();
+      if (!isHistory) {
+        boolean isFetch = fetchRewardDataService.fetchPoolHistoryForPool(poolReportSet);
+        if (isFetch) {
+          poolHistoryProjections =
+              poolHistoryRepository.getPoolHistoryKoiOs(
+                  poolReportHistory.getPoolView(),
+                  poolReportHistory.getBeginEpoch(),
+                  poolReportHistory.getEndEpoch());
+        }
+      } else {
+        poolHistoryProjections =
+            poolHistoryRepository.getPoolHistoryKoiOs(
+                poolReportHistory.getPoolView(),
+                poolReportHistory.getBeginEpoch(),
+                poolReportHistory.getEndEpoch());
+      }
+
+      return poolHistoryProjections.stream().map(EpochSize::toDomain).collect(Collectors.toList());
+    } else {
+      return epochStakeRepository
+          .getEpochSizeByPoolReport(
+              poolReportHistory.getPoolView(),
+              poolReportHistory.getBeginEpoch(),
+              poolReportHistory.getEndEpoch(),
+              pageable)
+          .getContent()
+          .stream()
+          .map(EpochSize::toDomain)
+          .collect(Collectors.toList());
+    }
   }
 }

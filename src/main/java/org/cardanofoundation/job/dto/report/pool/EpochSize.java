@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import org.cardanofoundation.job.projection.PoolHistoryKoiOsProjection;
 import org.cardanofoundation.job.projection.PoolReportProjection;
 import org.cardanofoundation.job.util.report.ColumnFieldEnum;
 import org.cardanofoundation.job.util.report.ColumnTitleEnum;
@@ -33,6 +34,14 @@ public class EpochSize {
         .fee(projection.getFee())
         .size(new BigDecimal(projection.getSize()))
         .rawSize(new BigDecimal(projection.getSize()).doubleValue() / 1000000)
+        .build();
+  }
+
+  public static EpochSize toDomain(PoolHistoryKoiOsProjection projection) {
+    return EpochSize.builder()
+        .epoch(projection.getEpochNo().toString())
+        .size(new BigDecimal(projection.getActiveStake()))
+        .fee(projection.getPoolFees())
         .build();
   }
 

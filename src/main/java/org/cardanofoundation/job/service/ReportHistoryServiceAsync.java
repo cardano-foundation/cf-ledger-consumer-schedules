@@ -28,7 +28,6 @@ import org.cardanofoundation.job.dto.report.stake.StakeRegistrationLifeCycle;
 import org.cardanofoundation.job.dto.report.stake.StakeRewardResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWalletActivityResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWithdrawalFilterResponse;
-import org.cardanofoundation.job.projection.EpochStakeRepository;
 import org.cardanofoundation.job.util.report.ExportContent;
 
 @Component
@@ -47,7 +46,6 @@ public class ReportHistoryServiceAsync {
   private static final String DEREGISTRATION_TITLE = "Deregistration";
   private final StakeKeyLifeCycleService stakeKeyLifeCycleService;
 
-  private final EpochStakeRepository epochStakeRepository;
   private final PoolLifecycleService poolLifecycleService;
 
   @Value("${jobs.limit-content}")
@@ -207,18 +205,7 @@ public class ReportHistoryServiceAsync {
   @Async
   public CompletableFuture<ExportContent> exportEpochSize(PoolReportHistory poolReport) {
     Pageable epochSizePage = PageRequest.of(0, limitSize, Sort.by("epochNo").descending());
-    List<EpochSize> epochSizes =
-        epochStakeRepository
-            .getEpochSizeByPoolReport(
-                poolReport.getPoolView(),
-                poolReport.getBeginEpoch(),
-                poolReport.getEndEpoch(),
-                epochSizePage)
-            .getContent()
-            .stream()
-            .map(EpochSize::toDomain)
-            .collect(Collectors.toList());
-
+    List<EpochSize> epochSizes = poolLifecycleService.getPoolSizes(poolReport, epochSizePage);
     return CompletableFuture.completedFuture(
         ExportContent.builder()
             .clazz(EpochSize.class)
