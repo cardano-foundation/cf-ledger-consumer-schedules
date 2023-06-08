@@ -23,14 +23,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
 import org.cardanofoundation.job.projection.EpochRewardProjection;
-import org.cardanofoundation.job.projection.EpochStakeRepository;
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
 import org.cardanofoundation.job.projection.StakeKeyProjection;
-import org.cardanofoundation.job.repository.EpochRepository;
 import org.cardanofoundation.job.repository.PoolHashRepository;
 import org.cardanofoundation.job.repository.PoolRetireRepository;
 import org.cardanofoundation.job.repository.PoolUpdateRepository;

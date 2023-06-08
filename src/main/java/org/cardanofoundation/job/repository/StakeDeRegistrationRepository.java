@@ -1,8 +1,6 @@
 package org.cardanofoundation.job.repository;
 
 import java.sql.Timestamp;
-import java.util.Collection;
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,14 +15,6 @@ import org.cardanofoundation.job.projection.StakeHistoryProjection;
 
 @Repository
 public interface StakeDeRegistrationRepository extends JpaRepository<StakeDeregistration, Long> {
-
-  @Query(
-      value =
-          "SELECT sd.tx.id"
-              + " FROM StakeDeregistration sd"
-              + " WHERE sd.addr = :stakeKey AND sd.tx.id IN :txIds")
-  List<Long> getStakeDeRegistrationsByAddressAndTxIn(
-      @Param("stakeKey") StakeAddress stakeKey, @Param("txIds") Collection<Long> txIds);
 
   @Query(
       value =

@@ -20,7 +20,7 @@ public enum ColumnTitleEnum {
   WITHDRAWN_TITLE("Withdrawn"),
   AMOUNT_ADA_TITLE("Amount ADA"),
   DEPOSIT_TITLE("Hold"),
-  FEES_TITLE("Fees Paid"),
+  FEES_TITLE("Fees"),
   TX_TYPE_TITLE("Transaction Type"),
   TX_STATUS_TITLE("Transaction Status"),
   STATUS_TITLE("Status"),
