@@ -24,7 +24,6 @@ public class StakeWalletActivityResponse implements Serializable {
   private Double rawAmount;
   private BigInteger fee;
   private LocalDateTime time;
-  private String type;
   private TxStatus status;
 
   public static List<ExportColumn> buildExportColumn() {
@@ -38,9 +37,6 @@ public class StakeWalletActivityResponse implements Serializable {
     columns.add(
         new ExportColumn(
             ColumnFieldEnum.TX_HASH_COLUMN, ColumnTitleEnum.TX_HASH_TITLE, Alignment.LEFT));
-    columns.add(
-        new ExportColumn(
-            ColumnFieldEnum.TYPE_COLUMN, ColumnTitleEnum.TX_TYPE_TITLE, Alignment.CENTER));
     columns.add(
         new ExportColumn(
             ColumnFieldEnum.STATUS_COLUMN, ColumnTitleEnum.STATUS_TITLE, Alignment.CENTER));
