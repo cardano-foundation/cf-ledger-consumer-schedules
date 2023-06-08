@@ -1,7 +1,6 @@
 package org.cardanofoundation.job.repository;
 
 import java.sql.Timestamp;
-import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,11 +31,4 @@ public interface WithdrawalRepository extends JpaRepository<Withdrawal, Long> {
       @Param("fromTime") Timestamp fromTime,
       @Param("toTime") Timestamp toTime,
       Pageable pageable);
-
-  @Query(
-      "SELECT withdrawal.tx.id"
-          + " FROM Withdrawal withdrawal"
-          + " WHERE withdrawal.addr = :stakeKey AND withdrawal.tx.id IN :txIds")
-  List<Long> getWithdrawalByAddressAndTxIn(
-      @Param("stakeKey") StakeAddress stakeKey, @Param("txIds") List<Long> txIds);
 }
