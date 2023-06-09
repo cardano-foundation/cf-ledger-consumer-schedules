@@ -32,7 +32,6 @@ import org.cardanofoundation.job.projection.PoolHistoryKoiOsProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
-import org.cardanofoundation.job.projection.StakeKeyProjection;
 import org.cardanofoundation.job.repository.PoolHashRepository;
 import org.cardanofoundation.job.repository.PoolHistoryRepository;
 import org.cardanofoundation.job.repository.PoolRetireRepository;
@@ -60,26 +59,8 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
     Page<PoolRegistrationProjection> projection =
         poolHashRepository.getPoolRegistrationByPool(poolView, pageable);
     if (Objects.nonNull(projection)) {
-      Set<Long> poolUpdateIds = new HashSet<>();
       projection.stream()
-          .forEach(
-              tabularRegis -> {
-                tabularRegisList.add(new TabularRegisResponse(tabularRegis));
-                poolUpdateIds.add(tabularRegis.getPoolUpdateId());
-              });
-      List<StakeKeyProjection> stakeKeyProjections =
-          poolUpdateRepository.findOwnerAccountByPoolUpdate(poolUpdateIds);
-      Map<Long, List<StakeKeyProjection>> stakeKeyProjectionMap =
-          stakeKeyProjections.stream()
-              .collect(Collectors.groupingBy(StakeKeyProjection::getPoolUpdateId));
-      Map<Long, List<String>> stakeKeyStrMap = new HashMap<>();
-      stakeKeyProjectionMap.forEach(
-          (k, v) ->
-              stakeKeyStrMap.put(
-                  k, v.stream().map(StakeKeyProjection::getView).collect(Collectors.toList())));
-      tabularRegisList.forEach(
-          tabularRegis ->
-              tabularRegis.setStakeKeys(stakeKeyStrMap.get(tabularRegis.getPoolUpdateId())));
+          .forEach(tabularRegis -> tabularRegisList.add(new TabularRegisResponse(tabularRegis)));
     }
     return tabularRegisList;
   }
