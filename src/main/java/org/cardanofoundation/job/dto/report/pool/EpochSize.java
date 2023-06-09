@@ -42,6 +42,7 @@ public class EpochSize {
         .epoch(projection.getEpochNo().toString())
         .size(new BigDecimal(projection.getActiveStake()))
         .fee(projection.getPoolFees())
+        .rawSize(new BigDecimal(projection.getActiveStake()).doubleValue() / 1000000)
         .build();
   }
 
