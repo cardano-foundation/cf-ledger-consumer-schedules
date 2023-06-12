@@ -1,6 +1,5 @@
 package org.cardanofoundation.job.service.impl;
 
-import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -9,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -22,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
 import org.cardanofoundation.explorer.consumercommon.entity.Tx;
-import org.cardanofoundation.job.common.enumeration.StakeTxType;
 import org.cardanofoundation.job.common.enumeration.TxStatus;
 import org.cardanofoundation.job.dto.report.stake.StakeDelegationFilterResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
@@ -37,10 +34,10 @@ import org.cardanofoundation.job.repository.RewardRepository;
 import org.cardanofoundation.job.repository.StakeAddressRepository;
 import org.cardanofoundation.job.repository.StakeDeRegistrationRepository;
 import org.cardanofoundation.job.repository.StakeRegistrationRepository;
+import org.cardanofoundation.job.repository.TxRepository;
 import org.cardanofoundation.job.repository.WithdrawalRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 import org.cardanofoundation.job.service.StakeKeyLifeCycleService;
-import org.cardanofoundation.job.service.StakeKeyLifeCycleServiceAsync;
 import org.cardanofoundation.job.util.DataUtil;
 
 @Service
@@ -56,14 +53,13 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
   private final RewardRepository rewardRepository;
   private final WithdrawalRepository withdrawalRepository;
   private final FetchRewardDataService fetchRewardDataService;
-  private final StakeKeyLifeCycleServiceAsync asyncService;
   private final AddressTxBalanceRepository addressTxBalanceRepository;
+  private final TxRepository txRepository;
 
   @Override
   public List<StakeWalletActivityResponse> getStakeWalletActivities(
       String stakeKey, Pageable pageable, StakeLifeCycleFilterRequest condition) {
 
-    StakeAddress stakeAddress = stakeAddressRepository.findByView(stakeKey);
     makeCondition(condition);
 
     var txAmountList =
@@ -81,37 +77,14 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
      * in parallel to reduce the time
      */
     List<CompletableFuture<List<Tx>>> txFutureList = new ArrayList<>();
-    List<CompletableFuture<List<Long>>> registrationFutureList = new ArrayList<>();
-    List<CompletableFuture<List<Long>>> deregistrationFutureList = new ArrayList<>();
-    List<CompletableFuture<List<Long>>> delegationFutureList = new ArrayList<>();
-    List<CompletableFuture<List<Long>>> withdrawalFutureList = new ArrayList<>();
 
     int subListSize = 50000;
     for (int i = 0; i < txIds.size(); i += subListSize) {
       List<Long> subTxList = txIds.subList(i, Math.min(txIds.size(), i + subListSize));
-      txFutureList.add(asyncService.findTxByIdIn(subTxList));
-      registrationFutureList.add(
-          asyncService.findStakeRegistrationByAddressAndTxIn(stakeAddress, subTxList));
-      deregistrationFutureList.add(
-          asyncService.findStakeDeRegistrationByAddressAndTxIn(stakeAddress, subTxList));
-      delegationFutureList.add(
-          asyncService.findDelegationByAddressAndTxIn(stakeAddress, subTxList));
-      withdrawalFutureList.add(
-          asyncService.findWithdrawalByAddressAndTxIn(stakeAddress, subTxList));
+      txFutureList.add(CompletableFuture.supplyAsync(() -> txRepository.findByIdIn(subTxList)));
     }
 
     var txList = txFutureList.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
-    var registrationList =
-        registrationFutureList.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
-    var deregistrationList =
-        deregistrationFutureList.stream()
-            .map(CompletableFuture::join)
-            .flatMap(List::stream)
-            .toList();
-    var delegationList =
-        delegationFutureList.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
-    var withdrawalList =
-        withdrawalFutureList.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
 
     Map<Long, Tx> txMap = txList.stream().collect(Collectors.toMap(Tx::getId, Function.identity()));
 
@@ -130,11 +103,6 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
               } else {
                 stakeWalletActivity.setStatus(TxStatus.FAIL);
               }
-              stakeWalletActivity.setType(
-                  getStakeTxType(
-                      stakeWalletActivity, txMap.get(item.getTxId()),
-                      registrationList, deregistrationList,
-                      delegationList, withdrawalList));
               return stakeWalletActivity;
             })
         .toList();
@@ -258,46 +226,6 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
 
   private Long makePositive(Long value) {
     return value == null ? null : Math.abs(value);
-  }
-
-  private String getStakeTxType(
-      StakeWalletActivityResponse stakeWalletActivity,
-      Tx tx,
-      List<Long> registrationList,
-      List<Long> deregistrationList,
-      List<Long> delegationList,
-      List<Long> withdrawList) {
-    boolean isRegistration = registrationList.contains(tx.getId());
-    boolean isDeRegistration = deregistrationList.contains(tx.getId());
-    boolean isDelegation = delegationList.contains(tx.getId());
-    boolean isWithdraw = withdrawList.contains(tx.getId());
-    BigInteger fee = tx.getFee();
-    BigInteger amount = stakeWalletActivity.getAmount();
-    if (isWithdraw) {
-      if (isRegistration) {
-        return StakeTxType.REWARD_WITHDRAWN_AND_CERTIFICATE_HOLD_PAID.getValue();
-      } else if (isDeRegistration) {
-        return StakeTxType.REWARD_WITHDRAWN_AND_CERTIFICATE_HOLD_DEPOSIT_REFUNDED.getValue();
-      } else {
-        return StakeTxType.REWARD_WITHDRAWN.getValue();
-      }
-    } else {
-      if (isRegistration) {
-        return StakeTxType.CERTIFICATE_HOLD_PAID.getValue();
-      } else if (isDeRegistration) {
-        return StakeTxType.CERTIFICATE_HOLD_DEPOSIT_REFUNDED.getValue();
-      } else if (isDelegation) {
-        return StakeTxType.CERTIFICATE_FEE_PAID.getValue();
-      } else if (Objects.nonNull(fee)
-          && fee.abs().compareTo(stakeWalletActivity.getAmount().abs()) == 0) {
-        return StakeTxType.FEE_PAID.getValue();
-      } else if (amount != null && amount.compareTo(BigInteger.ZERO) < 0) {
-        return StakeTxType.SENT.getValue();
-      } else if (amount != null && amount.compareTo(BigInteger.ZERO) > 0) {
-        return StakeTxType.RECEIVED.getValue();
-      }
-    }
-    return StakeTxType.UNKNOWN.getValue();
   }
 
   private void makeCondition(StakeLifeCycleFilterRequest condition) {
