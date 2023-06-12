@@ -1,6 +1,5 @@
 package org.cardanofoundation.job.service.impl;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -11,9 +10,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
 import org.cardanofoundation.explorer.consumercommon.entity.Tx;
-import org.cardanofoundation.job.common.enumeration.StakeTxType;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
 import org.cardanofoundation.job.projection.StakeDelegationProjection;
 import org.cardanofoundation.job.projection.StakeHistoryProjection;
@@ -44,9 +40,9 @@ import org.cardanofoundation.job.repository.RewardRepository;
 import org.cardanofoundation.job.repository.StakeAddressRepository;
 import org.cardanofoundation.job.repository.StakeDeRegistrationRepository;
 import org.cardanofoundation.job.repository.StakeRegistrationRepository;
+import org.cardanofoundation.job.repository.TxRepository;
 import org.cardanofoundation.job.repository.WithdrawalRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
-import org.cardanofoundation.job.service.StakeKeyLifeCycleServiceAsync;
 
 @ExtendWith(MockitoExtension.class)
 class StakeKeyLifeCycleServiceImplTest {
@@ -64,7 +60,7 @@ class StakeKeyLifeCycleServiceImplTest {
   @Mock private StakeDeRegistrationRepository stakeDeRegistrationRepository;
   @Mock private WithdrawalRepository withdrawalRepository;
   @Mock private AddressTxBalanceRepository addressTxBalanceRepository;
-  @Mock private StakeKeyLifeCycleServiceAsync stakeKeyLifeCycleServiceAsync;
+  @Mock private TxRepository txRepository;
   @InjectMocks private StakeKeyLifeCycleServiceImpl stakeKeyLifeCycleService;
 
   @Mock private FetchRewardDataService fetchRewardDataService;
@@ -189,35 +185,35 @@ class StakeKeyLifeCycleServiceImplTest {
     StakeLifeCycleFilterRequest condition =
         StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
 
-    when(stakeAddressRepository.findByView(anyString())).thenReturn(stakeAddress);
     when(addressTxBalanceRepository.findTxAndAmountByStake(
             stakeAddress.getView(), condition.getFromDate(), condition.getToDate(), pageable))
         .thenReturn(page);
 
-    when(stakeKeyLifeCycleServiceAsync.findTxByIdIn(any()))
-        .thenReturn(CompletableFuture.completedFuture(txList));
-    when(stakeKeyLifeCycleServiceAsync.findStakeRegistrationByAddressAndTxIn(any(), any()))
-        .thenReturn(CompletableFuture.completedFuture(List.of(102L)));
-    when(stakeKeyLifeCycleServiceAsync.findStakeDeRegistrationByAddressAndTxIn(any(), any()))
-        .thenReturn(CompletableFuture.completedFuture(List.of(105L)));
-    when(stakeKeyLifeCycleServiceAsync.findDelegationByAddressAndTxIn(any(), any()))
-        .thenReturn(CompletableFuture.completedFuture(List.of(104L)));
-    when(stakeKeyLifeCycleServiceAsync.findWithdrawalByAddressAndTxIn(any(), any()))
-        .thenReturn(CompletableFuture.completedFuture(Collections.emptyList()));
+    when(txRepository.findByIdIn(any())).thenReturn(txList);
 
     var response =
         stakeKeyLifeCycleService.getStakeWalletActivities(
             stakeAddress.getView(), pageable, condition);
 
     Assertions.assertEquals(6, response.size());
-    Assertions.assertEquals(StakeTxType.SENT.getValue(), response.get(0).getType());
-    Assertions.assertEquals(StakeTxType.RECEIVED.getValue(), response.get(1).getType());
     Assertions.assertEquals(
-        StakeTxType.CERTIFICATE_HOLD_PAID.getValue(), response.get(2).getType());
-    Assertions.assertEquals(StakeTxType.FEE_PAID.getValue(), response.get(3).getType());
-    Assertions.assertEquals(StakeTxType.CERTIFICATE_FEE_PAID.getValue(), response.get(4).getType());
+        response.get(0).getTxHash(),
+        "11ae03377b31c749d2d549674100986ec4ee68ac72e211404647f5ae0ce8686b");
     Assertions.assertEquals(
-        StakeTxType.CERTIFICATE_HOLD_DEPOSIT_REFUNDED.getValue(), response.get(5).getType());
+        response.get(1).getTxHash(),
+        "3a4de98d4652281ff2c747bbe0582c985d590ca57bc783fa3e5e0c23b126d6ca");
+    Assertions.assertEquals(
+        response.get(2).getTxHash(),
+        "17c5b738f4de8a67882791d261f7fcbd6671e4eae29936171ac48307c18d191e");
+    Assertions.assertEquals(
+        response.get(3).getTxHash(),
+        "5b995ad32ba2c0bb86e224441845d8adc71a03be932360b93e1a04bd459b02da");
+    Assertions.assertEquals(
+        response.get(4).getTxHash(),
+        "e985489b135b68add6f0f13a3e3b7f513f9e56e4710faee8b0c5065afb4419d1");
+    Assertions.assertEquals(
+        response.get(5).getTxHash(),
+        "817c26fc41a840f640c83ddda096a51406649402fc7dde0739131b209e9432b6");
   }
 
   @Test

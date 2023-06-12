@@ -4,9 +4,15 @@ import java.util.Set;
 
 public interface FetchRewardDataService {
 
-  boolean checkRewardAvailable(String stakeKey);
+  Boolean checkRewardAvailable(String stakeKey);
 
   Boolean fetchReward(Set<String> stakeKeySet);
 
   Boolean fetchReward(String poolView);
+
+  Boolean checkPoolHistoryForPool(Set<String> poolIds);
+
+  Boolean fetchPoolHistoryForPool(Set<String> poolIds);
+
+  Boolean isKoiOs();
 }

@@ -92,10 +92,11 @@ application:
   api:
     check-reward:
       base-url: ${API_CHECK_REWARD_URL:http://10.4.10.112:8888/api/v1/rewards/fetch}
+    check-pool-history:
+      base-url: ${API_CHECK_POOL_HISTORY_URL:http://10.4.10.231:8888/api/v1/pool-history/fetch}
 
 kafka:
   bootstrap-servers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:9092}
-  auto-create-topics: false
   topics:
     reports:
       name: reports
@@ -128,7 +129,7 @@ kafka:
       autoCommitIntervalMs: 1000
       sessionTimeoutMs: 30000
       trustedPackages: "*"
-      allowAutoCreateTopics: false
+      allowAutoCreateTopics: true
       concurrency: 6
       pollTimeout: 360000000
       groupId: ${KAFKA_GROUP_ID:mainnet}
@@ -149,3 +150,7 @@ cloud:
       path-style:
         enabled: true
       endpoint: ${S3_STORAGE_ENDPOINT:http://172.22.0.2:9000}
+
+logging:
+  level:
+    org.cardanofoundation: ${LOG:INFO}

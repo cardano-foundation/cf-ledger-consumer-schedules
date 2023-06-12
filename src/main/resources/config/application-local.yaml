@@ -53,7 +53,7 @@ spring:
       thread-name-prefix: Executorxx-
   ## Flyway config
   flyway:
-    enabled: ${FLYWAY_ENABLE:true}
+    enabled: ${FLYWAY_ENABLE:false}
     url: ${spring.datasource.url}
     user: ${spring.datasource.username}
     password: ${spring.datasource.password}
@@ -92,10 +92,11 @@ application:
   api:
     check-reward:
       base-url: ${API_CHECK_REWARD_URL:http://10.4.10.112:8888/api/v1/rewards/fetch}
+    check-pool-history:
+      base-url: ${API_CHECK_POOL_HISTORY_URL:http://10.4.10.231:8888/api/v1/pool-history/fetch}
 
 kafka:
   configuration-enabled: ${KAFKA_CONFIGURATION_ENABLED:true}
-  auto-create-topics: false
   topics:
     reports:
       name: reports
@@ -128,7 +129,7 @@ kafka:
       autoCommitIntervalMs: 1000
       sessionTimeoutMs: 30000
       trustedPackages: "*"
-      allowAutoCreateTopics: false
+      allowAutoCreateTopics: true
       concurrency: 6
       pollTimeout: 360000000
       groupId: ${SCHEMA:mainnet}
@@ -149,3 +150,7 @@ cloud:
       path-style:
         enabled: true
       endpoint: ${STORAGE_ENDPOINT:http://10.4.10.112:9000}
+
+logging:
+  level:
+    org.cardanofoundation: ${LOG:INFO}
