@@ -1,16 +1,18 @@
 package org.cardanofoundation.job.schedules;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.cardanofoundation.job.repository.aggregate.AggregateAddressTokenRepository;
-import org.cardanofoundation.job.repository.aggregate.AggregateAddressTxBalanceRepository;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.function.BiConsumer;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import org.cardanofoundation.job.repository.aggregate.AggregateAddressTokenRepository;
+import org.cardanofoundation.job.repository.aggregate.AggregateAddressTxBalanceRepository;
 
 @Component
 @Slf4j
@@ -31,12 +33,12 @@ public class AggregateAnalyticSchedule {
     log.info("Run job [{}] successfully, time exec: [{} ms]", jobName, timeExec);
   }
 
-  @Scheduled(cron = "0 0 0 * * *", zone = "UTC") //midnight utc
+  @Scheduled(cron = "0 0 0 * * *", zone = "UTC") // midnight utc
   public void sumBalanceTokenOfDay() {
     runJob(aggregateAddressTokenRepository::insertDataForDay, "sumBalanceTokenOfDay");
   }
 
-  @Scheduled(cron = "0 0 0 * * *", zone = "UTC") //midnight utc
+  @Scheduled(cron = "0 0 0 * * *", zone = "UTC") // midnight utc
   public void sumBalanceAddressOfDay() {
     runJob(aggregateAddressTxBalanceRepository::insertDataForDay, "sumBalanceAddressOfDay");
   }
