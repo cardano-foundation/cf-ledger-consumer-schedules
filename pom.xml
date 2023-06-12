@@ -26,7 +26,7 @@
     <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     <version.ledgersync-common>0.1.0-SNAPSHOT</version.ledgersync-common>
     <version.explorer-common>0.1.1-SNAPSHOT</version.explorer-common>
-    <version.explorer-consumer-common>0.1.4-SNAPSHOT-PR43</version.explorer-consumer-common>
+    <version.explorer-consumer-common>0.1.4-PR61</version.explorer-consumer-common>
     <version.spring-cloud-aws>2.4.2</version.spring-cloud-aws>
     <version.lombok>1.18.26</version.lombok>
     <version.eclipse.jgit>6.5.0.202303070854-r</version.eclipse.jgit>
