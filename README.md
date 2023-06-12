@@ -13,6 +13,7 @@ Run schedule task
 - REPORT_HISTORY_JOB_ENABLED: enable report history job to delete expired file. Default `true`
 - EXPIRED_REPORTS_RATE: delay time between each report history job run. Default `86400000` as 1 day
 - API_CHECK_REWARD_URL: api url to fetch reward
+- API_CHECK_POOL_HISTORY_URL: api url to fetch pool history
 - NETWORK_NAME: cardano node network name (preprod, testnet, mainnet)
 - KAFKA_CONFIGURATION_ENABLED: enable kafka configuration, default `true`
 - KAFKA_BOOSTRAP_SERVER_URL: kafka bootstrap serve. Default `localhost:9092`
