@@ -15,14 +15,14 @@ public interface PoolHistoryRepository extends JpaRepository<PoolHistory, Long> 
 
   @Query(
       value =
-          "SELECT ph.epochNo AS epochNo, CAST(ph.delegRewards AS BigInteger) AS delegateReward, ph.epochRos AS ros, "
-              + "CAST(ph.activeStake AS BigInteger) AS activeStake, CAST(ph.poolFees AS BigInteger) AS poolFees "
+          "SELECT ph.epochNo AS epochNo, ph.delegatorRewards AS delegateReward, ph.epochRos AS ros, "
+              + "ph.activeStake AS activeStake, ph.poolFees AS poolFees "
               + "FROM PoolHistory ph "
-              + "WHERE ph.poolId = :poolId "
+              + "WHERE ph.pool.view = :poolView "
               + "AND ph.epochNo between :epochBegin and :epochEnd "
               + "ORDER BY ph.epochNo DESC")
   List<PoolHistoryKoiOsProjection> getPoolHistoryKoiOs(
-      @Param("poolId") String poolId,
+      @Param("poolView") String poolView,
       @Param("epochBegin") int epochBegin,
       @Param("epochEnd") int epochEnd);
 }
