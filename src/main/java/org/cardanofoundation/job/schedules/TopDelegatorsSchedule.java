@@ -23,10 +23,6 @@ import java.util.stream.Collectors;
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
-@ConditionalOnProperty(
-        value = "top-delegators.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
 public class TopDelegatorsSchedule {
     private static final int MAX_ELEMENT_CACHE = 500;
     private static final String COLON = ":";
