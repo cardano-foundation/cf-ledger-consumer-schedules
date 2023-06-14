@@ -80,6 +80,9 @@ jobs:
     insert:
       delay: ${INSERT_POOL_DATA_DELAY:180000}
       innit: 5000
+  top-delegators:
+    enabled: ${TOP_DELEGATORS_JOB_ENABLED:true}
+    fixed-delay: ${TOP_DELEGATORS_FIXED_DELAY:300000}
   install-batch: 100
   limit-content: 100000
 
