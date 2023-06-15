@@ -156,3 +156,6 @@ cloud:
 logging:
   level:
     org.cardanofoundation: ${LOG:INFO}
+    io.netty: ${LOG:INFO}
+    java.nio.channels: OFF
+    reactor.netty: OFF
