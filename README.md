@@ -26,3 +26,4 @@ Run schedule task
 - S3_STORAGE_ENDPOINT: the storage endpoint, only for S3 clone (either on localhost, Minio, etc.)
 - SPRING_PROFILES_ACTIVE: active profiles
 - LOG: application log level 
+- TOP_DELEGATORS_FIXED_DELAY: top delegator fixed delay when run cron job
