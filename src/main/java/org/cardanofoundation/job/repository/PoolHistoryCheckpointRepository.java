@@ -16,6 +16,6 @@ public interface PoolHistoryCheckpointRepository
   @Query(
       "SELECT COUNT(cp.id) FROM PoolHistoryCheckpoint cp "
           + "WHERE cp.view IN :poolViews AND cp.epochCheckpoint = "
-          + "(SELECT max(e.no) - 1 FROM Epoch e) AND cp.earnedReward = TRUE")
+          + "(SELECT max(e.no) - 1 FROM Epoch e) AND cp.isSpendableReward = TRUE")
   Integer checkRewardByPoolViewAndEpoch(@Param("poolViews") Set<String> poolViews);
 }
