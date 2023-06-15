@@ -33,3 +33,5 @@ Run schedule task
 - META_DATA_JOB_ENABLED: enable metadata job
 - TOKEN_METADATA_URL: url that store token
 - TOKEN_METADATA_FOLDER: store token
+- TOP_DELEGATORS_FIXED_DELAY: top delegator fixed delay when run cron job
+
