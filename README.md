@@ -34,4 +34,7 @@ Run schedule task
 - TOKEN_METADATA_URL: url that store token
 - TOKEN_METADATA_FOLDER: store token
 - TOP_DELEGATORS_FIXED_DELAY: top delegator fixed delay when run cron job
-
+- REDIS_SENTINEL_PASSWORD : Redis sentinel password. Default is redis_sentinel_pass.
+- REDIS_SENTINEL_HOST : Redis sentinel host. Default is  cardano.redis.sentinel.
+- REDIS_SENTINEL_PORT : Redis sentinel port. Default is 26379.
+- REDIS_SENTINEL_MASTER_NAME : Redis master name. Default is mymaster.
