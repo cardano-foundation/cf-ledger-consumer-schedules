@@ -1,6 +1,6 @@
 # Infrastructure domain
 infrastructure:
-  host: ${HOST:10.4.10.112}
+  host: ${POSTGRES_HOST:10.4.10.112}
 spring:
   # Datasource specific configs
   datasource:
@@ -38,7 +38,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc.batch_size: 1000
-        default_schema: ${SCHEMA:mainnet}
+        default_schema: ${POSTGRES_SCHEMA:mainnet}
         show_sql: false
         format_sql: true
         order_inserts: true
@@ -72,7 +72,7 @@ jobs:
   report-history:
     enabled: ${REPORT_HISTORY_JOB_ENABLED:true}
     expired:
-      rate: ${EXPIRED_REPORTS_RATE:86400000} # 1 day
+      rate: ${SET_EXPIRED_REPORTS_DELAY:86400000} # 1 day
   pool-offline-data:
     enabled: ${POOL_OFFLINE_DATA_JOB_ENABLED:false}
     fetch:
@@ -83,17 +83,17 @@ jobs:
   top-delegators:
     fixed-delay: ${TOP_DELEGATORS_FIXED_DELAY:300000}
   install-batch: 100
-  limit-content: 1000000
+  limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
 token:
   metadata:
-    url: ${TOKEN-METDATA-URL:https://github.com/cardano-foundation/cardano-token-registry.git}
-    folder: ${TOKEN-METADATA-FOLDER:/mappings}
+    url: ${TOKEN_METADATA_URL:https://github.com/cardano-foundation/cardano-token-registry.git}
+    folder: ${TOKEN_METADATA_FOLDER:/mappings}
 application:
   network: ${NETWORK_NAME:mainnet}
   api:
     check-reward:
-      base-url: ${API_CHECK_REWARD_URL:http://10.4.10.112:8888/api/v1/rewards/fetch}
+      base-url: ${API_CHECK_REWARD_URL:http://10.4.10.231:8888/api/v1/rewards/fetch}
     check-pool-history:
       base-url: ${API_CHECK_POOL_HISTORY_URL:http://10.4.10.231:8888/api/v1/pool-history/fetch}
 
@@ -105,12 +105,12 @@ kafka:
       partitions: 1
       replicationFactor: 1
   admin:
-    bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
+    bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:29092}
   producers:
     json-producer:
       clientId: json-producer
       retries: 3
-      bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
+      bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:29092}
       maxInFlightRequestsPerConnection: 1
       requestTimeoutMs: 30000
       batchSize: 16384
@@ -123,7 +123,7 @@ kafka:
   consumers:
     json-consumer:
       clientId: json-consumer
-      bootstrapServers: ${BOOSTRAP_SERVER_HOST:localhost}:${BOOSTRAP_SERVER_PORT:29092}
+      bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:29092}
       keyDeserializer: org.apache.kafka.common.serialization.StringDeserializer
       valueDeserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       autoOffsetReset: earliest
@@ -134,10 +134,10 @@ kafka:
       allowAutoCreateTopics: true
       concurrency: 6
       pollTimeout: 360000000
-      groupId: ${SCHEMA:mainnet}
+      groupId: ${KAFKA_GROUP_ID:mainnet}
   listeners:
     topics:
-      reports: ${REPORTS_TOPIC:dev.explorer.api.mainnet.reports}
+      reports: ${KAFKA_REPORTS_TOPIC:dev.explorer.api.mainnet.reports}
 
 cloud:
   aws:
