@@ -34,6 +34,7 @@
     <version.spotless-maven-plugin>2.36.0</version.spotless-maven-plugin>
     <version.google-java-format>1.15.0</version.google-java-format>
     <version.flyway>9.4.0</version.flyway>
+    <version.log4j>2.20.0</version.log4j>
   </properties>
 
   <repositories>
@@ -63,6 +64,16 @@
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>${version.log4j}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-api</artifactId>
+      <version>${version.log4j}</version>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter</artifactId>
