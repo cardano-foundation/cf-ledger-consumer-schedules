@@ -1,6 +1,8 @@
 package org.cardanofoundation.job.repository.aggregate;
 
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -33,4 +35,7 @@ public interface AggregateAddressTokenRepository
       nativeQuery = true)
   void insertDataForDay(
       @Param("startOfDay") Timestamp startOfDay, @Param("endOfDay") Timestamp endOfDay);
+
+  @Query("select max(a.day) from AggregateAddressToken a")
+  Optional<LocalDate> getMaxDay();
 }
