@@ -1,7 +1,6 @@
 package org.cardanofoundation.job.repository;
 
 import java.sql.Timestamp;
-import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -17,13 +16,6 @@ import org.cardanofoundation.job.projection.StakeDelegationProjection;
 
 @Repository
 public interface DelegationRepository extends JpaRepository<Delegation, Long> {
-
-  @Query(
-      "SELECT delegation.tx.id"
-          + " FROM Delegation delegation"
-          + " WHERE delegation.address = :stakeKey AND delegation.tx.id IN :txIds")
-  List<Long> findDelegationByAddressAndTxIn(
-      @Param("stakeKey") StakeAddress stakeKey, @Param("txIds") Collection<Long> txIds);
 
   @Query(
       "SELECT tx.hash as txHash, block.time as time, block.epochSlotNo as epochSlotNo,"

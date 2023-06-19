@@ -40,7 +40,6 @@ public class PoolRegistration {
             .time(response.getTime())
             .adaValueHold(new BigDecimal(response.getDeposit()))
             .adaValueFee(new BigDecimal(response.getFee()))
-            .owner(String.join("\n", response.getStakeKeys()))
             .build();
     result.setAdaValue(result.getAdaValueHold().add(result.getAdaValueFee()));
     result.setRawAdaValue(result.getAdaValue().doubleValue() / 1000000);
@@ -58,9 +57,6 @@ public class PoolRegistration {
     poolRegistrationsColumns.add(
         new ExportColumn(
             ColumnFieldEnum.ADA_VALUE_COLUMN, ColumnTitleEnum.ADA_VALUE_TITLE, Alignment.RIGHT));
-    poolRegistrationsColumns.add(
-        new ExportColumn(
-            ColumnFieldEnum.OWNER_COLUMN, ColumnTitleEnum.OWNER_TITLE, Alignment.LEFT));
     return poolRegistrationsColumns;
   }
 }

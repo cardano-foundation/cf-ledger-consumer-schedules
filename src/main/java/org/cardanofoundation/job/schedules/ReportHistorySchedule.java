@@ -45,7 +45,7 @@ public class ReportHistorySchedule {
             LocalDateTime.ofInstant(Instant.now().minus(Duration.ofDays(7)), ZoneOffset.UTC));
 
     List<ReportHistory> reportHistoryList =
-        reportHistoryRepository.findByUploadedAtLessThan(timeAt7dayAgo);
+        reportHistoryRepository.findNotExpiredReportHistoryByUploadedAtLessThan(timeAt7dayAgo);
 
     List<CompletableFuture<Void>> futures = new ArrayList<>();
     reportHistoryList.forEach(

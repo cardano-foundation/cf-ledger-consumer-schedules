@@ -15,7 +15,7 @@ import org.cardanofoundation.job.service.FetchRewardDataService;
 public class FetchRewardDataServiceImpl implements FetchRewardDataService {
 
   @Override
-  public boolean checkRewardAvailable(String stakeKey) {
+  public Boolean checkRewardAvailable(String stakeKey) {
     return true;
   }
 
@@ -27,5 +27,20 @@ public class FetchRewardDataServiceImpl implements FetchRewardDataService {
   @Override
   public Boolean fetchReward(String poolView) {
     return true;
+  }
+
+  @Override
+  public Boolean checkPoolHistoryForPool(Set<String> poolIds) {
+    return true;
+  }
+
+  @Override
+  public Boolean fetchPoolHistoryForPool(Set<String> poolIds) {
+    return true;
+  }
+
+  @Override
+  public Boolean isKoiOs() {
+    return false;
   }
 }
