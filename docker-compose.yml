@@ -6,6 +6,10 @@ services:
     restart: always
     build:
       context: .
+      args:
+        - PRIVATE_MVN_REGISTRY_URL=${PRIVATE_MVN_REGISTRY_URL}
+        - PRIVATE_MVN_REGISTRY_USER=${PRIVATE_MVN_REGISTRY_USER}
+        - PRIVATE_MVN_REGISTRY_PASS=${PRIVATE_MVN_REGISTRY_PASS}
     environment:
       - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE}
       - SERVER_PORT=${SERVER_PORT}
