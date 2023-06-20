@@ -28,7 +28,7 @@ public interface AggregateAddressTokenRepository
               + "inner join tx t on addt.tx_id = t.id "
               + "inner join block b on t.block_id = b.id "
               + "where b.time >= :startOfDay "
-              + "and b.time <= :endOfDay "
+              + "and b.time < :endOfDay "
               + "and b.tx_count > 0 and addt.balance > 0 "
               + "GROUP BY addt.ident, time_agg "
               + "order by time_agg",
