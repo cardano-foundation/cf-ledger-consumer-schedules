@@ -27,7 +27,7 @@ public interface AggregateAddressTxBalanceRepository
               + "FROM address_tx_balance atb "
               + "inner join address addr on atb.address_id = addr.id "
               + "where atb.time >= :startOfDay "
-              + "and atb.time <= :endOfDay "
+              + "and atb.time < :endOfDay "
               + "GROUP BY addr.id, time_agg "
               + "order by time_agg",
       nativeQuery = true)
