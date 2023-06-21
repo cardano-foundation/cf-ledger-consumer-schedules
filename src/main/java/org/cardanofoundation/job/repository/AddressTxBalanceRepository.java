@@ -1,6 +1,7 @@
 package org.cardanofoundation.job.repository;
 
 import java.sql.Timestamp;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,4 +39,7 @@ public interface AddressTxBalanceRepository extends JpaRepository<AddressTxBalan
       @Param("stakeAddress") String stakeAddress,
       @Param("fromDate") Timestamp fromDate,
       @Param("toDate") Timestamp toDate);
+
+  @Query("select max(tx.time) from AddressTxBalance tx")
+  Optional<Timestamp> getMaxTime();
 }
