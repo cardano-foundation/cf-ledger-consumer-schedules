@@ -26,7 +26,7 @@
   <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
     <!--This log appender For development purposes, only the lowest level is configured, and the log level output by the console is greater than or equal to this level of log information.-->
     <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      <level>debug</level>
+      <level>trace</level>
     </filter>
     <encoder>
       <Pattern>${CONSOLE_LOG_PATTERN}</Pattern>
@@ -39,7 +39,7 @@
   <!-- 2.1 level by DEBUG Log, time scroll output  -->
   <appender name="DEBUG_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <!-- The path and document name of the log document being logged -->
-    <file>${log.path}/debug.log</file>
+    <file>${log.path}/web_debug.log</file>
     <!--Log Document Output Format-->
     <encoder>
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
@@ -48,7 +48,7 @@
     <!-- Logger rolling strategy, by date, by size -->
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- Archive -->
-      <fileNamePattern>${log.path}/debug-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <fileNamePattern>${log.path}/web-debug-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy
         class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
         <maxFileSize>100MB</maxFileSize>
@@ -67,7 +67,7 @@
   <!-- 2.2 level by INFO Log, time scroll output  -->
   <appender name="INFO_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <!-- The path and document name of the log document being logged -->
-    <file>${log.path}/info.log</file>
+    <file>${log.path}/web_info.log</file>
     <!--Log Document Output Format-->
     <encoder>
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
@@ -76,7 +76,7 @@
     <!-- Logger rolling strategy, by date, by size -->
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- Daily log archiving path and format -->
-      <fileNamePattern>${log.path}/info-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <fileNamePattern>${log.path}/web-info-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy
         class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
         <maxFileSize>100MB</maxFileSize>
@@ -95,7 +95,7 @@
   <!-- 2.3 level by WARN Log, time scroll output  -->
   <appender name="WARN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <!-- The path and document name of the log document being logged -->
-    <file>${log.path}/warn.log</file>
+    <file>${log.path}/web_warn.log</file>
     <!--Log Document Output Format-->
     <encoder>
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
@@ -103,7 +103,7 @@
     </encoder>
     <!-- Logger rolling strategy, by date, by size -->
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${log.path}/warn-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <fileNamePattern>${log.path}/web-warn-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy
         class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
         <maxFileSize>100MB</maxFileSize>
@@ -122,7 +122,7 @@
   <!-- 2.4 level by ERROR Log, time scroll output  -->
   <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <!-- The path and document name of the log document being logged -->
-    <file>${log.path}/error.log</file>
+    <file>${log.path}/web_error.log</file>
     <!--Log Document Output Format-->
     <encoder>
       <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n</pattern>
@@ -130,7 +130,7 @@
     </encoder>
     <!-- Logger rolling strategy, by date, by size -->
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${log.path}/error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <fileNamePattern>${log.path}/web-error-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy
         class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
         <maxFileSize>100MB</maxFileSize>

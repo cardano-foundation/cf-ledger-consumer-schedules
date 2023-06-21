@@ -1,5 +1,6 @@
 package org.cardanofoundation.job.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,6 @@ public interface PoolMetadataRefRepository extends JpaRepository<PoolMetadataRef
       PoolHash poolHash, String url, String hash);
 
   Optional<PoolMetadataRef> findById(Long id);
+
+  List<PoolMetadataRef> findByIdIn(List<Long> poolMetadataIds);
 }
