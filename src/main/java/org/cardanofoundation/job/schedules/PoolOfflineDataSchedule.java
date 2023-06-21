@@ -1,10 +1,10 @@
 package org.cardanofoundation.job.schedules;
 
 import java.math.BigInteger;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.Queue;
-import java.util.Set;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -17,9 +17,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import org.cardanofoundation.job.dto.PoolData;
+import org.cardanofoundation.job.event.message.FetchPoolDataFail;
 import org.cardanofoundation.job.event.message.FetchPoolDataSuccess;
 import org.cardanofoundation.job.service.PoolOfflineDataFetchingService;
 import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
@@ -34,16 +34,19 @@ import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
 public class PoolOfflineDataSchedule {
 
   final Queue<PoolData> successPools;
+  final Queue<PoolData> failPools;
   final PoolOfflineDataStoringService poolOfflineDataStoringService;
   final PoolOfflineDataFetchingService poolOfflineDataFetchingService;
+  static final int WAIT_TIMES = 40;
+
 
   @Value("${jobs.install-batch}")
   private int batchSize;
 
-  public PoolOfflineDataSchedule(
-      PoolOfflineDataStoringService poolOfflineDataStoringService,
-      PoolOfflineDataFetchingService poolOfflineDataFetchingService) {
+  public PoolOfflineDataSchedule(PoolOfflineDataStoringService poolOfflineDataStoringService,
+                                 PoolOfflineDataFetchingService poolOfflineDataFetchingService) {
     this.successPools = new LinkedBlockingDeque<>();
+    this.failPools = new LinkedBlockingDeque<>();
     this.poolOfflineDataStoringService = poolOfflineDataStoringService;
     this.poolOfflineDataFetchingService = poolOfflineDataFetchingService;
   }
@@ -54,36 +57,35 @@ public class PoolOfflineDataSchedule {
     successPools.add(fetchData.getPoolData());
   }
 
-  @Transactional
-  @Scheduled(
-      fixedDelayString = "${jobs.pool-offline-data.insert.delay}",
-      initialDelayString = "${jobs.pool-offline-data.insert..innit}")
-  public void updatePoolOffline() throws InterruptedException {
-    log.info("pool size {}", successPools.size());
+  @Async
+  @EventListener
+  public void handleFailPoolData(FetchPoolDataFail fetchData) {
+    failPools.add(fetchData.getPoolData());
+  }
 
-    if (CollectionUtils.isEmpty(successPools)) {
+  @Transactional
+  @Scheduled(fixedDelayString = "${jobs.pool-offline-data.fetch.delay}")
+  public void fetchPoolOffline() throws InterruptedException {
+    log.info("Start fetching pool metadata ");
+    final int fetchSize = poolOfflineDataFetchingService.fetchBatch(BigInteger.ZERO.intValue());
+    AtomicInteger wait = new AtomicInteger();
+    while (successPools.size() + failPools.size() < fetchSize &&
+        wait.getAndIncrement() < WAIT_TIMES) {
       Thread.sleep(3000);
     }
 
-    Set<PoolData> poolData = new HashSet<>();
+    log.info("Success pool size {}", successPools.size());
+    poolOfflineDataStoringService.insertSuccessPoolOfflineData(successPools.stream()
+        .sorted(Comparator.comparing(PoolData::getPoolId)
+            .thenComparing(PoolData::getMetadataRefId))
+        .toList());
+    successPools.clear();
 
-    while (successPools.size() > BigInteger.ZERO.intValue()) {
-      poolData.add(successPools.poll());
-      if (poolData.size() == batchSize) {
-        poolOfflineDataStoringService.insertBatch(poolData);
-        poolData.clear();
-      }
-    }
-
-    if (!CollectionUtils.isEmpty(poolData)) {
-      poolOfflineDataStoringService.insertBatch(poolData);
-      poolData.clear();
-    }
-  }
-
-  @Scheduled(fixedDelayString = "${jobs.pool-offline-data.fetch.delay}")
-  public void fetchPoolOffline() {
-    log.info("Start fetching pool metadata ");
-    poolOfflineDataFetchingService.fetchBatch(BigInteger.ZERO.intValue());
+    log.info("Fail pool size {}", failPools.size());
+    poolOfflineDataStoringService.insertFailOfflineData(failPools.stream()
+        .sorted(Comparator.comparing(PoolData::getPoolId)
+            .thenComparing(PoolData::getMetadataRefId))
+        .toList());
+    failPools.clear();
   }
 }
