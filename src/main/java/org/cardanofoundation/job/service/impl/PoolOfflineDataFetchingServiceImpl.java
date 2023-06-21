@@ -74,11 +74,13 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
    * @param start start position
    */
   @Override
-  public void fetchBatch(Integer start) {
+  public int fetchBatch(Integer start) {
+    int fetchSize = 0;
     while (true) {
       List<PoolHashUrlProjection> poolHashUrlProjections =
           poolHashRepository.findPoolHashAndUrl(PageRequest.of(start, JobConstants.DEFAULT_BATCH));
 
+      fetchSize = fetchSize + poolHashUrlProjections.size();
       if (CollectionUtils.isEmpty(poolHashUrlProjections)) {
         break;
       }
@@ -86,6 +88,8 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
       poolHashUrlProjections.forEach(this::fetchData);
       start = start + 1;
     }
+
+    return fetchSize;
   }
 
   private void fetchData(PoolHashUrlProjection poolHash) {
@@ -100,6 +104,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
           SslContextBuilder.forClient()
               .sslProvider(SslProvider.JDK)
               .trustManager(InsecureTrustManagerFactory.INSTANCE)
+              .startTls(true)
               .build();
 
       var httpClient =
@@ -127,7 +132,8 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
           .toEntity(String.class)
           .timeout(Duration.ofMillis(TIMEOUT))
           .doOnError(SSLHandshakeException.class, throwable -> fetchFail("", poolHash, throwable))
-          .doOnError(SslHandshakeTimeoutException.class, throwable -> fetchFail("", poolHash, throwable))
+          .doOnError(SslHandshakeTimeoutException.class,
+              throwable -> fetchFail("", poolHash, throwable))
           .doOnError(DecoderException.class, throwable -> fetchFail("", poolHash, throwable))
           .doOnError(Exception.class, throwable -> fetchFail("", poolHash, throwable))
           .map(
@@ -153,7 +159,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
                               contentType.contains(MediaType.APPLICATION_JSON_VALUE)
                                   || contentType.contains(MediaType.TEXT_PLAIN_VALUE)
                                   || contentType.contains(
-                                      MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
+                                  MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
                     return Optional.empty();
                   }
 
@@ -206,7 +212,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
   private void fetchFail(String error, PoolHashUrlProjection poolHash) {
     PoolData data =
         PoolData.builder()
-            .errorMessage(String.format(error, poolHash.getUrl()))
+            .errorMessage(String.format("%s %s", error, poolHash.getUrl()))
             .poolId(poolHash.getPoolId())
             .metadataRefId(poolHash.getMetadataId())
             .build();
@@ -215,10 +221,10 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
     applicationEventPublisher.publishEvent(new FetchPoolDataFail(data));
   }
 
-  private void fetchFail(String error, PoolHashUrlProjection poolHash , Throwable throwable) {
+  private void fetchFail(String error, PoolHashUrlProjection poolHash, Throwable throwable) {
     PoolData data =
         PoolData.builder()
-            .errorMessage(String.format(error, poolHash.getUrl()))
+            .errorMessage(String.format("%s %s", poolHash.getUrl(), throwable.getMessage()))
             .poolId(poolHash.getPoolId())
             .metadataRefId(poolHash.getMetadataId())
             .build();
