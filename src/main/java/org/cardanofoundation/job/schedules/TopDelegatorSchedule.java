@@ -9,7 +9,6 @@ import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.StakeAddressProjection;
 import org.cardanofoundation.job.repository.StakeAddressRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -23,10 +22,6 @@ import java.util.stream.Collectors;
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
-@ConditionalOnProperty(
-        value = "top-delegators.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
 public class TopDelegatorSchedule {
     private static final int MAX_ELEMENT_CACHE = 500;
     private static final String COLON = ":";
@@ -44,10 +39,10 @@ public class TopDelegatorSchedule {
         long start = System.currentTimeMillis();
         Pageable pageable = PageRequest.of(0, MAX_ELEMENT_CACHE);
         List<StakeAddressProjection> stakeAddressProjections =
-                stakeAddressRepository.findStakeAddressOrderByBalance(pageable);
+            stakeAddressRepository.findStakeAddressOrderByBalance(pageable);
 
         List<Long> stakeIds =
-                stakeAddressProjections.stream().map(StakeAddressProjection::getId).collect(Collectors.toList());
+            stakeAddressProjections.stream().map(StakeAddressProjection::getId).collect(Collectors.toList());
 
         redisTemplate.opsForValue().set(redisKey, gson.toJson(stakeIds));
         log.info("Build top-stake-delegators cache successfully, takes: [{} ms]", (System.currentTimeMillis() - start));
