@@ -1,5 +1,14 @@
 # Cardano Schedules
-Run schedule task
+
+<p align="left">
+<img alt="Tests" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/tests.yaml/badge.svg" />
+<img alt="Release" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/release.yaml/badge.svg?branch=main" />
+<img alt="Publish" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/publish.yaml/badge.svg?branch=main" />
+<a href="https://conventionalcommits.org"><img alt="conventionalcommits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits" /></a>
+</p>
+
+This repository executes tasks in a periodic sequence to precompute computationally intensive jobs.
+
 ## Environment value
 - POSTGRES_HOST: database host
 - POSTGRES_PORT: database port
