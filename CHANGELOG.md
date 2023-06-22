@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.2...v0.2.3) (2023-06-22)
+
+
+### Bug Fixes
+
+* update README.md and generate a new version ([9078cbb](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/9078cbbcc5a129c9a0a059b7e389820eaf7f8d87))
+
 ## [0.2.2](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.1...v0.2.2) (2023-06-22)
 
 
