@@ -23,14 +23,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
 import org.cardanofoundation.job.projection.EpochRewardProjection;
-import org.cardanofoundation.job.projection.EpochStakeRepository;
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
-import org.cardanofoundation.job.projection.StakeKeyProjection;
-import org.cardanofoundation.job.repository.EpochRepository;
 import org.cardanofoundation.job.repository.PoolHashRepository;
 import org.cardanofoundation.job.repository.PoolRetireRepository;
 import org.cardanofoundation.job.repository.PoolUpdateRepository;
@@ -65,12 +62,6 @@ class PoolLifecycleServiceImplTest {
     when(poolHashRepository.getPoolRegistrationByPool(
             "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
         .thenReturn(new PageImpl<>(List.of(registrationProjection)));
-    StakeKeyProjection projection = Mockito.mock(StakeKeyProjection.class);
-    when(projection.getPoolUpdateId()).thenReturn(69L);
-    when(projection.getView())
-        .thenReturn("stake1u80n7nvm3qlss9ls0krp5xh7sqxlazp8kz6n3fp5sgnul5cnxyg4p");
-    when(poolUpdateRepository.findOwnerAccountByPoolUpdate(Set.of(69L)))
-        .thenReturn(List.of(projection));
 
     var response =
         poolLifecycleService.registrationList(

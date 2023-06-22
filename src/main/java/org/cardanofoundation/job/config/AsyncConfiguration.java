@@ -7,12 +7,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 @Configuration
 @EnableAsync
 @EnableScheduling
-public class AsyncConfiguration implements AsyncConfigurer {
+public class AsyncConfiguration implements AsyncConfigurer, SchedulingConfigurer {
   @Value("${spring.task.execution.pool.core-size}")
   private int core;
 
@@ -30,5 +33,13 @@ public class AsyncConfiguration implements AsyncConfigurer {
     executor.setThreadNamePrefix(name);
     executor.initialize();
     return executor;
+  }
+
+  @Override
+  public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+    ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+    taskScheduler.setPoolSize(core);
+    taskScheduler.initialize();
+    taskRegistrar.setTaskScheduler(taskScheduler);
   }
 }

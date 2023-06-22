@@ -1,12 +1,5 @@
 package org.cardanofoundation.job.service.impl;
 
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
-
-import java.nio.channels.ClosedChannelException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
@@ -34,14 +27,14 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.bloxbean.cardano.client.crypto.Blake2bUtil;
 import com.bloxbean.cardano.client.util.HexUtil;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.codec.DecoderException;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandshakeTimeoutException;
 import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-import reactor.netty.http.client.HttpClient;
-
 import org.cardanofoundation.job.constant.JobConstants;
 import org.cardanofoundation.job.dto.PoolData;
 import org.cardanofoundation.job.event.message.FetchPoolDataFail;
@@ -50,6 +43,13 @@ import org.cardanofoundation.job.projection.PoolHashUrlProjection;
 import org.cardanofoundation.job.repository.PoolHashRepository;
 import org.cardanofoundation.job.service.PoolOfflineDataFetchingService;
 import org.cardanofoundation.ledgersync.common.util.UrlUtil;
+import reactor.netty.http.client.HttpClient;
+
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -74,11 +74,13 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
    * @param start start position
    */
   @Override
-  public void fetchBatch(Integer start) {
+  public int fetchBatch(Integer start) {
+    int fetchSize = 0;
     while (true) {
       List<PoolHashUrlProjection> poolHashUrlProjections =
           poolHashRepository.findPoolHashAndUrl(PageRequest.of(start, JobConstants.DEFAULT_BATCH));
 
+      fetchSize = fetchSize + poolHashUrlProjections.size();
       if (CollectionUtils.isEmpty(poolHashUrlProjections)) {
         break;
       }
@@ -86,6 +88,8 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
       poolHashUrlProjections.forEach(this::fetchData);
       start = start + 1;
     }
+
+    return fetchSize;
   }
 
   private void fetchData(PoolHashUrlProjection poolHash) {
@@ -100,6 +104,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
           SslContextBuilder.forClient()
               .sslProvider(SslProvider.JDK)
               .trustManager(InsecureTrustManagerFactory.INSTANCE)
+              .startTls(true)
               .build();
 
       var httpClient =
@@ -107,6 +112,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
               .wiretap(Boolean.FALSE)
               .secure(t -> t.sslContext(sslContext))
               .followRedirect(Boolean.TRUE)
+              .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, TIMEOUT)
               .responseTimeout(Duration.ofMillis(TIMEOUT))
               .doOnConnected(
                   connection -> {
@@ -115,7 +121,6 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
                     connection.addHandlerFirst(
                         new WriteTimeoutHandler(WRITE_TIMEOUT, TimeUnit.MILLISECONDS));
                   });
-
       webClientBuilder
           .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
           .clientConnector(new ReactorClientHttpConnector(httpClient))
@@ -125,11 +130,12 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
           .acceptCharset(StandardCharsets.UTF_8)
           .retrieve()
           .toEntity(String.class)
-          .doOnError(SSLHandshakeException.class, e -> fetchFail("SSL handshake fail %s", poolHash))
-          .doOnError(
-              SslHandshakeTimeoutException.class,
-              e -> fetchFail("SSL handshake time out %s", poolHash))
-          .doOnError(ClosedChannelException.class, throwable -> fetchFail("Time out %s", poolHash))
+          .timeout(Duration.ofMillis(TIMEOUT))
+          .doOnError(SSLHandshakeException.class, throwable -> fetchFail("", poolHash, throwable))
+          .doOnError(SslHandshakeTimeoutException.class,
+              throwable -> fetchFail("", poolHash, throwable))
+          .doOnError(DecoderException.class, throwable -> fetchFail("", poolHash, throwable))
+          .doOnError(Exception.class, throwable -> fetchFail("", poolHash, throwable))
           .map(
               response -> {
                 HttpStatusCode statusCode = response.getStatusCode();
@@ -153,7 +159,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
                               contentType.contains(MediaType.APPLICATION_JSON_VALUE)
                                   || contentType.contains(MediaType.TEXT_PLAIN_VALUE)
                                   || contentType.contains(
-                                      MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
+                                  MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
                     return Optional.empty();
                   }
 
@@ -191,7 +197,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
                       },
                       () ->
                           fetchFail(
-                              "Response larger than 512 bytes or response body not in json with",
+                              "Response larger than 512 bytes or response body not in json with url",
                               poolHash)));
     } catch (Exception e) {
       log.error(e.getMessage());
@@ -206,12 +212,24 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
   private void fetchFail(String error, PoolHashUrlProjection poolHash) {
     PoolData data =
         PoolData.builder()
-            .errorMessage(String.format(error, poolHash.getUrl()))
+            .errorMessage(String.format("%s %s", error, poolHash.getUrl()))
             .poolId(poolHash.getPoolId())
             .metadataRefId(poolHash.getMetadataId())
             .build();
 
     log.error("{} {}", error, poolHash.getUrl());
+    applicationEventPublisher.publishEvent(new FetchPoolDataFail(data));
+  }
+
+  private void fetchFail(String error, PoolHashUrlProjection poolHash, Throwable throwable) {
+    PoolData data =
+        PoolData.builder()
+            .errorMessage(String.format("%s %s", poolHash.getUrl(), throwable.getMessage()))
+            .poolId(poolHash.getPoolId())
+            .metadataRefId(poolHash.getMetadataId())
+            .build();
+
+    log.error("{} {} {}", error, poolHash.getUrl(), throwable.getMessage());
     applicationEventPublisher.publishEvent(new FetchPoolDataFail(data));
   }
 }

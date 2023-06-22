@@ -56,4 +56,13 @@ public interface PoolUpdateRepository extends JpaRepository<PoolUpdate, Long> {
               + "WHERE ph.view  = :poolView "
               + "GROUP BY sa.view")
   List<String> findOwnerAccountByPoolView(@Param("poolView") String poolView);
+
+  @Query(
+      value =
+          "SELECT sa.view FROM PoolHash ph "
+              + "JOIN PoolUpdate pu ON ph.id = pu.poolHash.id "
+              + "JOIN StakeAddress sa ON pu.rewardAddr.id = sa.id "
+              + "WHERE ph.view = :poolView "
+              + "GROUP BY sa.view")
+  List<String> findRewardAccountByPoolView(@Param("poolView") String poolView);
 }
