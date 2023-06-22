@@ -1,7 +1,7 @@
 redis:
   databaseIndex: 0
-  master: ${REDIS_MASTER_NAME:mymaster}
-  password: ${REDIS_SENTINEL_PASS:redis_sentinel_pass}
+  master: ${REDIS_SENTINEL_MASTER_NAME:mymaster}
+  password: ${REDIS_SENTINEL_PASSWORD:redis_sentinel_pass}
   testOnBorrow: false
   maxTotal: 10
   maxIdle: 5
@@ -10,4 +10,4 @@ redis:
   testWhileIdle: false
   sentinels:
     - host: ${REDIS_SENTINEL_HOST:127.0.0.1}
-      port: 26379
+      port: ${REDIS_SENTINEL_PORT:26379}
