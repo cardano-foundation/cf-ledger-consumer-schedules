@@ -1,4 +1,4 @@
-package org.cardanofoundation.job.config.redis;
+package org.cardanofoundation.job.config.redis.sentinel;
 
 import java.util.List;
 

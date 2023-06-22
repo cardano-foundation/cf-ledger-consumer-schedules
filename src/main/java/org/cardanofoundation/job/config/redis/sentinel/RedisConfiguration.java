@@ -1,4 +1,4 @@
-package org.cardanofoundation.job.config.redis;
+package org.cardanofoundation.job.config.redis.sentinel;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import org.cardanofoundation.job.config.redis.sentinel.RedisProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
@@ -41,7 +42,7 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import io.lettuce.core.ReadFrom;
 import redis.clients.jedis.JedisPoolConfig;
 
-import org.cardanofoundation.job.config.redis.RedisProperties.SentinelNode;
+import org.cardanofoundation.job.config.redis.sentinel.RedisProperties.SentinelNode;
 
 /**
  * @author huynv
