@@ -82,6 +82,9 @@ jobs:
       innit: 5000
   top-delegators:
     fixed-delay: ${TOP_DELEGATORS_FIXED_DELAY:300000}
+  token-page-cache:
+    fixed-delay: ${TOKEN_PAGE_CACHE_FIXED_DELAY:200000}
+    ttl: ${TOKEN_PAGE_CACHE_TTL:200000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
