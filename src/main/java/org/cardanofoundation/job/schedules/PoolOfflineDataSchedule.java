@@ -37,7 +37,7 @@ public class PoolOfflineDataSchedule {
   final Queue<PoolData> failPools;
   final PoolOfflineDataStoringService poolOfflineDataStoringService;
   final PoolOfflineDataFetchingService poolOfflineDataFetchingService;
-  static final int WAIT_TIMES = 40;
+  static final int WAIT_TIMES = 10;
 
 
   @Value("${jobs.install-batch}")
@@ -54,6 +54,7 @@ public class PoolOfflineDataSchedule {
   @Async
   @EventListener
   public void handleSuccessfulPoolData(FetchPoolDataSuccess fetchData) {
+    fetchData.getPoolData().setValid(Boolean.TRUE);
     successPools.add(fetchData.getPoolData());
   }
 
@@ -67,18 +68,20 @@ public class PoolOfflineDataSchedule {
   @Scheduled(fixedDelayString = "${jobs.pool-offline-data.fetch.delay}")
   public void fetchPoolOffline() throws InterruptedException {
     log.info("Start fetching pool metadata ");
-    final int fetchSize = poolOfflineDataFetchingService.fetchBatch(BigInteger.ZERO.intValue());
+    final var startTime = System.currentTimeMillis();
+    final int fetchSize = poolOfflineDataFetchingService.fetchPoolOfflineDataByBatch(BigInteger.ZERO.intValue());
     AtomicInteger wait = new AtomicInteger();
+
+    poolOfflineDataFetchingService.fetchPoolOfflineDataLogo(successPools.stream());
+
     while (successPools.size() + failPools.size() < fetchSize &&
         wait.getAndIncrement() < WAIT_TIMES) {
       Thread.sleep(3000);
     }
 
+
     log.info("Success pool size {}", successPools.size());
-    poolOfflineDataStoringService.insertSuccessPoolOfflineData(successPools.stream()
-        .sorted(Comparator.comparing(PoolData::getPoolId)
-            .thenComparing(PoolData::getMetadataRefId))
-        .toList());
+    poolOfflineDataStoringService.insertSuccessPoolOfflineData(successPools);
     successPools.clear();
 
     log.info("Fail pool size {}", failPools.size());
@@ -87,5 +90,6 @@ public class PoolOfflineDataSchedule {
             .thenComparing(PoolData::getMetadataRefId))
         .toList());
     failPools.clear();
+    log.info("-----------------End fetching pool metadata in {} ms", (System.currentTimeMillis() - startTime));
   }
 }
