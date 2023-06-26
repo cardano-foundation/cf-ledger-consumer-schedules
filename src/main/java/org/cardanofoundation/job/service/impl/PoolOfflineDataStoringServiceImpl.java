@@ -137,19 +137,23 @@ public class PoolOfflineDataStoringServiceImpl implements PoolOfflineDataStoring
                     existedPod -> { // if  pool offline data exist check hash change
                       // update exist pool metadata when if json data change
                       if (!existedPod.getHash().equals(poolData.getHash())) {
-                        poolOfflineDataRepository
-                            .findByPoolIdAndAndPmrId(poolData.getPoolId(),
-                                poolData.getMetadataRefId())
-                            .ifPresent(
-                                offlineData -> {
-                                  offlineData.setJson(Arrays.toString(poolData.getJson()));
-                                  offlineData.setBytes(poolData.getJson());
-                                  offlineData.setHash(poolData.getHash());
-                                  offlineData.setLogoUrl(poolData.getLogoUrl());
-                                  offlineData.setIconUrl(poolData.getIconUrl());
-                                  savingPoolData.put(Pair.of(offlineData.getPoolId(),
-                                      offlineData.getHash()), offlineData);
-                                });
+                        existedPod.setJson(Arrays.toString(poolData.getJson()));
+                        existedPod.setBytes(poolData.getJson());
+                        existedPod.setHash(poolData.getHash());
+                        existedPod.setLogoUrl(poolData.getLogoUrl());
+                        existedPod.setIconUrl(poolData.getIconUrl());
+                        savingPoolData.put(Pair.of(existedPod.getPoolId(),
+                            existedPod.getHash()), existedPod);
+                      } else { // this
+                        if (ObjectUtils.isEmpty(existedPod.getIconUrl()) &&
+                            ObjectUtils.isEmpty(existedPod.getLogoUrl())) {
+                          existedPod.setLogoUrl(
+                              !ObjectUtils.isEmpty(poolData.getLogoUrl()) ? poolData.getIconUrl()
+                                                                          : poolData.getLogoUrl());
+                          existedPod.setIconUrl(
+                              !ObjectUtils.isEmpty(poolData.getIconUrl()) ? poolData.getIconUrl()
+                                                                          : poolData.getLogoUrl());
+                        }
                       }
                     }, () -> {
                       final var offlineDataKey = Pair.of(poolData.getPoolId(),
