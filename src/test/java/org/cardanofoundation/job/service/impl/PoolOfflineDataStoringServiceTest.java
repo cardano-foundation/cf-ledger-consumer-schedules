@@ -137,10 +137,6 @@ class PoolOfflineDataStoringServiceTest {
         .hash("2")
         .build();
 
-
-    when(poolOfflineDataRepository.findByPoolIdAndAndPmrId(any(), any()))
-        .thenReturn(Optional.of(poolOfflineData));
-
     when(poolOfflineDataRepository.findPoolOfflineDataHashByPoolMetadataRefIds(anyList()))
         .thenReturn(Set.of(poolOfflineData));
 

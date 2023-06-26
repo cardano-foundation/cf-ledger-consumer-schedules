@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolMetadataRef;
@@ -17,5 +19,6 @@ public interface PoolMetadataRefRepository extends JpaRepository<PoolMetadataRef
 
   Optional<PoolMetadataRef> findById(Long id);
 
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
   List<PoolMetadataRef> findByIdIn(List<Long> poolMetadataIds);
 }
