@@ -50,5 +50,4 @@ public class PoolStatusScheduleTest {
         Mockito.verify(poolRetireRepository,Mockito.times(1)).getLastPoolRetireTilEpoch(Mockito.anyInt());
         Mockito.verify(valueOperations,Mockito.times(2)).set(Mockito.anyString(),Mockito.anyInt());
     }
-
 }
