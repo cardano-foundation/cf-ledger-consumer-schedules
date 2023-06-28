@@ -104,14 +104,13 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
     return fetchSize;
   }
 
-
   @Override
   public void fetchPoolOfflineDataLogo(Stream<PoolData> stream) {
     stream
         .forEach(poolData -> {
           // Sleep 12 millis second for fetch data can fill to stream
           try {
-            Thread.sleep(12);
+            Thread.sleep(20);
           } catch (InterruptedException e) {
             log.error(e.getMessage());
           }
@@ -196,6 +195,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
 
   /**
    * Find URL_PNG_LOGO and URL_PNG_ICON_64_X_64 in extend map
+   *
    * @param map
    * @param poolData
    */
@@ -221,7 +221,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
             Optional.ofNullable(map.get(URL_PNG_ICON_64_X_64))
                 .ifPresent(url -> urlIcon.set(String.valueOf(url)));
 
-            if (urlIcon.get().length() < URL_LIMIT &&  UrlUtil.isUrl(urlIcon.get())) {
+            if (urlIcon.get().length() < URL_LIMIT && UrlUtil.isUrl(urlIcon.get())) {
               poolData.setIconUrl(urlIcon.get());
             }
           }
@@ -319,7 +319,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
                               "Response larger than 512 bytes or response body not in json with url",
                               poolHash)));
     } catch (Exception e) {
-      log.error(e.getMessage());
+      log.debug(e.getMessage());
     }
   }
 
