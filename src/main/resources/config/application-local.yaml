@@ -43,8 +43,7 @@ spring:
         format_sql: true
         order_inserts: true
         order_updates: true
-        hbm2ddl:
-          auto: none
+
   task:
     execution:
       pool:
@@ -78,11 +77,11 @@ jobs:
     enabled: ${POOL_OFFLINE_DATA_JOB_ENABLED:false}
     fetch:
       delay: ${CRAWL_POOL_DATA_DELAY:172800000}
-    insert:
-      delay: ${INSERT_POOL_DATA_DELAY:180000}
-      innit: 5000
   top-delegators:
     fixed-delay: ${TOP_DELEGATORS_FIXED_DELAY:300000}
+  token-page-cache:
+    fixed-delay: ${TOKEN_PAGE_CACHE_FIXED_DELAY:200000}
+    ttl: ${TOKEN_PAGE_CACHE_TTL:200000}
   pool-status:
     fixed-delay: ${POOL_STATUS_FIXED_DELAY:3000}
   install-batch: 100
