@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
 import org.cardanofoundation.job.projection.PoolHashUrlProjection;
@@ -68,5 +70,6 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
               + "WHERE ph.view = :poolView")
   PoolInfoProjection getPoolInfo(@Param("poolView") String poolView);
 
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
   List<PoolHash> findByIdIn(List<Long> poolId);
 }
