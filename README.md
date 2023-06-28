@@ -9,6 +9,10 @@
 
 This repository executes tasks in a periodic sequence to precompute computationally intensive jobs.
 
+
+### Reports
+[Mutation report](https://cardano-foundation.github.io/cf-ledger-consumer-schedules/mutation-report/)
+
 ## Environment value
 - POSTGRES_HOST: database host
 - POSTGRES_PORT: database port
@@ -48,3 +52,5 @@ This repository executes tasks in a periodic sequence to precompute computationa
 - TOP_DELEGATORS_FIXED_DELAY:  fixed delay for job build cache top-delegators
 - TOKEN_PAGE_CACHE_FIXED_DELAY: fixed delay for job build cache token-page
 - TOKEN_PAGE_CACHE_TTL: time to live of token-page cache data
+- TOP_DELEGATORS_FIXED_DELAY: top delegator fixed delay when run cron job
+- POOL_STATUS_FIXED_DELAY: delay time between each time get pool status
