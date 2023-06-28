@@ -27,7 +27,6 @@ public class RedisStandaloneConfig {
     private String password;
 
     @Bean(name = "lettuceConnectionFactory")
-    @Autowired
     LettuceConnectionFactory lettuceConnectionFactory() {
         RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(hostname, port);
         redisStandaloneConfiguration.setPassword(password);
@@ -35,7 +34,6 @@ public class RedisStandaloneConfig {
     }
 
     @Bean
-    @Autowired
     RedisTemplate<String, ?> redisTemplate(//NOSONAR
                                            final LettuceConnectionFactory lettuceConnectionFactory) {
         var redisTemplate = new RedisTemplate<String, Object>();
@@ -48,7 +46,6 @@ public class RedisStandaloneConfig {
     }
 
     @Bean
-    @Autowired
     RedisTemplate<String, String> redisTemplateString(//NOSONAR // TODO will remove in next version
                                                       final LettuceConnectionFactory lettuceConnectionFactory) {
         var redisTemplate = new RedisTemplate<String, String>();
