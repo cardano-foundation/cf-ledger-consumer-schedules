@@ -51,3 +51,4 @@ This repository executes tasks in a periodic sequence to precompute computationa
 - REDIS_SENTINEL_PORT : Redis sentinel port. Default is 26379.
 - REDIS_SENTINEL_MASTER_NAME : Redis master name. Default is mymaster.
 - TOP_DELEGATORS_FIXED_DELAY: top delegator fixed delay when run cron job
+- POOL_STATUS_FIXED_DELAY: delay time between each time get pool status

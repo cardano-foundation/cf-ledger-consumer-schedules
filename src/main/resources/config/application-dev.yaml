@@ -83,6 +83,8 @@ jobs:
       innit: 5000
   top-delegators:
     fixed-delay: ${TOP_DELEGATORS_FIXED_DELAY:300000}
+  pool-status:
+    fixed-delay: ${POOL_STATUS_FIXED_DELAY:300000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
