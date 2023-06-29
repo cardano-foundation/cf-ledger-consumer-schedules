@@ -36,8 +36,6 @@ public class FetchRewardDataFromKoiosServiceImpl implements FetchRewardDataServi
 
   private final RestTemplate restTemplate = new RestTemplate();
   private final RewardCheckpointRepository rewardCheckpointRepository;
-  private final DelegationRepository delegationRepository;
-  private final EpochRepository epochRepository;
   private final PoolHistoryCheckpointRepository poolHistoryCheckpointRepository;
   private final PoolUpdateRepository poolUpdateRepository;
 

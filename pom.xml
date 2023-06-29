@@ -35,6 +35,7 @@
     <version.google-java-format>1.15.0</version.google-java-format>
     <version.flyway>9.4.0</version.flyway>
     <version.log4j>2.20.0</version.log4j>
+    <version.emmbedded-redis>1.2</version.emmbedded-redis>
   </properties>
 
   <repositories>
@@ -175,6 +176,17 @@
       <artifactId>flyway-core</artifactId>
       <version>${version.flyway}</version>
     </dependency>
+    <dependency>
+      <groupId>cn.ponfee</groupId>
+      <artifactId>embedded-redis</artifactId>
+      <version>${version.emmbedded-redis}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -302,6 +314,28 @@
             <endWithNewline/>
           </java>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <configuration>
+          <features>
+            <feature>+auto_threads</feature>
+          </features>
+          <targetClasses>
+            <param>org.cardanofoundation.job.*</param>
+          </targetClasses>
+          <targetTests>
+            <param>org.cardanofoundation.job.*</param>
+          </targetTests>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.1.1</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
