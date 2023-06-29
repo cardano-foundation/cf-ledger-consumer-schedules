@@ -1,13 +1,12 @@
 package org.cardanofoundation.job.schedule;
 
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.config.RedisTestConfig;
 import org.cardanofoundation.job.config.redis.standalone.RedisStandaloneConfig;
-import org.cardanofoundation.job.dto.PoolStatus;
+import org.cardanofoundation.job.schedules.DelegationSchedule;
 import org.cardanofoundation.job.schedules.PoolStatusSchedule;
-import org.cardanofoundation.job.service.PoolService;
+import org.cardanofoundation.job.service.DelegationService;
+import org.cardanofoundation.job.service.impl.DelegationServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,8 +20,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.CollectionUtils;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @ActiveProfiles({"test", "standalone"})
@@ -31,20 +28,19 @@ import java.util.Set;
         RedisStandaloneConfig.class,
         RedisTestConfig.class
 })
-@FieldDefaults(level = AccessLevel.PRIVATE)
-public class PoolStatusScheduleTest {
+public class DelegationScheduleTest {
 
-    PoolStatusSchedule poolStatusSchedule;
+    DelegationSchedule delegationSchedule;
 
     @MockBean
-    PoolService poolService;
+    DelegationService delegationService;
 
     @Autowired
     RedisTemplate<String, Integer> redisTemplate;
 
     @BeforeEach
     void init() {
-        poolStatusSchedule = new PoolStatusSchedule(redisTemplate, poolService);
+        delegationSchedule = new DelegationSchedule(delegationService,redisTemplate);
         Set<String> keys = redisTemplate.keys("*");
         if (!CollectionUtils.isEmpty(keys)) {
             redisTemplate.delete(keys);
@@ -52,18 +48,11 @@ public class PoolStatusScheduleTest {
     }
 
     @Test
-    void test_getPoolStatus() {
-        Mockito.when(poolService.getCurrentPoolStatus()).thenReturn(PoolStatus.builder()
-                .poolActivateIds(new HashSet<>(List.of(1L, 2L)))
-                .poolInactivateIds(new HashSet<>(List.of(3L)))
-                .build());
-        poolStatusSchedule.updatePoolStatus();
-        Mockito.verify(poolService, Mockito.times(1)).getCurrentPoolStatus();
-        int poolActivate = redisTemplate.opsForValue().get(RedisKey.POOL_ACTIVATE.name() + "_null");
-        int poolInActivate = redisTemplate.opsForValue().get(RedisKey.POOL_INACTIVATE.name() + "_null");
-        Assertions.assertEquals(2, poolActivate);
-        Assertions.assertEquals(1, poolInActivate);
+    void test_updateNumberDelegator(){
+        Mockito.when(delegationService.countCurrentDelegator()).thenReturn(100);
+        delegationSchedule.updateNumberDelegator();
+        Mockito.verify(delegationService,Mockito.times(1)).countCurrentDelegator();
+        int numberDelegator = redisTemplate.opsForValue().get(RedisKey.TOTAL_DELEGATOR.name() + "_null");
+        Assertions.assertEquals(100,numberDelegator);
     }
-
-
 }
