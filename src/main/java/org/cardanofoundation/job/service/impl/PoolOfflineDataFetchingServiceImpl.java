@@ -319,6 +319,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
                               "Response larger than 512 bytes or response body not in json with url",
                               poolHash)));
     } catch (Exception e) {
+      log.debug("{} {}", e.getMessage(), poolHash.getUrl());
       fetchFail(e.getMessage(), poolHash);
     }
   }
