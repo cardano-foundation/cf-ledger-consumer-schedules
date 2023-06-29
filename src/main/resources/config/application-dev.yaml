@@ -153,7 +153,7 @@ cloud:
       bucket:
         name: ${S3_BUCKET_NAME:cardano-explorer-api-storage}
       path-style:
-        enabled: true
+        enabled: ${S3_PATH_STYLE_ENABLED:true}
       endpoint: ${S3_STORAGE_ENDPOINT:http://172.22.0.2:9000}
 
 logging:
