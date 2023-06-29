@@ -85,6 +85,8 @@ jobs:
     ttl: ${TOKEN_PAGE_CACHE_TTL:200000}
   pool-status:
     fixed-delay: ${POOL_STATUS_FIXED_DELAY:300000}
+  number-delegator:
+    fixed-delay: ${NUMBER_DELEGATOR_FIXED_DELAY:300000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
