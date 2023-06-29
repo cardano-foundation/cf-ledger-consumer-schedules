@@ -47,7 +47,7 @@ import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
 @Slf4j
 public class PoolOfflineDataStoringServiceImpl implements PoolOfflineDataStoringService {
 
-  public static final int MAX_RECORDS = 1000;
+  public static final int MAX_RECORDS = 300;
   final PoolOfflineFetchErrorRepository poolOfflineFetchErrorRepository;
   private final PoolMetadataRefRepository poolMetadataRefRepository;
   final PoolOfflineDataRepository poolOfflineDataRepository;
@@ -101,10 +101,7 @@ public class PoolOfflineDataStoringServiceImpl implements PoolOfflineDataStoring
         .filter(poolMetaDataId -> !poolMetadata.containsKey(poolMetaDataId))
         .toList();
 
-    final int poolMetaDataPartition = (int) Math.ceil(
-        (double) poolMetadataIds.size() / MAX_RECORDS);
-
-    Lists.partition(poolMetadataIds, poolMetaDataPartition)
+    Lists.partition(poolMetadataIds, MAX_RECORDS)
         .parallelStream()
         .forEach(splitPoolMetadataIds ->
             poolMetadataRefRepository.findByIdIn(splitPoolMetadataIds)
@@ -112,6 +109,7 @@ public class PoolOfflineDataStoringServiceImpl implements PoolOfflineDataStoring
                 .forEach(poolMetadataRef ->
                     poolMetadata.putIfAbsent(poolMetadataRef.getId(), poolMetadataRef)
                 ));
+
     // Get pool hash that not existed in pool offline data
     final List<Long> poolHashIds = successPools.stream()
         .filter(PoolData::isValid)
@@ -119,9 +117,7 @@ public class PoolOfflineDataStoringServiceImpl implements PoolOfflineDataStoring
         .filter(poolId -> !poolHashes.containsKey(poolId))
         .toList();
 
-    final int poolHashPartition = (int) Math.ceil((double) poolHashIds.size() / MAX_RECORDS);
-
-    Lists.partition(poolHashIds, poolHashPartition)
+    Lists.partition(poolHashIds, MAX_RECORDS)
         .parallelStream()
         .forEach(splitPoolMetadataIds ->
             poolHashRepository.findByIdIn(splitPoolMetadataIds)
@@ -144,15 +140,19 @@ public class PoolOfflineDataStoringServiceImpl implements PoolOfflineDataStoring
                         existedPod.setIconUrl(poolData.getIconUrl());
                         savingPoolData.put(Pair.of(existedPod.getPoolId(),
                             existedPod.getHash()), existedPod);
-                      } else { // this
+                      } else {
                         if (ObjectUtils.isEmpty(existedPod.getIconUrl()) &&
                             ObjectUtils.isEmpty(existedPod.getLogoUrl())) {
+                          // this will update pool offline data missing logo
                           existedPod.setLogoUrl(
                               !ObjectUtils.isEmpty(poolData.getLogoUrl()) ? poolData.getIconUrl()
                                                                           : poolData.getLogoUrl());
                           existedPod.setIconUrl(
                               !ObjectUtils.isEmpty(poolData.getIconUrl()) ? poolData.getIconUrl()
                                                                           : poolData.getLogoUrl());
+
+                          savingPoolData.put(Pair.of(existedPod.getPoolId(),
+                              existedPod.getHash()), existedPod);
                         }
                       }
                     }, () -> {
