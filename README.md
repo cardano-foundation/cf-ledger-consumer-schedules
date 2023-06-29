@@ -41,7 +41,6 @@ This repository executes tasks in a periodic sequence to precompute computationa
 - SPRING_PROFILES_ACTIVE: active profiles
 - LOG: application log level
 - POOL_OFFLINE_DATA_JOB_ENABLED: enable fetch pool offline metadata job
-- INSERT_POOL_DATA_DELAY: delay time between each listen to crawl process
 - CRAWL_POOL_DATA_DELAY: delay time between each crawl pool metadata time)
 - META_DATA_JOB_ENABLED: enable metadata job
 - TOKEN_METADATA_URL: url that store token
@@ -50,6 +49,9 @@ This repository executes tasks in a periodic sequence to precompute computationa
 - REDIS_SENTINEL_HOST : Redis sentinel host. Default is  cardano.redis.sentinel.
 - REDIS_SENTINEL_PORT : Redis sentinel port. Default is 26379.
 - REDIS_SENTINEL_MASTER_NAME : Redis master name. Default is mymaster.
+- TOP_DELEGATORS_FIXED_DELAY:  fixed delay for job build cache top-delegators
+- TOKEN_PAGE_CACHE_FIXED_DELAY: fixed delay for job build cache token-page
+- TOKEN_PAGE_CACHE_TTL: time to live of token-page cache data
 - TOP_DELEGATORS_FIXED_DELAY: top delegator fixed delay when run cron job
 - POOL_STATUS_FIXED_DELAY: delay time between each time get pool status
 - NUMBER_DELEGATOR_FIXED_DELAY: delay time between each time get number delegator

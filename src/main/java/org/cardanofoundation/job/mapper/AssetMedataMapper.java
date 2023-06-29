@@ -5,6 +5,7 @@ import org.mapstruct.Mapping;
 
 import org.cardanofoundation.explorer.consumercommon.entity.AssetMetadata;
 import org.cardanofoundation.job.dto.AssetMetadataDTO;
+import org.cardanofoundation.job.dto.token.TokenMetadataDto;
 
 @Mapper(componentModel = "spring")
 public interface AssetMedataMapper {
@@ -18,4 +19,6 @@ public interface AssetMedataMapper {
   @Mapping(target = "logo", source = "logo.value")
   @Mapping(target = "decimals", source = "decimals.value")
   AssetMetadata fromDTO(AssetMetadataDTO dto);
+
+  TokenMetadataDto fromAssetMetadata(AssetMetadata metadata);
 }

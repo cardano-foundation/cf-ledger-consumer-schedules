@@ -26,7 +26,7 @@
     <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     <version.ledgersync-common>0.1.0-SNAPSHOT</version.ledgersync-common>
     <version.explorer-common>0.1.1-SNAPSHOT</version.explorer-common>
-    <version.explorer-consumer-common>0.1.5</version.explorer-consumer-common>
+    <version.explorer-consumer-common>0.1.7-SNAPSHOT</version.explorer-consumer-common>
     <version.spring-cloud-aws>2.4.2</version.spring-cloud-aws>
     <version.lombok>1.18.26</version.lombok>
     <version.eclipse.jgit>6.5.0.202303070854-r</version.eclipse.jgit>
@@ -35,6 +35,7 @@
     <version.google-java-format>1.15.0</version.google-java-format>
     <version.flyway>9.4.0</version.flyway>
     <version.log4j>2.20.0</version.log4j>
+    <version.guava>31.1-jre</version.guava>
     <version.emmbedded-redis>1.2</version.emmbedded-redis>
   </properties>
 
@@ -65,6 +66,12 @@
   </dependencyManagement>
 
   <dependencies>
+    <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>${version.guava}</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-core</artifactId>
