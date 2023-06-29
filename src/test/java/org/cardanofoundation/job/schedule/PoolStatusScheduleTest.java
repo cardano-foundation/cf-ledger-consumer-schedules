@@ -5,11 +5,9 @@ import lombok.experimental.FieldDefaults;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.config.RedisTestConfig;
 import org.cardanofoundation.job.config.redis.standalone.RedisStandaloneConfig;
-import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
-import org.cardanofoundation.job.repository.EpochRepository;
-import org.cardanofoundation.job.repository.PoolRetireRepository;
-import org.cardanofoundation.job.repository.PoolUpdateRepository;
+import org.cardanofoundation.job.dto.PoolStatus;
 import org.cardanofoundation.job.schedules.PoolStatusSchedule;
+import org.cardanofoundation.job.service.PoolService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +21,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -39,24 +37,14 @@ public class PoolStatusScheduleTest {
     PoolStatusSchedule poolStatusSchedule;
 
     @MockBean
-    EpochRepository epochRepository;
-
-    @MockBean
-    PoolUpdateRepository poolUpdateRepository;
-
-    @MockBean
-    PoolRetireRepository poolRetireRepository;
+    PoolService poolService;
 
     @Autowired
     RedisTemplate<String, Integer> redisTemplate;
 
-
-//    @MockBean
-//    ValueOperations<String, Integer> valueOperations;
-
     @BeforeEach
     void init() {
-        poolStatusSchedule = new PoolStatusSchedule(epochRepository, poolUpdateRepository, poolRetireRepository, redisTemplate);
+        poolStatusSchedule = new PoolStatusSchedule(redisTemplate, poolService);
         Set<String> keys = redisTemplate.keys("*");
         if (!CollectionUtils.isEmpty(keys)) {
             redisTemplate.delete(keys);
@@ -65,24 +53,16 @@ public class PoolStatusScheduleTest {
 
     @Test
     void test_getPoolStatus() {
-        Mockito.when(poolUpdateRepository.findLastPoolCertificate()).thenReturn(new ArrayList<>(
-                List.of(new PoolUpdateTxProjection(100L, 1L),
-                        new PoolUpdateTxProjection(200L, 2L),
-                        new PoolUpdateTxProjection(300L, 3L)
-                )));
-
-        Mockito.when(poolRetireRepository.getLastPoolRetireTilEpoch(Mockito.anyInt())).thenReturn(new ArrayList<>(
-                List.of(new PoolUpdateTxProjection(90L, 1L),
-                        new PoolUpdateTxProjection(202L, 2L)
-                )));
+        Mockito.when(poolService.getCurrentPoolStatus()).thenReturn(PoolStatus.builder()
+                .poolActivateIds(new HashSet<>(List.of(1L, 2L)))
+                .poolInactivateIds(new HashSet<>(List.of(3L)))
+                .build());
         poolStatusSchedule.updatePoolStatus();
-        Mockito.verify(epochRepository, Mockito.times(1)).findMaxEpochNo();
-        Mockito.verify(poolUpdateRepository, Mockito.times(1)).findLastPoolCertificate();
-        Mockito.verify(poolRetireRepository, Mockito.times(1)).getLastPoolRetireTilEpoch(Mockito.anyInt());
+        Mockito.verify(poolService, Mockito.times(1)).getCurrentPoolStatus();
         int poolActivate = redisTemplate.opsForValue().get(RedisKey.POOL_ACTIVATE.name() + "_null");
         int poolInActivate = redisTemplate.opsForValue().get(RedisKey.POOL_INACTIVATE.name() + "_null");
-        Assertions.assertEquals(2,poolActivate);
-        Assertions.assertEquals(1,poolInActivate);
+        Assertions.assertEquals(2, poolActivate);
+        Assertions.assertEquals(1, poolInActivate);
     }
 
 
