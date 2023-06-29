@@ -41,7 +41,6 @@ This repository executes tasks in a periodic sequence to precompute computationa
 - SPRING_PROFILES_ACTIVE: active profiles
 - LOG: application log level
 - POOL_OFFLINE_DATA_JOB_ENABLED: enable fetch pool offline metadata job
-- INSERT_POOL_DATA_DELAY: delay time between each listen to crawl process
 - CRAWL_POOL_DATA_DELAY: delay time between each crawl pool metadata time)
 - META_DATA_JOB_ENABLED: enable metadata job
 - TOKEN_METADATA_URL: url that store token

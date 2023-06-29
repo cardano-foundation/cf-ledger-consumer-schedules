@@ -6,7 +6,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -66,10 +68,10 @@ class PoolOfflineDataStoringServiceTest {
   @Test
   @DisplayName("Should process success pool offline data")
   void insertNonExitPoolData() {
-    when(poolOfflineDataRepository.findPoolOfflineDataHashByPoolIds(anyList()))
+    when(poolOfflineDataRepository.findPoolOfflineDataHashByPoolMetadataRefIds(anyList()))
         .thenReturn(Collections.emptySet());
 
-    List<PoolData> successPools = new ArrayList<>();
+    Queue<PoolData> successPools = new LinkedBlockingDeque<>();
 
     String json = "{\"name\": \"HOPECHE POOl\",\n"
         + "\"description\": \"Hello This is HOPECHE Staking Pool\",\n"
@@ -83,6 +85,7 @@ class PoolOfflineDataStoringServiceTest {
         .metadataRefId(1L)
         .hash("1")
         .json(json.getBytes())
+        .valid(Boolean.TRUE)
         .build());
 
     PoolHash pool = PoolHash.builder()
@@ -91,11 +94,11 @@ class PoolOfflineDataStoringServiceTest {
         .epochNo(1)
         .build();
 
-    when(poolHashRepository.findById(any()))
-        .thenReturn(Optional.of(pool));
+    when(poolHashRepository.findByIdIn(anyList()))
+        .thenReturn(List.of(pool));
 
-    when(poolMetadataRefRepository.findById(any()))
-        .thenReturn(Optional.of(PoolMetadataRef.builder()
+    when(poolMetadataRefRepository.findByIdIn(anyList()))
+        .thenReturn(List.of(PoolMetadataRef.builder()
             .id(1L)
             .poolHash(pool)
             .hash("123123")
@@ -129,20 +132,13 @@ class PoolOfflineDataStoringServiceTest {
         .id(1L)
         .pool(pool)
         .poolMetadataRef(poolMetadataRef)
+        .poolId(pool.getId())
+        .pmrId(poolMetadataRef.getId())
         .hash("2")
         .build();
 
-    PoolOfflineHashProjection poolOfflineHashProjection = mock(PoolOfflineHashProjection.class);
-
-    when(poolOfflineHashProjection.getPoolId()).thenReturn(1L);
-    when(poolOfflineHashProjection.getPoolRefId()).thenReturn(1L);
-    when(poolOfflineHashProjection.getHash()).thenReturn("2");
-
-    when(poolOfflineDataRepository.findByPoolIdAndAndPmrId(any(), any()))
-        .thenReturn(Optional.of(poolOfflineData));
-
-    when(poolOfflineDataRepository.findPoolOfflineDataHashByPoolIds(anyList()))
-        .thenReturn(Set.of(poolOfflineHashProjection));
+    when(poolOfflineDataRepository.findPoolOfflineDataHashByPoolMetadataRefIds(anyList()))
+        .thenReturn(Set.of(poolOfflineData));
 
     String json = "{\"name\": \"HOPECHE POOl\",\n"
         + "\"description\": \"Hello This is HOPECHE Staking Pool\",\n"
@@ -151,12 +147,16 @@ class PoolOfflineDataStoringServiceTest {
         + "\"extended\": \"https://git.io/JnKRd\"\n"
         + "}";
 
-    poolOfflineDataStoringService.insertSuccessPoolOfflineData(List.of(PoolData.builder()
+    Queue queue = new LinkedBlockingDeque();
+    queue.add(PoolData.builder()
         .poolId(1L)
         .metadataRefId(1L)
         .hash("1")
         .json(json.getBytes())
-        .build()));
+        .valid(Boolean.TRUE)
+        .build());
+
+    poolOfflineDataStoringService.insertSuccessPoolOfflineData(queue);
 
     verify(poolOfflineDataRepository, times(1))
         .saveAll(poolOfflineDataCaptor.capture());
@@ -251,7 +251,8 @@ class PoolOfflineDataStoringServiceTest {
     verify(poolOfflineFetchErrorRepository, times(1))
         .saveAll(poolOfflineFetchErrorCaptor.capture());
 
-    PoolOfflineFetchError actualError = new ArrayList<>(poolOfflineFetchErrorCaptor.getValue()).get(0);
+    PoolOfflineFetchError actualError = new ArrayList<>(poolOfflineFetchErrorCaptor.getValue()).get(
+        0);
 
     Assertions.assertEquals(1L, actualError.getId());
     Assertions.assertEquals(2, actualError.getRetryCount());
