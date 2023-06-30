@@ -3,7 +3,6 @@ package org.cardanofoundation.job.repository;
 import java.util.List;
 import java.util.Set;
 
-import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
+import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
 import org.cardanofoundation.job.projection.StakeKeyProjection;
 
 public interface PoolUpdateRepository extends JpaRepository<PoolUpdate, Long> {
@@ -67,7 +67,15 @@ public interface PoolUpdateRepository extends JpaRepository<PoolUpdate, Long> {
               + "GROUP BY sa.view")
   List<String> findRewardAccountByPoolView(@Param("poolView") String poolView);
 
-  @Query("SELECT new org.cardanofoundation.job.projection.PoolUpdateTxProjection(MAX(poolUpdate.registeredTxId) , poolUpdate.poolHashId) " +
-          "FROM PoolUpdate poolUpdate GROUP BY poolUpdate.poolHashId")
+  //  @Query("SELECT new
+  // org.cardanofoundation.job.projection.PoolUpdateTxProjection(MAX(poolUpdate.registeredTxId) ,
+  // poolUpdate.poolHashId, MAX(poolUpdate.certIndex)) " +
+  //          "FROM PoolUpdate poolUpdate GROUP BY poolUpdate.poolHashId")
+  @Query(
+      "SELECT  new org.cardanofoundation.job.projection.PoolUpdateTxProjection(poolUpdate.registeredTxId, poolUpdate.poolHashId, MAX(poolUpdate.certIndex)) "
+          + "FROM PoolUpdate poolUpdate "
+          + "WHERE (poolUpdate.registeredTxId, poolUpdate.poolHashId) IN "
+          + "(SELECT MAX(pu.registeredTxId), pu.poolHashId FROM PoolUpdate pu GROUP BY pu.poolHashId)"
+          + "GROUP BY poolUpdate.registeredTxId, poolUpdate.poolHashId")
   List<PoolUpdateTxProjection> findLastPoolCertificate();
 }

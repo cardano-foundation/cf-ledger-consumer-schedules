@@ -39,12 +39,12 @@ public class PoolOfflineDataSchedule {
   final PoolOfflineDataFetchingService poolOfflineDataFetchingService;
   static final int WAIT_TIMES = 10;
 
-
   @Value("${jobs.install-batch}")
   private int batchSize;
 
-  public PoolOfflineDataSchedule(PoolOfflineDataStoringService poolOfflineDataStoringService,
-                                 PoolOfflineDataFetchingService poolOfflineDataFetchingService) {
+  public PoolOfflineDataSchedule(
+      PoolOfflineDataStoringService poolOfflineDataStoringService,
+      PoolOfflineDataFetchingService poolOfflineDataFetchingService) {
     this.successPools = new LinkedBlockingDeque<>();
     this.failPools = new LinkedBlockingDeque<>();
     this.poolOfflineDataStoringService = poolOfflineDataStoringService;
@@ -69,27 +69,30 @@ public class PoolOfflineDataSchedule {
   public void fetchPoolOffline() throws InterruptedException {
     log.info("Start fetching pool metadata ");
     final var startTime = System.currentTimeMillis();
-    final int fetchSize = poolOfflineDataFetchingService.fetchPoolOfflineDataByBatch(BigInteger.ZERO.intValue());
+    final int fetchSize =
+        poolOfflineDataFetchingService.fetchPoolOfflineDataByBatch(BigInteger.ZERO.intValue());
     AtomicInteger wait = new AtomicInteger();
 
     poolOfflineDataFetchingService.fetchPoolOfflineDataLogo(successPools.stream());
 
-    while (successPools.size() + failPools.size() < fetchSize &&
-        wait.getAndIncrement() < WAIT_TIMES) {
+    while (successPools.size() + failPools.size() < fetchSize
+        && wait.getAndIncrement() < WAIT_TIMES) {
       Thread.sleep(3000);
     }
-
 
     log.info("Success pool size {}", successPools.size());
     poolOfflineDataStoringService.insertSuccessPoolOfflineData(successPools);
     successPools.clear();
 
     log.info("Fail pool size {}", failPools.size());
-    poolOfflineDataStoringService.insertFailOfflineData(failPools.stream()
-        .sorted(Comparator.comparing(PoolData::getPoolId)
-            .thenComparing(PoolData::getMetadataRefId))
-        .toList());
+    poolOfflineDataStoringService.insertFailOfflineData(
+        failPools.stream()
+            .sorted(
+                Comparator.comparing(PoolData::getPoolId).thenComparing(PoolData::getMetadataRefId))
+            .toList());
     failPools.clear();
-    log.info("-----------------End fetching pool metadata in {} ms", (System.currentTimeMillis() - startTime));
+    log.info(
+        "-----------------End fetching pool metadata in {} ms",
+        (System.currentTimeMillis() - startTime));
   }
 }

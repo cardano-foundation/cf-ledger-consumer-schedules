@@ -1,13 +1,13 @@
 package org.cardanofoundation.job.schedules;
 
-import com.google.gson.Gson;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.cardanofoundation.job.common.enumeration.RedisKey;
-import org.cardanofoundation.job.projection.StakeAddressProjection;
-import org.cardanofoundation.job.repository.StakeAddressRepository;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -15,8 +15,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.google.gson.Gson;
+
+import org.cardanofoundation.job.common.enumeration.RedisKey;
+import org.cardanofoundation.job.projection.StakeAddressProjection;
+import org.cardanofoundation.job.repository.StakeAddressRepository;
 
 @Slf4j
 @Component
@@ -42,9 +45,13 @@ public class TopDelegatorsSchedule {
         stakeAddressRepository.findStakeAddressOrderByBalance(pageable);
 
     List<Long> stakeIds =
-        stakeAddressProjections.stream().map(StakeAddressProjection::getId).collect(Collectors.toList());
+        stakeAddressProjections.stream()
+            .map(StakeAddressProjection::getId)
+            .collect(Collectors.toList());
 
     redisTemplate.opsForValue().set(redisKey, gson.toJson(stakeIds));
-    log.info("Build top-stake-delegators cache successfully, takes: [{} ms]", (System.currentTimeMillis() - start));
+    log.info(
+        "Build top-stake-delegators cache successfully, takes: [{} ms]",
+        (System.currentTimeMillis() - start));
   }
 }

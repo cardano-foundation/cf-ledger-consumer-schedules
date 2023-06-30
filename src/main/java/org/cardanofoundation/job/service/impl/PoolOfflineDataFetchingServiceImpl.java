@@ -1,5 +1,11 @@
 package org.cardanofoundation.job.service.impl;
 
+import static org.springframework.http.HttpStatus.FORBIDDEN;
+import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.OK;
+import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
+
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -8,7 +14,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -45,6 +50,8 @@ import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import reactor.netty.http.client.HttpClient;
+
 import org.cardanofoundation.job.constant.JobConstants;
 import org.cardanofoundation.job.dto.PoolData;
 import org.cardanofoundation.job.event.message.FetchPoolDataFail;
@@ -53,13 +60,6 @@ import org.cardanofoundation.job.projection.PoolHashUrlProjection;
 import org.cardanofoundation.job.repository.PoolHashRepository;
 import org.cardanofoundation.job.service.PoolOfflineDataFetchingService;
 import org.cardanofoundation.ledgersync.common.util.UrlUtil;
-import reactor.netty.http.client.HttpClient;
-
-import static org.springframework.http.HttpStatus.FORBIDDEN;
-import static org.springframework.http.HttpStatus.MOVED_PERMANENTLY;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.HttpStatus.REQUEST_TIMEOUT;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -88,8 +88,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
 
     while (true) {
       List<PoolHashUrlProjection> poolHashUrlProjections =
-          poolHashRepository.findPoolHashAndUrl(
-              PageRequest.of(start, JobConstants.DEFAULT_BATCH));
+          poolHashRepository.findPoolHashAndUrl(PageRequest.of(start, JobConstants.DEFAULT_BATCH));
 
       fetchSize = fetchSize + poolHashUrlProjections.size();
       if (CollectionUtils.isEmpty(poolHashUrlProjections)) {
@@ -106,8 +105,8 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
 
   @Override
   public void fetchPoolOfflineDataLogo(Stream<PoolData> stream) {
-    stream
-        .forEach(poolData -> {
+    stream.forEach(
+        poolData -> {
           // Sleep 12 millis second for fetch data can fill to stream
           try {
             Thread.sleep(20);
@@ -152,37 +151,43 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
                   .retrieve()
                   .toEntity(String.class)
                   .timeout(Duration.ofMillis(TIMEOUT))
-                  .doOnError(SSLHandshakeException.class,
+                  .doOnError(
+                      SSLHandshakeException.class,
                       throwable -> fetchFail(throwable.getMessage(), processedPoolData))
-                  .doOnError(SslHandshakeTimeoutException.class,
+                  .doOnError(
+                      SslHandshakeTimeoutException.class,
                       throwable -> fetchFail(throwable.getMessage(), processedPoolData))
-                  .doOnError(DecoderException.class,
+                  .doOnError(
+                      DecoderException.class,
                       throwable -> fetchFail(throwable.getMessage(), processedPoolData))
-                  .doOnError(Exception.class,
+                  .doOnError(
+                      Exception.class,
                       throwable -> fetchFail(throwable.getMessage(), processedPoolData))
                   .toFuture()
-                  .thenAccept(responsePoolExtended -> {
-                    if (Objects.isNull(responsePoolExtended) || ObjectUtils.isEmpty(
-                        responsePoolExtended.getBody())) {
-                      return;
-                    }
+                  .thenAccept(
+                      responsePoolExtended -> {
+                        if (Objects.isNull(responsePoolExtended)
+                            || ObjectUtils.isEmpty(responsePoolExtended.getBody())) {
+                          return;
+                        }
 
-                    String extendBody = responsePoolExtended.getBody();
-                    // make another try catch for catching extendMap only and not affect pool
-                    try {
-                      final Map<String, Object> extendMap = objectMapper.readValue(extendBody,
-                          new TypeReference<>() {});
+                        String extendBody = responsePoolExtended.getBody();
+                        // make another try catch for catching extendMap only and not affect pool
+                        try {
+                          final Map<String, Object> extendMap =
+                              objectMapper.readValue(extendBody, new TypeReference<>() {});
+                          if (CollectionUtils.isEmpty(map)) {
+                            return;
+                          }
 
-                      if (CollectionUtils.isEmpty(map)) {
-                        return;
-                      }
-
-                      findExtendedLogoWithLoop(extendMap, processedPoolData);
-                    } catch (JsonProcessingException e) {
-                      log.debug("Extended of metadata ref {} fail with content",
-                          processedPoolData.getMetadataRefId(), extendBody);
-                    }
-                  });
+                          findExtendedLogoWithLoop(extendMap, processedPoolData);
+                        } catch (JsonProcessingException e) {
+                          log.debug(
+                              "Extended of metadata ref {} fail with content",
+                              processedPoolData.getMetadataRefId(),
+                              extendBody);
+                        }
+                      });
             }
           } catch (JsonProcessingException e) {
             fetchFail(e.getMessage(), poolData);
@@ -201,31 +206,32 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
    */
   private void findExtendedLogoWithLoop(Map<String, Object> map, PoolData poolData) {
     map.keySet()
-        .forEach(key -> {
-          if (map.get(key) instanceof LinkedHashMap<?, ?> subMap) {
-            findExtendedLogoWithLoop((LinkedHashMap<String, Object>) subMap, poolData);
-            return;
-          }
+        .forEach(
+            key -> {
+              if (map.get(key) instanceof LinkedHashMap<?, ?> subMap) {
+                findExtendedLogoWithLoop((LinkedHashMap<String, Object>) subMap, poolData);
+                return;
+              }
 
-          if (key.equals(URL_PNG_LOGO)) {
-            AtomicReference<String> urlLogo = new AtomicReference<>("");
-            Optional.ofNullable(map.get(URL_PNG_LOGO))
-                .ifPresent(url -> urlLogo.set(String.valueOf(url)));
-            if (urlLogo.get().length() < URL_LIMIT && UrlUtil.isUrl(urlLogo.get())) {
-              poolData.setLogoUrl(urlLogo.get());
-            }
-          }
+              if (key.equals(URL_PNG_LOGO)) {
+                AtomicReference<String> urlLogo = new AtomicReference<>("");
+                Optional.ofNullable(map.get(URL_PNG_LOGO))
+                    .ifPresent(url -> urlLogo.set(String.valueOf(url)));
+                if (urlLogo.get().length() < URL_LIMIT && UrlUtil.isUrl(urlLogo.get())) {
+                  poolData.setLogoUrl(urlLogo.get());
+                }
+              }
 
-          if (key.equals(URL_PNG_ICON_64_X_64)) {
-            AtomicReference<String> urlIcon = new AtomicReference<>("");
-            Optional.ofNullable(map.get(URL_PNG_ICON_64_X_64))
-                .ifPresent(url -> urlIcon.set(String.valueOf(url)));
+              if (key.equals(URL_PNG_ICON_64_X_64)) {
+                AtomicReference<String> urlIcon = new AtomicReference<>("");
+                Optional.ofNullable(map.get(URL_PNG_ICON_64_X_64))
+                    .ifPresent(url -> urlIcon.set(String.valueOf(url)));
 
-            if (urlIcon.get().length() < URL_LIMIT && UrlUtil.isUrl(urlIcon.get())) {
-              poolData.setIconUrl(urlIcon.get());
-            }
-          }
-        });
+                if (urlIcon.get().length() < URL_LIMIT && UrlUtil.isUrl(urlIcon.get())) {
+                  poolData.setIconUrl(urlIcon.get());
+                }
+              }
+            });
   }
 
   /**
@@ -241,15 +247,16 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
     }
 
     try {
-      buildWebClient().get()
+      buildWebClient()
+          .get()
           .uri(UrlUtil.formatSpecialCharactersUrl(poolHash.getUrl()))
           .acceptCharset(StandardCharsets.UTF_8)
           .retrieve()
           .toEntity(String.class)
           .timeout(Duration.ofMillis(TIMEOUT))
           .doOnError(SSLHandshakeException.class, throwable -> fetchFail("", poolHash, throwable))
-          .doOnError(SslHandshakeTimeoutException.class,
-              throwable -> fetchFail("", poolHash, throwable))
+          .doOnError(
+              SslHandshakeTimeoutException.class, throwable -> fetchFail("", poolHash, throwable))
           .doOnError(DecoderException.class, throwable -> fetchFail("", poolHash, throwable))
           .doOnError(Exception.class, throwable -> fetchFail("", poolHash, throwable))
           .map(
@@ -278,7 +285,7 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
                               contentType.contains(MediaType.APPLICATION_JSON_VALUE)
                                   || contentType.contains(MediaType.TEXT_PLAIN_VALUE)
                                   || contentType.contains(
-                                  MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
+                                      MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
                     return Optional.empty();
                   }
 
