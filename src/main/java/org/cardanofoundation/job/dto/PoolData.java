@@ -22,8 +22,11 @@ public class PoolData {
   Long metadataRefId;
   String errorMessage;
   String hash;
+  String logoUrl;
+  String iconUrl;
   int status;
   byte[] json;
+  boolean valid;
 
   @Override
   public boolean equals(Object o) {

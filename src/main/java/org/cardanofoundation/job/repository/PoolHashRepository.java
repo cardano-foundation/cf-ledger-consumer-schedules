@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
 import org.cardanofoundation.job.projection.PoolHashUrlProjection;
@@ -19,18 +21,14 @@ import org.cardanofoundation.job.projection.PoolRegistrationProjection;
 public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
 
   /**
-   * Get fetched pool without error < 5 times  with raw query
-   * <pa>select  ph.hash_raw , pmr.url, pmr.id, ph.id</p>
+   * Get fetched pool without error < 5 times with raw query <pa>select ph.hash_raw , pmr.url,
+   * pmr.id, ph.id from pool_hash ph join pool_metadata_ref pmr on pmr.pool_id = ph.id left join
+   * pool_offline_data pod on pod.pool_id = pmr.pool_id and pod.pmr_id = pmr.id left join
+   * pool_offline_fetch_error pofe on pofe.pool_id = pmr.pool_id and pofe.pmr_id = pmr.id where
+   * ((pofe.retry_count is null or pofe.retry_count < 5) and pod.pmr_id >= (select max(pod2.pmr_id)
+   * from pool_offline_data pod2 where pod2.pool_id = pod.pool_id)) or not exists( select pod1.id
+   * from pool_offline_data pod1 where pod1.pool_id = ph.id ) order by ph.id, pmr.id
    *
-   * from pool_hash ph
-   * join pool_metadata_ref pmr on pmr.pool_id = ph.id
-   * left join pool_offline_data pod on pod.pool_id = pmr.pool_id and pod.pmr_id = pmr.id
-   * left join pool_offline_fetch_error pofe on pofe.pool_id = pmr.pool_id and pofe.pmr_id = pmr.id
-   * where
-   * ((pofe.retry_count is null or pofe.retry_count < 5)
-   * and pod.pmr_id >= (select max(pod2.pmr_id) from pool_offline_data pod2 where pod2.pool_id = pod.pool_id))
-   * or not exists( select pod1.id from pool_offline_data pod1 where pod1.pool_id = ph.id )
-   * order  by ph.id, pmr.id
    * @param pageable
    * @return
    */
@@ -68,5 +66,6 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
               + "WHERE ph.view = :poolView")
   PoolInfoProjection getPoolInfo(@Param("poolView") String poolView);
 
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
   List<PoolHash> findByIdIn(List<Long> poolId);
 }

@@ -1,7 +1,7 @@
 package org.cardanofoundation.job.repository;
 
 import java.sql.Timestamp;
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,11 +35,18 @@ public interface DelegationRepository extends JpaRepository<Delegation, Long> {
       Pageable pageable);
 
   @Query(
-      "SELECT delegation.address FROM Delegation delegation"
-          + " LEFT JOIN RewardCheckpoint rewardCheckpoint ON delegation.address.view = rewardCheckpoint.stakeAddress"
-          + " WHERE delegation.poolHash.view = :poolView"
-          + " AND (rewardCheckpoint.epochCheckpoint IS NULL) "
-          + " OR (rewardCheckpoint.epochCheckpoint < :epochNo)")
-  List<StakeAddress> findStakeAddressByPoolViewAndRewardCheckPoint(
-      @Param("poolView") String poolView, @Param("epochNo") Integer epochNo);
+      "SELECT COUNT(d.stakeAddressId)  FROM Delegation d "
+          + "LEFT JOIN StakeDeregistration de ON de.addr.id = d.stakeAddressId AND de.txId ="
+          + "(SELECT MAX(stakeDereg.txId) FROM StakeDeregistration stakeDereg WHERE "
+          + "stakeDereg.addr.id = d.stakeAddressId) "
+          + "LEFT JOIN StakeRegistration re ON re.addr.id = d.stakeAddressId AND re.txId = "
+          + "(SELECT MAX(stakeReg.txId) FROM StakeRegistration stakeReg WHERE "
+          + "stakeReg.addr.id = d.stakeAddressId) "
+          + "WHERE d.id IN "
+          + "(SELECT MAX(deleIn.id) FROM Delegation deleIn "
+          + "GROUP BY (deleIn.stakeAddressId)) "
+          + "AND (de.tx.id  < re.tx.id OR de IS NULL) "
+          + "AND d.txId >= re.txId "
+          + "AND (d.poolHash.id IN :poolIds)")
+  Integer countCurrentDelegator(@Param("poolIds") Set<Long> poolIds);
 }

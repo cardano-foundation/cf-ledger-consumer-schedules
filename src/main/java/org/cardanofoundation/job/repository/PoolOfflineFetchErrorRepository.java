@@ -10,10 +10,11 @@ import org.springframework.stereotype.Repository;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineFetchError;
 
 @Repository
-public interface PoolOfflineFetchErrorRepository extends
-    JpaRepository<PoolOfflineFetchError, Long> {
+public interface PoolOfflineFetchErrorRepository
+    extends JpaRepository<PoolOfflineFetchError, Long> {
 
-  @Query("SELECT poe FROM PoolOfflineFetchError poe WHERE poe.poolMetadataRef.id IN :poolMetadataIds ")
+  @Query(
+      "SELECT poe FROM PoolOfflineFetchError poe WHERE poe.poolMetadataRef.id IN :poolMetadataIds ")
   List<PoolOfflineFetchError> findPoolOfflineFetchErrorByPoolMetadataRefIn(
       @Param("poolMetadataIds") List<Long> poolMetadataId);
 }

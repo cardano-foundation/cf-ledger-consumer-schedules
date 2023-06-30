@@ -1,0 +1,116 @@
+# Infrastructure domain
+
+spring:
+  # Datasource specific configs
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    url: jdbc:hsqldb:mem:myDb
+    username: cardano-test
+    password: password321
+    driver-class-name: org.hsqldb.jdbc.JDBCDriver
+  jpa:
+    open-in-view: false
+    database-platform: org.hibernate.dialect.HSQLDialect
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      javax:
+        persistence:
+          validation:
+            mode: none
+  codec:
+    max-in-memory-size: 10MB
+
+jobs:
+  meta-data:
+    enabled: ${META_DATA_JOB_ENABLED:false}
+  report-history:
+    enabled: ${REPORT_HISTORY_JOB_ENABLED:false}
+    expired:
+      rate: ${SET_EXPIRED_REPORTS_DELAY:86400000} # 1 day
+  pool-offline-data:
+    enabled: ${POOL_OFFLINE_DATA_JOB_ENABLED:false}
+    fetch:
+      delay: ${CRAWL_POOL_DATA_DELAY:172800000}
+    insert:
+      delay: ${INSERT_POOL_DATA_DELAY:180000}
+      innit: 5000
+  top-delegators:
+    fixed-delay: ${TOP_DELEGATORS_FIXED_DELAY:300000}
+  pool-status:
+    fixed-delay: ${POOL_STATUS_FIXED_DELAY:3000}
+  install-batch: 100
+  limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
+
+token:
+  metadata:
+    url: ${TOKEN_METADATA_URL:https://github.com/cardano-foundation/cardano-token-registry.git}
+    folder: ${TOKEN_METADATA_FOLDER:/mappings}
+application:
+  network: ${NETWORK_NAME:mainnet}
+  api:
+    check-reward:
+      base-url: ${API_CHECK_REWARD_URL:http://10.4.10.231:8888/api/v1/rewards/fetch}
+    check-pool-history:
+      base-url: ${API_CHECK_POOL_HISTORY_URL:http://10.4.10.231:8888/api/v1/pool-history/fetch}
+
+#kafka:
+#  configuration-enabled: ${KAFKA_CONFIGURATION_ENABLED:true}
+#  topics:
+#    reports:
+#      name: reports
+#      partitions: 1
+#      replicationFactor: 1
+#  admin:
+#    bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:29092}
+#  producers:
+#    json-producer:
+#      clientId: json-producer
+#      retries: 3
+#      bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:29092}
+#      maxInFlightRequestsPerConnection: 1
+#      requestTimeoutMs: 30000
+#      batchSize: 16384
+#      lingerMs: 5
+#      bufferMemory: 33554432
+#      acks: all
+#      enableIdempotence: true
+#      keySerializer: org.apache.kafka.common.serialization.StringSerializer
+#      valueSerializer: org.springframework.kafka.support.serializer.JsonSerializer
+#  consumers:
+#    json-consumer:
+#      clientId: json-consumer
+#      bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:29092}
+#      keyDeserializer: org.apache.kafka.common.serialization.StringDeserializer
+#      valueDeserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#      autoOffsetReset: earliest
+#      enableAutoCommit: false
+#      autoCommitIntervalMs: 1000
+#      sessionTimeoutMs: 30000
+#      trustedPackages: "*"
+#      allowAutoCreateTopics: true
+#      concurrency: 6
+#      pollTimeout: 360000000
+#      groupId: ${KAFKA_GROUP_ID:mainnet}
+#  listeners:
+#    topics:
+#      reports: ${KAFKA_REPORTS_TOPIC:dev.explorer.api.mainnet.reports}
+#
+#cloud:
+#  aws:
+#    credentials:
+#      access-key: ${S3_ACCESS_KEY:minio_access_key}
+#      secret-key: ${S3_SECRET_KEY:minio_secret_key}
+#    region:
+#      static: ${S3_REGION:null}
+#    s3:
+#      bucket:
+#        name: ${S3_BUCKET_NAME:cardano-explorer-api-storage-mainnet}
+#      path-style:
+#        enabled: true
+#      endpoint: ${STORAGE_ENDPOINT:http://10.4.10.112:9000}
+#logging:
+#  level:
+#    org.cardanofoundation: ${LOG:INFO}
+#    io.netty: ${LOG:INFO}
+#    reactor.netty: OFF
