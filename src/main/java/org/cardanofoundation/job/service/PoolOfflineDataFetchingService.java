@@ -17,6 +17,7 @@ public interface PoolOfflineDataFetchingService {
 
   /**
    * Fetch extended logo and icon field from success pool data
+   *
    * @param stream
    */
   void fetchPoolOfflineDataLogo(Stream<PoolData> stream);

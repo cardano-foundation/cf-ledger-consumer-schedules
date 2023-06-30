@@ -3,7 +3,6 @@ package org.cardanofoundation.job.repository;
 import java.util.List;
 import java.util.Set;
 
-import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
+import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
 import org.cardanofoundation.job.projection.StakeKeyProjection;
 
 public interface PoolUpdateRepository extends JpaRepository<PoolUpdate, Long> {
@@ -67,7 +67,8 @@ public interface PoolUpdateRepository extends JpaRepository<PoolUpdate, Long> {
               + "GROUP BY sa.view")
   List<String> findRewardAccountByPoolView(@Param("poolView") String poolView);
 
-  @Query("SELECT new org.cardanofoundation.job.projection.PoolUpdateTxProjection(MAX(poolUpdate.registeredTxId) , poolUpdate.poolHashId) " +
-          "FROM PoolUpdate poolUpdate GROUP BY poolUpdate.poolHashId")
+  @Query(
+      "SELECT new org.cardanofoundation.job.projection.PoolUpdateTxProjection(MAX(poolUpdate.registeredTxId) , poolUpdate.poolHashId) "
+          + "FROM PoolUpdate poolUpdate GROUP BY poolUpdate.poolHashId")
   List<PoolUpdateTxProjection> findLastPoolCertificate();
 }

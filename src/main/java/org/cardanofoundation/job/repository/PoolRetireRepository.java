@@ -1,6 +1,7 @@
 package org.cardanofoundation.job.repository;
 
-import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,8 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolRetire;
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
-
-import java.util.List;
+import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
 
 @Repository
 public interface PoolRetireRepository extends JpaRepository<PoolRetire, Long> {
@@ -27,9 +27,10 @@ public interface PoolRetireRepository extends JpaRepository<PoolRetire, Long> {
   Page<PoolDeRegistrationProjection> getPoolDeRegistration(
       @Param("poolView") String poolView, Pageable pageable);
 
-  @Query("SELECT new org.cardanofoundation.job.projection.PoolUpdateTxProjection(MAX(poolRetire.announcedTxId) , poolRetire.poolHashId) " +
-          "FROM PoolRetire poolRetire " +
-          "WHERE poolRetire.retiringEpoch <= :epoch " +
-          "GROUP BY poolRetire.poolHashId")
+  @Query(
+      "SELECT new org.cardanofoundation.job.projection.PoolUpdateTxProjection(MAX(poolRetire.announcedTxId) , poolRetire.poolHashId) "
+          + "FROM PoolRetire poolRetire "
+          + "WHERE poolRetire.retiringEpoch <= :epoch "
+          + "GROUP BY poolRetire.poolHashId")
   List<PoolUpdateTxProjection> getLastPoolRetireTilEpoch(@Param("epoch") int epoch);
 }

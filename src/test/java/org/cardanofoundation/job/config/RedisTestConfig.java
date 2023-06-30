@@ -1,6 +1,7 @@
 package org.cardanofoundation.job.config;
 
 import org.springframework.boot.test.context.TestConfiguration;
+
 import redis.embedded.RedisServer;
 
 @TestConfiguration

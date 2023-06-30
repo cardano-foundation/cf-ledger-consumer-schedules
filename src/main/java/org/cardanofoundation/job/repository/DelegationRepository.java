@@ -1,7 +1,6 @@
 package org.cardanofoundation.job.repository;
 
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -35,8 +34,8 @@ public interface DelegationRepository extends JpaRepository<Delegation, Long> {
       @Param("toTime") Timestamp toTime,
       Pageable pageable);
 
-
-  @Query("SELECT COUNT(d.stakeAddressId)  FROM Delegation d "
+  @Query(
+      "SELECT COUNT(d.stakeAddressId)  FROM Delegation d "
           + "LEFT JOIN StakeDeregistration de ON de.addr.id = d.stakeAddressId AND de.txId ="
           + "(SELECT MAX(stakeDereg.txId) FROM StakeDeregistration stakeDereg WHERE "
           + "stakeDereg.addr.id = d.stakeAddressId) "

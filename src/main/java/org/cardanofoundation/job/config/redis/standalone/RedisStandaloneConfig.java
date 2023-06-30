@@ -1,7 +1,7 @@
 package org.cardanofoundation.job.config.redis.standalone;
 
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,40 +17,41 @@ import org.springframework.data.redis.serializer.GenericToStringSerializer;
 @Profile("standalone")
 public class RedisStandaloneConfig {
 
-    @Value("${spring.redis.standalone.host}")
-    private String hostname;
+  @Value("${spring.redis.standalone.host}")
+  private String hostname;
 
-    @Value("${spring.redis.standalone.port}")
-    private Integer port;
+  @Value("${spring.redis.standalone.port}")
+  private Integer port;
 
-    @Value("${spring.redis.password}")
-    private String password;
+  @Value("${spring.redis.password}")
+  private String password;
 
-    @Bean(name = "lettuceConnectionFactory")
-    LettuceConnectionFactory lettuceConnectionFactory() {
-        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(hostname, port);
-        redisStandaloneConfiguration.setPassword(password);
-        return new LettuceConnectionFactory(redisStandaloneConfiguration);
-    }
+  @Bean(name = "lettuceConnectionFactory")
+  LettuceConnectionFactory lettuceConnectionFactory() {
+    RedisStandaloneConfiguration redisStandaloneConfiguration =
+        new RedisStandaloneConfiguration(hostname, port);
+    redisStandaloneConfiguration.setPassword(password);
+    return new LettuceConnectionFactory(redisStandaloneConfiguration);
+  }
 
-    @Bean
-    RedisTemplate<String, ?> redisTemplate(//NOSONAR
-                                           final LettuceConnectionFactory lettuceConnectionFactory) {
-        var redisTemplate = new RedisTemplate<String, Object>();
-        redisTemplate.setConnectionFactory(lettuceConnectionFactory);
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
-        redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+  @Bean
+  RedisTemplate<String, ?> redisTemplate( // NOSONAR
+      final LettuceConnectionFactory lettuceConnectionFactory) {
+    var redisTemplate = new RedisTemplate<String, Object>();
+    redisTemplate.setConnectionFactory(lettuceConnectionFactory);
+    redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+    redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+    redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
 
-        return redisTemplate;
-    }
+    return redisTemplate;
+  }
 
-    @Bean
-    RedisTemplate<String, String> redisTemplateString(//NOSONAR // TODO will remove in next version
-                                                      final LettuceConnectionFactory lettuceConnectionFactory) {
-        var redisTemplate = new RedisTemplate<String, String>();
-        redisTemplate.setConnectionFactory(lettuceConnectionFactory);
-        redisTemplate.setValueSerializer(new GenericToStringSerializer<>(Object.class));
-        return redisTemplate;
-    }
+  @Bean
+  RedisTemplate<String, String> redisTemplateString( // NOSONAR // TODO will remove in next version
+      final LettuceConnectionFactory lettuceConnectionFactory) {
+    var redisTemplate = new RedisTemplate<String, String>();
+    redisTemplate.setConnectionFactory(lettuceConnectionFactory);
+    redisTemplate.setValueSerializer(new GenericToStringSerializer<>(Object.class));
+    return redisTemplate;
+  }
 }

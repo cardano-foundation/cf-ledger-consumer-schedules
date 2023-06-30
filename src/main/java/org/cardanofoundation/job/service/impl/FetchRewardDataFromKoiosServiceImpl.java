@@ -15,8 +15,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import org.cardanofoundation.job.repository.DelegationRepository;
-import org.cardanofoundation.job.repository.EpochRepository;
 import org.cardanofoundation.job.repository.PoolHistoryCheckpointRepository;
 import org.cardanofoundation.job.repository.PoolUpdateRepository;
 import org.cardanofoundation.job.repository.RewardCheckpointRepository;
