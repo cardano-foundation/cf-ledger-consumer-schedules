@@ -6,4 +6,5 @@ public enum RedisKey {
   POOL_INACTIVATE,
   TOTAL_POOL,
   TOTAL_DELEGATOR,
+  REDIS_TOKEN_PAGE
 }

@@ -52,3 +52,5 @@ This repository executes tasks in a periodic sequence to precompute computationa
 - TOP_DELEGATORS_FIXED_DELAY: top delegator fixed delay when run cron job
 - POOL_STATUS_FIXED_DELAY: delay time between each time get pool status
 - NUMBER_DELEGATOR_FIXED_DELAY: delay time between each time get number delegator
+- TOKEN_PAGE_CACHE_FIXED_DELAY: fixed delay for job build cache token-page
+- TOKEN_PAGE_CACHE_TTL: time to live of token-page cache data
