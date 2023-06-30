@@ -1,11 +1,15 @@
 package org.cardanofoundation.job.config.redis.sentinel;
 
-import io.lettuce.core.ReadFrom;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import org.cardanofoundation.job.config.redis.sentinel.RedisProperties.SentinelNode;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.cache.RedisCacheManagerBuilderCustomizer;
@@ -29,12 +33,11 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
+import io.lettuce.core.ReadFrom;
 import redis.clients.jedis.JedisPoolConfig;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import org.cardanofoundation.job.config.redis.sentinel.RedisProperties.SentinelNode;
 
 /**
  * @author huynv
@@ -77,9 +80,9 @@ public class RedisConfiguration extends CachingConfigurerSupport {
     sentinelConfig.setSentinelPassword(RedisPassword.of(redisProperties.getPassword()));
     sentinelConfig.setDatabase(redisProperties.getDatabaseIndex());
     var sentinels =
-            redisProperties.getSentinels().stream()
-                    .map(getSentinelNodeRedisNodeFunction())
-                    .collect(Collectors.toSet());
+        redisProperties.getSentinels().stream()
+            .map(getSentinelNodeRedisNodeFunction())
+            .collect(Collectors.toSet());
 
     sentinelConfig.setSentinels(sentinels);
     return sentinelConfig;
@@ -109,7 +112,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
   @Autowired
   LettuceConnectionFactory lettuceConnectionFactory(RedisSentinelConfiguration sentinelConfig) {
     LettuceClientConfiguration clientConfig =
-            LettuceClientConfiguration.builder().readFrom(ReadFrom.REPLICA_PREFERRED).build();
+        LettuceClientConfiguration.builder().readFrom(ReadFrom.REPLICA_PREFERRED).build();
     return new LettuceConnectionFactory(sentinelConfig, clientConfig);
   }
 
@@ -121,7 +124,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
   @Bean
   @Autowired
   RedisTemplate<String, ?> redisTemplate( // NOSONAR
-                                          final LettuceConnectionFactory lettuceConnectionFactory) {
+      final LettuceConnectionFactory lettuceConnectionFactory) {
     var redisTemplate = new RedisTemplate<String, Object>();
     redisTemplate.setConnectionFactory(lettuceConnectionFactory);
     redisTemplate.setKeySerializer(new StringRedisSerializer());
@@ -141,7 +144,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
    */
   @Bean
   <HK, V> HashOperations<String, HK, V> hashOperations(
-          final RedisTemplate<String, V> redisTemplate) { // NOSONAR
+      final RedisTemplate<String, V> redisTemplate) { // NOSONAR
     return redisTemplate.opsForHash();
   }
 
@@ -218,9 +221,9 @@ public class RedisConfiguration extends CachingConfigurerSupport {
   @Bean
   RedisCacheManagerBuilderCustomizer redisCacheManagerBuilderCustomizer() {
     return builder ->
-            builder.withCacheConfiguration(
-                    "monolithic",
-                    RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofSeconds(5)));
+        builder.withCacheConfiguration(
+            "monolithic",
+            RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofSeconds(5)));
   }
 
   /**
@@ -231,7 +234,7 @@ public class RedisConfiguration extends CachingConfigurerSupport {
    */
   @Bean
   CacheManager cacheManager(
-          @Qualifier("jedisConnectionFactory") final RedisConnectionFactory redisConnectionFactory) {
+      @Qualifier("jedisConnectionFactory") final RedisConnectionFactory redisConnectionFactory) {
     return RedisCacheManager.create(redisConnectionFactory);
   }
 }

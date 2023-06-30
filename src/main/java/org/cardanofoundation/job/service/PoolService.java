@@ -4,5 +4,5 @@ import org.cardanofoundation.job.dto.PoolStatus;
 
 public interface PoolService {
 
-    PoolStatus getCurrentPoolStatus();
+  PoolStatus getCurrentPoolStatus();
 }
