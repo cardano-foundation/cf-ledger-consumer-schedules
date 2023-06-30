@@ -7,18 +7,20 @@ import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineData;
-import org.cardanofoundation.job.projection.PoolOfflineHashProjection;
 
 public interface PoolOfflineDataRepository extends JpaRepository<PoolOfflineData, Long> {
   @Query(
-      "SELECT pod.pool.id as poolId, pod.poolMetadataRef.id as poolRefId,pod.hash as hash "
+      "SELECT pod "
           + "FROM PoolOfflineData pod "
-          + "WHERE pod.pool.id IN :ids "
+          + "WHERE pod.poolMetadataRef.id IN :ids "
           + "ORDER BY pod.pool.id ASC, "
           + "pod.poolMetadataRef.id ASC")
-  Set<PoolOfflineHashProjection> findPoolOfflineDataHashByPoolIds(@Param("ids") List<Long> ids);
+  @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
+  Set<PoolOfflineData> findPoolOfflineDataHashByPoolMetadataRefIds(@Param("ids") List<Long> ids);
 
   Optional<PoolOfflineData> findByPoolIdAndAndPmrId(Long poolId, Long pmrId);
 }

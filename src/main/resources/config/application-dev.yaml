@@ -78,13 +78,12 @@ jobs:
     enabled: ${POOL_OFFLINE_DATA_JOB_ENABLED:false}
     fetch:
       delay: ${CRAWL_POOL_DATA_DELAY:172800000}
-    insert:
-      delay: ${INSERT_POOL_DATA_DELAY:180000}
-      innit: 5000
   top-delegators:
     fixed-delay: ${TOP_DELEGATORS_FIXED_DELAY:300000}
   pool-status:
     fixed-delay: ${POOL_STATUS_FIXED_DELAY:300000}
+  number-delegator:
+    fixed-delay: ${NUMBER_DELEGATOR_FIXED_DELAY:300000}
   token-page-cache:
     fixed-delay: ${TOKEN_PAGE_CACHE_FIXED_DELAY:200000}
     ttl: ${TOKEN_PAGE_CACHE_TTL:200000}
@@ -156,7 +155,7 @@ cloud:
       bucket:
         name: ${S3_BUCKET_NAME:cardano-explorer-api-storage}
       path-style:
-        enabled: true
+        enabled: ${S3_PATH_STYLE_ENABLED:true}
       endpoint: ${S3_STORAGE_ENDPOINT:http://172.22.0.2:9000}
 
 logging:
