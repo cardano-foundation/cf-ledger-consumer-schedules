@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.2.4](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.3...v0.2.4) (2023-06-30)
+
+
+### Features
+
+* [MET-1154] add job cache for frequently called Token page ([63ab92f](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/63ab92f8948fe0bc51a4985ce001e453e9d6c468))
+* [MET-1154] add job cache for frequently called Token page ([4f31bc1](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/4f31bc18d736830286e0e55eefd318159e4ae54d))
+* [MET-1154] add unit tests ([7c16e99](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/7c16e9986cd4fa39e4dd2488406468097211b613))
+* [MET-1154] resolve conflict ([ddd1b6b](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/ddd1b6b31f4cf74a694d1b98889934ecef15a959))
+* [MET-1154] resolve conflict ([a63f40e](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/a63f40ecfc47f644b3b6fad28e1b0c77b1bb1209))
+* added redis support for cluster and standalone mode ([#88](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/issues/88)) ([3b80d3c](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/3b80d3c88c42bac2577d40af39409cb158142816))
+* met-1346 pool offline data logo, icon ([a75c330](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/a75c3307debc226c366e680cb7c3f878e159690d))
+* met-1346 update existed pool ([c5e0850](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/c5e08504ea89eed8a9fc5658fcc2c1dfbf0865b9))
+* MET-1392 get pool status and save to redis ([1205d2b](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/1205d2bfe600525638bed5173568c60b629441ff))
+* MET-1393 add schedule for number delegator, refactor PoolStatusSchedule ([5f7c95e](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/5f7c95e105b92e5cfe47960df9f9dec0a3eedd41))
+
+
+### Bug Fixes
+
+* check certificate when retire and update in the same tx ([5b07c11](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/5b07c11979edf5fa17471d31fa0df698d168d1df))
+* **gha:** fixed PR builds ([bc79eeb](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/bc79eeb67e53a55df813c46577a8ce94003a3e62))
+
+
+### Miscellaneous Chores
+
+* release 0.2.4 ([9954a24](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/9954a241d1536b8fb5a71c138850078bcaa36b78))
+
 ## [0.2.3](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.2...v0.2.3) (2023-06-22)
 
 
