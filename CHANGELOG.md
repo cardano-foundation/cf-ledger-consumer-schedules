@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.5](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.4...v0.2.5) (2023-07-04)
+
+
+### Features
+
+* update README.md trigger build pipeline ([190beb4](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/190beb4e7a5766d3fee57dffd3d7459a3ba3fc7a))
+
 ## [0.2.4](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.3...v0.2.4) (2023-06-30)
 
 
