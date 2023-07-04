@@ -1,4 +1,4 @@
-# Cardano Schedules
+# Iris Scheduled Jobs
 
 <p align="left">
 <img alt="Tests" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/tests.yaml/badge.svg" />
@@ -9,6 +9,7 @@
 
 This repository executes tasks in a periodic sequence to precompute computationally intensive jobs.
 
+👉 Check the [Iris repository](https://github.com/cardano-foundation/cf-explorer) to understand how the microservices work together
 
 ## 🧪 Test Reports
 
