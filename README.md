@@ -10,8 +10,11 @@
 This repository executes tasks in a periodic sequence to precompute computationally intensive jobs.
 
 
-### Reports
-[Mutation report](https://cardano-foundation.github.io/cf-ledger-consumer-schedules/mutation-report/)
+## 🧪 Test Reports
+
+To ensure the stability and reliability of this project, unit and mutation tests have been implemented. By clicking on the links below, you can access the detailed test reports and review the outcomes of the tests performed.
+
+📊 [Mutation report](https://cardano-foundation.github.io/cf-ledger-consumer-schedules/mutation-report/)
 
 ## Environment value
 - POSTGRES_HOST: database host
@@ -54,3 +57,5 @@ This repository executes tasks in a periodic sequence to precompute computationa
 - NUMBER_DELEGATOR_FIXED_DELAY: delay time between each time get number delegator
 - TOKEN_PAGE_CACHE_FIXED_DELAY: fixed delay for job build cache token-page
 - TOKEN_PAGE_CACHE_TTL: time to live of token-page cache data
+- TOKEN_INFO_JOB_ENABLED: enable token info job
+- TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
