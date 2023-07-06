@@ -65,7 +65,7 @@ public class AggregateAnalyticSchedule {
     log.info("Run job [{}] successfully, time exec: [{} ms]", jobName, timeExec);
   }
 
-  @Scheduled(cron = "0 0 0 * * *", zone = "UTC") // midnight utc
+  @Scheduled(cron = "0 15 0 * * *", zone = "UTC") // midnight utc 0:15 AM make sure that it will not rollback to block has time < midnight
   public void sumAggBalanceAddressToken() {
     runJob(
         aggregateAddressTokenRepository::getMaxDay,
@@ -74,7 +74,7 @@ public class AggregateAnalyticSchedule {
         "sumAggBalanceAddressToken");
   }
 
-  @Scheduled(cron = "0 0 0 * * *", zone = "UTC") // midnight utc
+  @Scheduled(cron = "0 15 0 * * *", zone = "UTC") // midnight utc 0:15 AM make sure that it will not rollback to block has time < midnight
   public void sumAggBalanceAddressTx() {
     runJob(
         aggregateAddressTxBalanceRepository::getMaxDay,
