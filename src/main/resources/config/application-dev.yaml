@@ -68,7 +68,7 @@ multi-datasource: #specified for HikariDataSource
       sqlMigrationPrefix: V
       sqlMigrationSeparator: __
       sqlMigrationSuffixes: .sql
-      locations: db/migration/ledgersync
+      locations: db/migration/analytics
       defaultSchema: ${spring.jpa.properties.hibernate.default_schema}
       schemas: ${spring.jpa.properties.hibernate.default_schema}
       validateOnMigrate: ${ANALYTICS_FLYWAY_VALIDATE:false}
