@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import org.cardanofoundation.job.service.ReportHistoryService;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,7 +34,6 @@ import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportType;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
 import org.cardanofoundation.job.repository.AddressTxBalanceRepository;
-import org.cardanofoundation.job.repository.StakeKeyReportHistoryRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.service.StorageService;
 import org.cardanofoundation.job.util.report.ExcelHelper;
@@ -52,7 +52,7 @@ class StakeKeyReportServiceImplTest {
 
   @InjectMocks StakeKeyReportServiceImpl stakeKeyReportService;
 
-  @Mock StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
+  @Mock ReportHistoryService reportHistoryService;
 
   @BeforeEach
   public void setUp() {
@@ -170,8 +170,7 @@ class StakeKeyReportServiceImplTest {
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(excelHelper.writeContent(anyList())).thenReturn(new ByteArrayInputStream(new byte[0]));
     doNothing().when(storageService).uploadFile(any(), anyString());
-    when(stakeKeyReportHistoryRepository.save(any(StakeKeyReportHistory.class)))
-        .thenReturn(new StakeKeyReportHistory());
+    doNothing().when(reportHistoryService).saveStakeReportHistory(any(StakeKeyReportHistory.class));
 
     Assertions.assertDoesNotThrow(
         () -> stakeKeyReportService.exportStakeKeyReport(stakeKeyReportHistory));

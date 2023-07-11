@@ -17,6 +17,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
+import org.cardanofoundation.job.config.datasource.DataBaseType;
+import org.cardanofoundation.job.config.datasource.SwitchDataSource;
 import org.cardanofoundation.job.dto.report.pool.EpochSize;
 import org.cardanofoundation.job.dto.report.pool.PoolDeregistration;
 import org.cardanofoundation.job.dto.report.pool.PoolRegistration;
