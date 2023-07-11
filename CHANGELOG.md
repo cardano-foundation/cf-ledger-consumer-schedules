@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.2.4](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.6...v0.2.4) (2023-07-11)
+## [0.2.7](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.6...v0.2.7) (2023-07-11)
 
 
 ### Features
@@ -85,7 +85,7 @@
 
 ### Miscellaneous Chores
 
-* release 0.2.4 ([9954a24](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/9954a241d1536b8fb5a71c138850078bcaa36b78))
+* release 0.2.7 ([9954a24](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/9954a241d1536b8fb5a71c138850078bcaa36b78))
 
 ## [0.2.6](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.5...v0.2.6) (2023-07-11)
 
