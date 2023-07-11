@@ -7,6 +7,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import jakarta.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,9 +50,18 @@ public class AggregateAnalyticSchedule {
       return;
     }
 
-    LocalDate finalizeTimeConsumer = currentMaxTimeConsumer.get().toLocalDateTime().minusDays(1).minusMinutes(FINALIZE_MINUTE).toLocalDate();
-    if(finalizeTimeConsumer.isBefore(currentMaxDay)){
-      log.info("Do not meet finalize time yet: finalize time {}, current max day {}",finalizeTimeConsumer,currentMaxDay);
+    LocalDate finalizeTimeConsumer =
+        currentMaxTimeConsumer
+            .get()
+            .toLocalDateTime()
+            .minusDays(1)
+            .minusMinutes(FINALIZE_MINUTE)
+            .toLocalDate();
+    if (finalizeTimeConsumer.isBefore(currentMaxDay)) {
+      log.info(
+          "Do not meet finalize time yet: finalize time {}, current max day {}",
+          finalizeTimeConsumer,
+          currentMaxDay);
       return;
     }
 
@@ -69,7 +79,10 @@ public class AggregateAnalyticSchedule {
     log.info("Run job [{}] successfully, time exec: [{} ms]", jobName, timeExec);
   }
 
-  @Scheduled(cron = "0 20 0 * * *", zone = "UTC") // midnight utc 0:20 AM make sure that it will not rollback to block has time < midnight
+  @Scheduled(
+      cron = "0 20 0 * * *",
+      zone = "UTC") // midnight utc 0:20 AM make sure that it will not rollback to block has time <
+  // midnight
   public void sumAggBalanceAddressToken() {
     runJob(
         aggregateAddressTokenRepository::getMaxDay,
@@ -78,7 +91,10 @@ public class AggregateAnalyticSchedule {
         "sumAggBalanceAddressToken");
   }
 
-  @Scheduled(cron = "0 20 0 * * *", zone = "UTC") // midnight utc 0:20 AM make sure that it will not rollback to block has time < midnight
+  @Scheduled(
+      cron = "0 20 0 * * *",
+      zone = "UTC") // midnight utc 0:20 AM make sure that it will not rollback to block has time <
+  // midnight
   public void sumAggBalanceAddressTx() {
     runJob(
         aggregateAddressTxBalanceRepository::getMaxDay,
@@ -86,18 +102,19 @@ public class AggregateAnalyticSchedule {
         aggregateAddressTxBalanceRepository::insertDataForDay,
         "sumAggBalanceAddressTx");
   }
+
   @PostConstruct
   public void checkOnStart() {
     runJob(
-            aggregateAddressTokenRepository::getMaxDay,
-            blockRepository::getMaxTime,
-            aggregateAddressTokenRepository::insertDataForDay,
-            "sumAggBalanceAddressToken");
+        aggregateAddressTokenRepository::getMaxDay,
+        blockRepository::getMaxTime,
+        aggregateAddressTokenRepository::insertDataForDay,
+        "sumAggBalanceAddressToken");
 
     runJob(
-            aggregateAddressTxBalanceRepository::getMaxDay,
-            addressTxBalanceRepository::getMaxTime,
-            aggregateAddressTxBalanceRepository::insertDataForDay,
-            "sumAggBalanceAddressTx");
+        aggregateAddressTxBalanceRepository::getMaxDay,
+        addressTxBalanceRepository::getMaxTime,
+        aggregateAddressTxBalanceRepository::insertDataForDay,
+        "sumAggBalanceAddressTx");
   }
 }
