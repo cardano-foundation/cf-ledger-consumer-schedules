@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.6](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.5...v0.2.6) (2023-07-11)
+
+
+### Features
+
+* change time run aggregate job to 0:15, make sure no rollback ([3e0f7da](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/3e0f7da54dfeeee96b0c0fcc22503dac7e7a2d9a))
+
+
+### Bug Fixes
+
+* get sum of balance of address_tx_balance, add post contruct with agg job ([fcab4b1](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/fcab4b194ff8d08ccaef30d960bcaea3c256211a))
+
 ## [0.2.5](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.4...v0.2.5) (2023-07-04)
 
 
