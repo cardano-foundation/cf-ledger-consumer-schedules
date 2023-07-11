@@ -22,7 +22,7 @@ public interface AggregateAddressTxBalanceRepository
           "insert into agg_address_tx_balance (stake_address_id, address_id, balance, day) "
               + "SELECT addr.stake_address_id       as stake_address_id, "
               + "       addr.id                     as address_id, "
-              + "       sum(addr.balance)           as sum_balance, "
+              + "       sum(atb.balance)           as sum_balance, "
               + "       date_trunc('day', atb.time) as time_agg "
               + "FROM address_tx_balance atb "
               + "inner join address addr on atb.address_id = addr.id "
