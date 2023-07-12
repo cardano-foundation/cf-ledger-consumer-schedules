@@ -47,7 +47,10 @@ public class UniqueAccountSchedule {
     Integer currentEpoch = Collections.max(epochs.stream().map(Epoch::getNo).toList());
 
     for (Epoch epoch : epochs) {
-      final String redisKey = getRedisKey(epoch.getNo().toString());
+      final String redisKey = String.join(
+          UNDERSCORE,
+          getRedisKey(UNIQUE_ACCOUNTS_KEY),
+          epoch.getNo().toString());
       var uniqueAccount = redisTemplate.hasKey(redisKey);
       if(epoch.getNo().equals(currentEpoch) || Boolean.TRUE.equals(uniqueAccount)) {
         continue;
@@ -61,11 +64,7 @@ public class UniqueAccountSchedule {
               UniqueAccountTxCountProjection::getTxCount
           ));
       if (!CollectionUtils.isEmpty(uniqueAccounts)) {
-        String uniqueAccountRedisKey = String.join(
-            UNDERSCORE,
-            getRedisKey(UNIQUE_ACCOUNTS_KEY),
-            epoch.getNo().toString());
-        redisTemplate.opsForHash().putAll(uniqueAccountRedisKey, uniqueAccounts);
+        redisTemplate.opsForHash().putAll(redisKey, uniqueAccounts);
       }
       log.info("Building unique account for epoch: {} done", epoch.getNo());
     }
