@@ -268,7 +268,7 @@ public class ReportHistoryServiceAsync {
   @Async
   public CompletableFuture<ExportContent> exportRewardsDistribution(PoolReportHistory poolReport) {
     List<RewardDistribution> poolRegistrations =
-        poolLifecycleService.listReward(poolReport.getPoolView(), defPageablePool).stream()
+        poolLifecycleService.listReward(poolReport, defPageablePool).stream()
             .map(RewardDistribution::toDomain)
             .collect(Collectors.toList());
 
