@@ -1,7 +1,6 @@
 package org.cardanofoundation.job.service.impl;
 
 import static org.mockito.ArgumentMatchers.any;
-
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.InvocationTargetException;
@@ -12,7 +11,19 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.cardanofoundation.explorer.consumercommon.entity.AssetMetadata;
 import org.cardanofoundation.explorer.consumercommon.entity.MultiAsset;
 import org.cardanofoundation.job.dto.token.TokenFilterDto;
@@ -25,53 +36,34 @@ import org.cardanofoundation.job.repository.AddressTokenRepository;
 import org.cardanofoundation.job.repository.AssetMetadataRepository;
 import org.cardanofoundation.job.repository.MultiAssetRepository;
 import org.cardanofoundation.job.repository.TxRepository;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class TokenServiceImplTest {
 
-  @Mock
-  MultiAssetRepository multiAssetRepository;
-  @Mock
-  AssetMetadataRepository assetMetadataRepository;
-  @Mock
-  AddressTokenBalanceRepository addressTokenBalanceRepository;
-  @Mock
-  AddressTokenRepository addressTokenRepository;
-  @Mock
-  TxRepository txRepository;
-  @InjectMocks
-  TokenServiceImpl tokenService;
-  @Mock
-  TokenMapper tokenMapper;
-  @Mock
-  AssetMedataMapper assetMetadataMapper;
+  @Mock MultiAssetRepository multiAssetRepository;
+  @Mock AssetMetadataRepository assetMetadataRepository;
+  @Mock AddressTokenBalanceRepository addressTokenBalanceRepository;
+  @Mock AddressTokenRepository addressTokenRepository;
+  @Mock TxRepository txRepository;
+  @InjectMocks TokenServiceImpl tokenService;
+  @Mock TokenMapper tokenMapper;
+  @Mock AssetMedataMapper assetMetadataMapper;
 
   @Test
   void exportTokenReport_shouldTokenListSuccess() {
-    //Init value
+    // Init value
     Pageable pageable = PageRequest.of(0, 10);
 
-    MultiAsset multiAsset = MultiAsset.builder()
-        .id(1734731L)
-        .fingerprint("asset17q7r59zlc3dgw0venc80pdv566q6yguw03f0d9")
-        .name("HOSKY")
-        .nameView("HOSKY")
-        .policy("a0028f350aaabe0545fdcb56b039bfb08e4bb4d8c4d7c3c7d481c235")
-        .totalVolume(BigInteger.valueOf(74405760743875966L))
-        .time(Timestamp.valueOf(LocalDateTime.of(2021, 11, 5, 11, 15, 13)))
-        .build();
+    MultiAsset multiAsset =
+        MultiAsset.builder()
+            .id(1734731L)
+            .fingerprint("asset17q7r59zlc3dgw0venc80pdv566q6yguw03f0d9")
+            .name("HOSKY")
+            .nameView("HOSKY")
+            .policy("a0028f350aaabe0545fdcb56b039bfb08e4bb4d8c4d7c3c7d481c235")
+            .totalVolume(BigInteger.valueOf(74405760743875966L))
+            .time(Timestamp.valueOf(LocalDateTime.of(2021, 11, 5, 11, 15, 13)))
+            .build();
     List<MultiAsset> multiAssets = List.of(multiAsset);
 
     TokenFilterDto tokenFilterDto = new TokenFilterDto();
@@ -92,17 +84,17 @@ class TokenServiceImplTest {
     when(txRepository.findMinTxByAfterTime(any())).thenReturn(txId.describeConstable());
     when(addressTokenRepository.sumBalanceAfterTx(any(), any())).thenReturn(new ArrayList<>());
     when(addressTokenBalanceRepository.countByMultiAssetIn(any())).thenReturn(new ArrayList<>());
-    when(addressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetIn(any())).thenReturn(
-        new ArrayList<>());
+    when(addressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetIn(any()))
+        .thenReturn(new ArrayList<>());
     when(assetMetadataMapper.fromAssetMetadata(any())).thenReturn(new TokenMetadataDto());
 
     var response = tokenService.filterToken(pageable);
 
     Assertions.assertEquals(1, response.getTotalItems());
     Assertions.assertEquals("HOSKY", response.getData().get(0).getName());
-    Assertions.assertEquals("a0028f350aaabe0545fdcb56b039bfb08e4bb4d8c4d7c3c7d481c235",
-        response.getData().get(0).getPolicy()
-    );
+    Assertions.assertEquals(
+        "a0028f350aaabe0545fdcb56b039bfb08e4bb4d8c4d7c3c7d481c235",
+        response.getData().get(0).getPolicy());
     Assertions.assertEquals("74405760743875966", response.getData().get(0).getTotalVolume());
   }
 
