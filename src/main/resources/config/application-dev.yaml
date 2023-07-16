@@ -107,7 +107,6 @@ application:
       base-url: ${API_CHECK_REWARD_URL:http://10.4.10.231:8888/api/v1/rewards/fetch}
     check-pool-history:
       base-url: ${API_CHECK_POOL_HISTORY_URL:http://10.4.10.231:8888/api/v1/pool-history/fetch}
-  token-logo-endpoint: ${TOKEN_LOGO_ENDPOINT:http://localhost:9001/}
 
 kafka:
   configuration-enabled: ${KAFKA_CONFIGURATION_ENABLED:true}
@@ -118,7 +117,6 @@ kafka:
       replicationFactor: 1
   admin:
     bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:9092}
-    useSsl: ${KAFKA_USE_SSL:false}
   producers:
     json-producer:
       clientId: json-producer
