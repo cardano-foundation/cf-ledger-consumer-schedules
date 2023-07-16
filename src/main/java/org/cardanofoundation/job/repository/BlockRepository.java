@@ -12,4 +12,11 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
 
   @Query("select max(b.time) from Block b")
   Optional<Timestamp> getMaxTime();
+
+  @Query("select max(b.blockNo) from Block b")
+  Optional<Long> findMaxBlocKNo();
+
+  @Query("select b from Block b where b.blockNo = "
+      + "(select max(blockNo) from Block)")
+  Optional<Block> findLatestBlock();
 }
