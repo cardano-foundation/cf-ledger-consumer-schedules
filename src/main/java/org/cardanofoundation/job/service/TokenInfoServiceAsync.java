@@ -68,7 +68,7 @@ public class TokenInfoServiceAsync {
     return CompletableFuture.completedFuture(saveEntities);
   }
 
-  public Map<Long, Long> getMapNumberHolder(List<Long> multiAssetIds) {
+  private Map<Long, Long> getMapNumberHolder(List<Long> multiAssetIds) {
     var numberOfHoldersWithStakeKey =
         jooqAddressTokenBalanceRepository.countByMultiAssetIn(multiAssetIds);
     var numberOfHoldersWithAddressNotHaveStakeKey =

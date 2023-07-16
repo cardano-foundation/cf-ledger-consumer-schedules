@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -22,14 +23,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.cardanofoundation.explorer.consumercommon.entity.MultiAsset;
 import org.cardanofoundation.explorer.consumercommon.entity.TokenInfo;
 import org.cardanofoundation.explorer.consumercommon.entity.TokenInfoCheckpoint;
+import org.cardanofoundation.job.model.TokenNumberHolders;
 import org.cardanofoundation.job.projection.TokenVolumeProjection;
-import org.cardanofoundation.job.repository.AddressTokenBalanceRepository;
 import org.cardanofoundation.job.repository.AddressTokenRepository;
 import org.cardanofoundation.job.repository.BlockRepository;
 import org.cardanofoundation.job.repository.MultiAssetRepository;
 import org.cardanofoundation.job.repository.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.TokenInfoRepository;
 import org.cardanofoundation.job.repository.TxRepository;
+import org.cardanofoundation.job.repository.jooq.JOOQAddressTokenBalanceRepository;
 import org.cardanofoundation.job.repository.jooq.JOOQMultiAssetRepository;
 import org.cardanofoundation.job.repository.jooq.JOOQTokenInfoRepository;
 import org.cardanofoundation.job.service.TokenInfoService;
@@ -51,7 +53,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final AddressTokenRepository addressTokenRepository;
   private final JOOQTokenInfoRepository jooqTokenInfoRepository;
   private final JOOQMultiAssetRepository jooqMultiAssetRepository;
-  private final AddressTokenBalanceRepository addressTokenBalanceRepository;
+  private final JOOQAddressTokenBalanceRepository jooqAddressTokenBalanceRepository;
 
   @Override
   @Transactional
@@ -147,7 +149,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         var tokenVolumeMap =
             StreamUtil.toMap(
                 volumes, TokenVolumeProjection::getIdent, TokenVolumeProjection::getVolume);
-        var mapNumberHolder = tokenInfoServiceAsync.getMapNumberHolder(multiAssetIds);
+        var mapNumberHolder = getMapNumberHolder(multiAssetIds);
         var tokenInfoMap = tokenInfoRepository.findByFingerprintIn(
                 StreamUtil.mapApplySet(tokens, MultiAsset::getFingerprint)).stream()
             .collect(Collectors.toMap(TokenInfo::getFingerprint, Function.identity()));
@@ -171,4 +173,30 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         TokenInfoCheckpoint.builder().blockNo(maxBlockNo.get())
             .updateTime(Timestamp.from(Instant.now())).build());
   }
+
+  private Map<Long, Long> getMapNumberHolder(List<Long> multiAssetIds) {
+    var numberOfHoldersWithStakeKey =
+        jooqAddressTokenBalanceRepository.countByMultiAssetIn(multiAssetIds);
+    var numberOfHoldersWithAddressNotHaveStakeKey =
+        jooqAddressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetIn(multiAssetIds);
+
+    var numberHoldersStakeKeyMap =
+        StreamUtil.toMap(
+            numberOfHoldersWithStakeKey,
+            TokenNumberHolders::getIdent,
+            TokenNumberHolders::getNumberOfHolders);
+    var numberHoldersAddressNotHaveStakeKeyMap =
+        StreamUtil.toMap(
+            numberOfHoldersWithAddressNotHaveStakeKey,
+            TokenNumberHolders::getIdent,
+            TokenNumberHolders::getNumberOfHolders);
+    return multiAssetIds.stream()
+        .collect(
+            Collectors.toMap(
+                ident -> ident,
+                ident ->
+                    numberHoldersStakeKeyMap.getOrDefault(ident, 0L)
+                        + numberHoldersAddressNotHaveStakeKeyMap.getOrDefault(ident, 0L)));
+  }
+
 }

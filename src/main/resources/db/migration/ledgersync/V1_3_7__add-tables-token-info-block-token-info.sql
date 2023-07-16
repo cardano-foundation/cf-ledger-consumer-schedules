@@ -1,4 +1,4 @@
-CREATE TABLE token_info
+CREATE TABLE IF NOT EXISTS token_info
 (
     id                bigserial NOT NULL,
     fingerprint       varchar(255) NULL,
@@ -19,7 +19,7 @@ CREATE SEQUENCE IF NOT EXISTS token_info_id_seq
 
 ALTER SEQUENCE token_info_id_seq OWNED BY token_info.id;
 
-CREATE TABLE token_info_checkpoint
+CREATE IF NOT EXISTS TABLE token_info_checkpoint
 (
     id          bigserial NOT NULL,
     block_no    int8 NULL,
@@ -35,3 +35,4 @@ CREATE SEQUENCE IF NOT EXISTS token_info_checkpoint_id_seq
     CACHE 1;
 
 ALTER SEQUENCE token_info_checkpoint_id_seq OWNED BY token_info_checkpoint.id;
+
