@@ -41,9 +41,14 @@ public interface RewardRepository extends JpaRepository<Reward, Long> {
               + "JOIN StakeAddress sa ON rw.addr.id = sa.id "
               + "JOIN Epoch e ON rw.spendableEpoch = e.no "
               + "WHERE ph.view  = :poolView AND rw.type = 'leader' "
+              + "AND (rw.earnedEpoch >= :beginEpoch) "
+              + "AND (rw.earnedEpoch <= :endEpoch)"
               + "ORDER BY rw.earnedEpoch DESC")
   Page<LifeCycleRewardProjection> getRewardInfoByPool(
-      @Param("poolView") String poolView, Pageable pageable);
+      @Param("poolView") String poolView,
+      @Param("beginEpoch") Integer beginEpoch,
+      @Param("endEpoch") Integer endEpoch,
+      Pageable pageable);
 
   @Query(
       value =
