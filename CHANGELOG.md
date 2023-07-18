@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.8](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.7...v0.2.8) (2023-07-18)
+
+
+### Features
+
+* MET-1271 fix create redis key ([7f43a68](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/7f43a68ae3ad1f490d0da4adc679b58819a17699))
+
+
+### Bug Fixes
+
+* reward distribution of pool report not in epoch range ([0b96784](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/0b96784f153a01dee55b13642ebead3b1fcc04ed))
+
 ## [0.2.7](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.6...v0.2.7) (2023-07-11)
 
 
