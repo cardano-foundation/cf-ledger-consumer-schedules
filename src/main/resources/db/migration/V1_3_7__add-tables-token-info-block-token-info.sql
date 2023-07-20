@@ -1,13 +1,13 @@
-CREATE TABLE token_info
+CREATE TABLE IF NOT EXISTS token_info
 (
     id                bigserial NOT NULL,
-    fingerprint       varchar(255) NULL,
+    ident             int8 NULL,
     number_of_holders int8 NULL,
     volume_24h        numeric(40) NULL,
     block_no          int8 NULL,
     update_time       timestamp NULL,
     CONSTRAINT token_info_pkey PRIMARY KEY (id),
-    CONSTRAINT unique_token_info UNIQUE (fingerprint)
+    CONSTRAINT unique_token_info UNIQUE (ident)
 );
 
 CREATE SEQUENCE IF NOT EXISTS token_info_id_seq
@@ -19,7 +19,7 @@ CREATE SEQUENCE IF NOT EXISTS token_info_id_seq
 
 ALTER SEQUENCE token_info_id_seq OWNED BY token_info.id;
 
-CREATE TABLE token_info_checkpoint
+CREATE TABLE IF NOT EXISTS token_info_checkpoint
 (
     id          bigserial NOT NULL,
     block_no    int8 NULL,

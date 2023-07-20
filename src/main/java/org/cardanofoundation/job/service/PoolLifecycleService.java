@@ -17,7 +17,7 @@ public interface PoolLifecycleService {
 
   List<PoolUpdateDetailResponse> poolUpdateList(String poolView, Pageable pageable);
 
-  List<RewardResponse> listReward(String poolView, Pageable pageable);
+  List<RewardResponse> listReward(PoolReportHistory poolReportHistory, Pageable pageable);
 
   List<DeRegistrationResponse> deRegistration(String poolView, Pageable pageable);
 

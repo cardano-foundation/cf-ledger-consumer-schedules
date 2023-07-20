@@ -10,4 +10,12 @@ public interface StakeKeyReportService {
    * @param stakeKeyReportHistory stake key report history
    */
   void exportStakeKeyReport(StakeKeyReportHistory stakeKeyReportHistory) throws Exception;
+
+  /**
+   * Find stake key report history by report id
+   *
+   * @param reportId report id
+   * @return stake key report history
+   */
+  StakeKeyReportHistory findByReportId(Long reportId);
 }
