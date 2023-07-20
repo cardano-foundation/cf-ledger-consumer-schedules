@@ -66,3 +66,5 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - TOKEN_PAGE_CACHE_TTL: time to live of token-page cache data
 - UNIQUE_ACCOUNT_FIXED_DELAY: fixed delay for job build cache unique account
 - UNIQUE_ACCOUNT_ENABLED: enable unique account job
+- TOKEN_INFO_JOB_ENABLED: enable token info job
+- TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
