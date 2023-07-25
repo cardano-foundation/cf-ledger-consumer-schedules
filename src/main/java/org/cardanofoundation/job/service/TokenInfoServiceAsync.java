@@ -35,7 +35,7 @@ public class TokenInfoServiceAsync {
   @Async
   @Transactional(readOnly = true)
   public CompletableFuture<List<TokenInfo>> initTokenInfoList(
-      List<MultiAsset> multiAssetList, Long blockNo, Long afterTxId) {
+      List<MultiAsset> multiAssetList, Long blockNo, Long afterTxId, Timestamp updateTime) {
 
     List<TokenInfo> saveEntities = new ArrayList<>(multiAssetList.size());
     var curTime = System.currentTimeMillis();
@@ -47,8 +47,6 @@ public class TokenInfoServiceAsync {
         StreamUtil.toMap(
             volumes, TokenVolume::getIdent, TokenVolume::getVolume);
     var mapNumberHolder = getMapNumberHolder(multiAssetIds);
-
-    var updateTime = Timestamp.from(Instant.now());
 
     multiAssetIds.clear();
     volumes.clear();

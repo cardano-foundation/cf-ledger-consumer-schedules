@@ -19,10 +19,21 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
       + " join Tx tx on tx.id = addressToken.txId"
       + " join Block block on block.id = tx.blockId"
       + " where block.blockNo > :fromBlockNo and block.blockNo <= :toBlockNo ")
-  List<MultiAsset> getTokensInTransaction(@Param("fromBlockNo") Long fromBlockNo,
-                                          @Param("toBlockNo") Long toBlockNo);
+  List<MultiAsset> getTokensInTransactionInBlockRange(@Param("fromBlockNo") Long fromBlockNo,
+                                                      @Param("toBlockNo") Long toBlockNo);
 
-  @Query("select multiAsset from MultiAsset multiAsset where multiAsset.time > :time"
+  @Query("select multiAsset from MultiAsset multiAsset where multiAsset.time >= :time"
       + " and multiAsset.txCount = 0")
   List<MultiAsset> getTokensWithZeroTxCountAndAfterTime(@Param("time") Timestamp afterTime);
+
+  @Query("select multiAsset "
+      + " from MultiAsset multiAsset join AddressToken addressToken"
+      + " on multiAsset.id = addressToken.multiAssetId"
+      + " join Tx tx on tx.id = addressToken.txId"
+      + " join Block block on block.id = tx.blockId"
+      + " where block.time >= :fromTime and block.time <= :toTime")
+  List<MultiAsset> getTokensInTransactionInTimeRange(@Param("fromTime") Timestamp fromTime,
+                                                     @Param("toTime") Timestamp toTime);
+
+
 }
