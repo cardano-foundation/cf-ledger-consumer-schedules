@@ -1,25 +1,20 @@
 # Infrastructure domain
-infrastructure:
-  host: ${POSTGRES_HOST:10.4.10.112}
-spring:
-  # Datasource specific configs
-  datasource:
-    type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:54321}/${POSTGRES_DB:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
-    username: ${POSTGRES_USER:cardano_read}
-    password: ${POSTGRES_PASSWORD:1}
-    driver-class-name: org.postgresql.Driver
-    # Hikari specific configs
-    hikari:
-      pool-name: explorer-schedule-pool
-      minimum-idle: 1 #minimum number of idle connections maintained by HikariCP in a connection pool
-      maximum-pool-size: ${MAXIMUM_POOL_SIZE:48} #maximum pool size
-      idle-timeout: 300000 #maximum idle time for connection
-      max-lifetime: 900000 #maximum lifetime in milliseconds of a connection in the pool after it is closed.
-      connection-timeout: 50000 #maximum number of milliseconds that a client will wait for a connection
-      auto-commit: false #default auto-commit behavior.
-      connection-init-sql: SELECT 1
-      data-source-properties:
+multi-datasource: #specified for HikariDataSource
+  datasourceLedgerSync:
+    hikariConfig:
+      jdbcUrl: jdbc:postgresql://${LEDGER_SYNC_HOST:10.4.10.112}:${LEDGER_SYNC_PORT:54321}/${LEDGER_SYNC_DB:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
+      username: ${LEDGER_SYNC_USER:cardano_read}
+      password: ${LEDGER_SYNC_USER:1}
+      driverClassName: org.postgresql.Driver
+      poolName: explorer-schedule-ledgersync-pool
+      minimumIdle: 1 #minimum number of idle connections maintained by HikariCP in a connection pool
+      maximumPoolSize: ${MAXIMUM_POOL_SIZE:48} #maximum pool size
+      idleTimeout: 300000 #maximum idle time for connection
+      maxLifetime: 900000 #maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      connectionTimeout: 50000 #maximum number of milliseconds that a client will wait for a connection
+      autoCommit: false #default auto-commit behavior.
+      connectionInitSql: SELECT 1
+      dataSourceProperties:
         cachePrepStmts: true
         prepStmtCacheSize: 250
         prepStmtCacheSqlLimit: 2048
@@ -30,6 +25,56 @@ spring:
         cacheServerConfiguration: true
         elideSetAutoCommits: true
         maintainTimeStats: false
+    flyway:
+      enabled: ${LEDGER_SYNC_FLYWAY_ENABLE:false}
+      group: true
+      sqlMigrationPrefix: V
+      sqlMigrationSeparator: __
+      sqlMigrationSuffixes: .sql
+      locations: db/migration/ledgersync
+      defaultSchema: ${spring.jpa.properties.hibernate.default_schema}
+      schemas: ${spring.jpa.properties.hibernate.default_schema}
+      validateOnMigrate: ${LEDGER_SYNC_FLYWAY_VALIDATE:false}
+      outOfOrder: true
+
+  datasourceAnalytics:
+    hikariConfig:
+      jdbcUrl: jdbc:postgresql://localhost:${ANALYTICS_HOST:54321}/${ANALYTICS_PORT:explorer}?currentSchema=${POSTGRES_SCHEMA}
+      username: ${ANALYTICS_USER:cardano-master}
+      password: ${ANALYTICS_PASSWORD:Y2FyZGFuby1kYXRhYmFzZS1tYXN0ZXI=}
+      driverClassName: org.postgresql.Driver
+      poolName: explorer-schedule-analytics-pool
+      minimumIdle: 1 #minimum number of idle connections maintained by HikariCP in a connection pool
+      maximumPoolSize: ${MAXIMUM_POOL_SIZE:48} #maximum pool size
+      idleTimeout: 300000 #maximum idle time for connection
+      maxLifetime: 900000 #maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      connectionTimeout: 50000 #maximum number of milliseconds that a client will wait for a connection
+      autoCommit: false #default auto-commit behavior.
+      connectionInitSql: SELECT 1
+      dataSourceProperties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+    flyway:
+      enabled: ${ANALYTICS_FLYWAY_ENABLE:true}
+      group: true
+      sqlMigrationPrefix: V
+      sqlMigrationSeparator: __
+      sqlMigrationSuffixes: .sql
+      locations: db/migration/analytics
+      defaultSchema: ${spring.jpa.properties.hibernate.default_schema}
+      schemas: ${spring.jpa.properties.hibernate.default_schema}
+      validateOnMigrate: ${ANALYTICS_FLYWAY_VALIDATE:false}
+      outOfOrder: true
+
+spring:
   # JPA specific configs
   jpa:
     open-in-view: false
@@ -52,19 +97,7 @@ spring:
       thread-name-prefix: Executorxx-
   ## Flyway config
   flyway:
-    enabled: ${FLYWAY_ENABLE:true}
-    url: ${spring.datasource.url}
-    user: ${spring.datasource.username}
-    password: ${spring.datasource.password}
-    group: true
-    sql-migration-prefix: V
-    sql-migration-separator: __
-    sql-migration-suffixes: .sql
-    locations: db/migration
-    default-schema: ${spring.jpa.properties.hibernate.default_schema}
-    schemas: ${spring.jpa.properties.hibernate.default_schema}
-    validate-on-migrate: ${FLYWAY_VALIDATE:false}
-    out-of-order: true
+    enabled: false # disable auto FlywayAutoConfiguration
 
 jobs:
   meta-data:
@@ -86,6 +119,9 @@ jobs:
   token-page-cache:
     fixed-delay: ${TOKEN_PAGE_CACHE_FIXED_DELAY:200000}
     ttl: ${TOKEN_PAGE_CACHE_TTL:200000}
+  unique-account:
+    enabled: ${UNIQUE_ACCOUNT_ENABLED:true}
+    fixed-delay: ${UNIQUE_ACCOUNT_FIXED_DELAY:300000}
   token-info:
     enabled: ${TOKEN_INFO_JOB_ENABLED:true}
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}

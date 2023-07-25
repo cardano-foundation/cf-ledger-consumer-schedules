@@ -3,6 +3,7 @@ package org.cardanofoundation.job.service.impl;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -104,7 +105,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
       log.info("Get MultiAsset take {} ms", System.currentTimeMillis() - startTime);
 
       Timestamp yesterday =
-          Timestamp.valueOf(updateTime.minusDays(1));
+          Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC).minusDays(1));
       Long txId = txRepository.findMinTxByAfterTime(yesterday).orElse(Long.MAX_VALUE);
 
       int multiAssetListSize = 50000;
@@ -144,7 +145,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     } else {
       Timestamp yesterday =
-          Timestamp.valueOf(updateTime.minusDays(1));
+          Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC).minusDays(1));
       Long txId = txRepository.findMinTxByAfterTime(yesterday).orElse(Long.MAX_VALUE);
       var tokensInTransactionWithNewBlockRange = multiAssetRepository.getTokensInTransactionInBlockRange(
           tokenInfoCheckpoint.get().getBlockNo(),

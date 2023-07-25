@@ -92,15 +92,18 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
   }
 
   @Override
-  public List<RewardResponse> listReward(String poolView, Pageable pageable) {
+  public List<RewardResponse> listReward(PoolReportHistory poolReportHistory, Pageable pageable) {
     List<RewardResponse> rewardRes = new ArrayList<>();
 
-    if (!fetchRewardDataService.fetchReward(poolView)) {
+    if (!fetchRewardDataService.fetchReward(poolReportHistory.getPoolView())) {
       throw new RuntimeException("Fetch reward failed");
     }
 
     Page<LifeCycleRewardProjection> projections =
-        rewardRepository.getRewardInfoByPool(poolView, pageable);
+        rewardRepository.getRewardInfoByPool(poolReportHistory.getPoolView(),
+                                             poolReportHistory.getBeginEpoch(),
+                                             poolReportHistory.getEndEpoch(),
+                                             pageable);
     if (Objects.nonNull(projections)) {
       projections.stream()
           .forEach(

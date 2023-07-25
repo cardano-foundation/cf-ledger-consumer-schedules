@@ -17,6 +17,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
+import org.cardanofoundation.job.config.datasource.DataBaseType;
+import org.cardanofoundation.job.config.datasource.SwitchDataSource;
 import org.cardanofoundation.job.dto.report.pool.EpochSize;
 import org.cardanofoundation.job.dto.report.pool.PoolDeregistration;
 import org.cardanofoundation.job.dto.report.pool.PoolRegistration;
@@ -268,7 +270,7 @@ public class ReportHistoryServiceAsync {
   @Async
   public CompletableFuture<ExportContent> exportRewardsDistribution(PoolReportHistory poolReport) {
     List<RewardDistribution> poolRegistrations =
-        poolLifecycleService.listReward(poolReport.getPoolView(), defPageablePool).stream()
+        poolLifecycleService.listReward(poolReport, defPageablePool).stream()
             .map(RewardDistribution::toDomain)
             .collect(Collectors.toList());
 
