@@ -2,16 +2,13 @@ package org.cardanofoundation.job.service.impl;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,7 +26,6 @@ import org.cardanofoundation.explorer.consumercommon.entity.TokenInfo;
 import org.cardanofoundation.explorer.consumercommon.entity.TokenInfoCheckpoint;
 import org.cardanofoundation.job.model.TokenNumberHolders;
 import org.cardanofoundation.job.model.TokenVolume;
-import org.cardanofoundation.job.projection.TokenVolumeProjection;
 import org.cardanofoundation.job.repository.AddressTokenRepository;
 import org.cardanofoundation.job.repository.BlockRepository;
 import org.cardanofoundation.job.repository.MultiAssetRepository;
@@ -56,7 +52,6 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final TokenInfoRepository tokenInfoRepository;
   private final TokenInfoServiceAsync tokenInfoServiceAsync;
   private final TxRepository txRepository;
-  private final AddressTokenRepository addressTokenRepository;
   private final JOOQTokenInfoRepository jooqTokenInfoRepository;
   private final JOOQMultiAssetRepository jooqMultiAssetRepository;
   private final JOOQAddressTokenBalanceRepository jooqAddressTokenBalanceRepository;
@@ -136,41 +131,48 @@ public class TokenInfoServiceImpl implements TokenInfoService {
           .flatMap(List::stream)
           .toList();
       BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
-
       multiAssetList.clear();
 
       tokenInfoCheckpointRepository.save(
           TokenInfoCheckpoint.builder().blockNo(maxBlockNo)
               .updateTime(Timestamp.valueOf(updateTime)).build());
-
     } else {
       Timestamp yesterday =
           Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC).minusDays(1));
       Long txId = txRepository.findMinTxByAfterTime(yesterday).orElse(Long.MAX_VALUE);
+
       var tokensInTransactionWithNewBlockRange = multiAssetRepository.getTokensInTransactionInBlockRange(
           tokenInfoCheckpoint.get().getBlockNo(),
           maxBlockNo);
-      log.info("tokensInTransactionWithNewBlockRange has size: {}", tokensInTransactionWithNewBlockRange.size());
+      log.info("tokensInTransactionWithNewBlockRange has size: {}",
+          tokensInTransactionWithNewBlockRange.size());
+      var tokensInTransactionWithNewBlockRangeMap = StreamUtil.toMap(
+          tokensInTransactionWithNewBlockRange, MultiAsset::getId, Function.identity());
+
       var lastUpdateTime = tokenInfoCheckpoint.get().getUpdateTime();
 
       var tokensWithZeroTxCount = multiAssetRepository.getTokensWithZeroTxCountAndAfterTime(
           tokenInfoCheckpoint.get().getUpdateTime());
       log.info("tokensWithZeroTxCount has size: {}", tokensWithZeroTxCount.size());
+      var tokensWithZeroTxCountMap = StreamUtil.toMap(
+          tokensWithZeroTxCount, MultiAsset::getId, Function.identity());
 
       var tokenNeedUpdateVolume24h = multiAssetRepository.getTokensInTransactionInTimeRange(
           Timestamp.valueOf(lastUpdateTime.toLocalDateTime().minusDays(1)), yesterday
       );
+
       log.info("tokenNeedUpdateVolume24h has size: {}", tokenNeedUpdateVolume24h.size());
+      var tokenNeedUpdateVolume24hMap = StreamUtil.toMap(
+          tokenNeedUpdateVolume24h, MultiAsset::getId, Function.identity());
 
-      Set<Long> idsOfTokensToProcess = new HashSet<>();
-      idsOfTokensToProcess.addAll(
-          StreamUtil.mapApply(tokensInTransactionWithNewBlockRange, MultiAsset::getId));
-      idsOfTokensToProcess.addAll(StreamUtil.mapApply(tokensWithZeroTxCount, MultiAsset::getId));
-      idsOfTokensToProcess.addAll(StreamUtil.mapApply(tokenNeedUpdateVolume24h, MultiAsset::getId));
+      var tokenToProcessMap = new HashMap<Long, MultiAsset>();
+      tokenToProcessMap.putAll(tokensInTransactionWithNewBlockRangeMap);
+      tokenToProcessMap.putAll(tokensWithZeroTxCountMap);
+      tokenToProcessMap.putAll(tokenNeedUpdateVolume24hMap);
 
-      log.info("tokensToProcess has size: {}", idsOfTokensToProcess.size());
-
-      BatchUtils.doBatching(10000, idsOfTokensToProcess.stream().toList(), multiAssetIds -> {
+      log.info("tokenToProcess has size: {}", tokenToProcessMap.size());
+      BatchUtils.doBatching(10000, tokenToProcessMap.values().stream().toList(), multiAssets -> {
+        List<Long> multiAssetIds = StreamUtil.mapApply(multiAssets, MultiAsset::getId);
         List<TokenInfo> saveEntities = new ArrayList<>();
 
         List<TokenVolume> volumes = jooqAddressTokenRepository.sumBalanceAfterTx(
@@ -179,28 +181,28 @@ public class TokenInfoServiceImpl implements TokenInfoService {
             StreamUtil.toMap(
                 volumes, TokenVolume::getIdent, TokenVolume::getVolume);
         var mapNumberHolder = getMapNumberHolder(multiAssetIds);
+
         var tokenInfoMap = tokenInfoRepository.findByMultiAssetIdIn(
                 multiAssetIds).stream()
             .collect(Collectors.toMap(TokenInfo::getMultiAssetId, Function.identity()));
 
-        multiAssetIds.forEach(id -> {
-          var tokenInfo = tokenInfoMap.getOrDefault(id, new TokenInfo());
-          tokenInfo.setMultiAssetId(id);
-          tokenInfo.setVolume24h(tokenVolumeMap.getOrDefault(id, BigInteger.ZERO));
-          tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(id, 0L));
+        multiAssetIds.forEach(multiAssetId -> {
+          var tokenInfo = tokenInfoMap.getOrDefault(multiAssetId, new TokenInfo());
+          tokenInfo.setMultiAsset(tokenToProcessMap.get(multiAssetId));
+          tokenInfo.setVolume24h(tokenVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
+          tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAssetId, 0L));
           tokenInfo.setUpdateTime(Timestamp.valueOf(updateTime));
           tokenInfo.setBlockNo(maxBlockNo);
           saveEntities.add(tokenInfo);
         });
-        BatchUtils.doBatching(500, saveEntities, tokenInfoRepository::saveAll);
 
+        BatchUtils.doBatching(500, saveEntities, tokenInfoRepository::saveAll);
       });
 
       tokenInfoCheckpointRepository.save(
           TokenInfoCheckpoint.builder().blockNo(maxBlockNo)
               .updateTime(Timestamp.valueOf(updateTime)).build());
     }
-
   }
 
   private Map<Long, Long> getMapNumberHolder(List<Long> multiAssetIds) {
