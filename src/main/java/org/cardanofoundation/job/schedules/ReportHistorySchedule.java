@@ -38,7 +38,7 @@ public class ReportHistorySchedule {
 
   /** Find all report history expired and delete from storage and set status to EXPIRED */
   @Scheduled(fixedRateString = "${jobs.report-history.expired.rate}", initialDelay = 3000)
-  void setExpiredReportHistory() {
+  public void setExpiredReportHistory() {
     var currentTime = System.currentTimeMillis();
     Timestamp timeAt7dayAgo =
         Timestamp.valueOf(
