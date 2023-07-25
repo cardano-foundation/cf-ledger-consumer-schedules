@@ -17,6 +17,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
+import org.cardanofoundation.job.config.datasource.DataBaseType;
+import org.cardanofoundation.job.config.datasource.SwitchDataSource;
 import org.cardanofoundation.job.dto.report.pool.EpochSize;
 import org.cardanofoundation.job.dto.report.pool.PoolDeregistration;
 import org.cardanofoundation.job.dto.report.pool.PoolRegistration;
@@ -36,7 +38,6 @@ import org.cardanofoundation.job.util.report.ExportContent;
 public class ReportHistoryServiceAsync {
 
   private static final String DELEGATION_HISTORY_TITLE = "Delegation History";
-  private static final String REWARDS_DISTRIBUTION_TITLE = "Rewards Distribution";
   private static final String WITHDRAWAL_HISTORY_TITLE = "Withdrawal History";
   private static final String WALLET_ACTIVITY_TITLE = "ADA Transfer";
   private static final String POOL_SIZE_TITLE = "Pool Size";
@@ -145,7 +146,7 @@ public class ReportHistoryServiceAsync {
     return CompletableFuture.completedFuture(
         ExportContent.builder()
             .clazz(StakeRewardResponse.class)
-            .headerTitle(REWARDS_DISTRIBUTION_TITLE)
+            .headerTitle(REWARD_DISTRIBUTION_TITLE)
             .lstColumn(StakeRewardResponse.buildExportColumn())
             .lstData(stakeRewards)
             .build());
@@ -268,7 +269,7 @@ public class ReportHistoryServiceAsync {
   @Async
   public CompletableFuture<ExportContent> exportRewardsDistribution(PoolReportHistory poolReport) {
     List<RewardDistribution> poolRegistrations =
-        poolLifecycleService.listReward(poolReport.getPoolView(), defPageablePool).stream()
+        poolLifecycleService.listReward(poolReport, defPageablePool).stream()
             .map(RewardDistribution::toDomain)
             .collect(Collectors.toList());
 
