@@ -14,14 +14,6 @@ public interface StorageService {
   void uploadFile(byte[] bytes, String filename);
 
   /**
-   * Upload image to storage
-   * @param inputStream input stream
-   * @param filename filename
-   * @throws IOException
-   */
-  void uploadImageFile(InputStream inputStream, String filename) throws IOException;
-
-  /**
    * Delete file from storage
    *
    * @param fileName filename

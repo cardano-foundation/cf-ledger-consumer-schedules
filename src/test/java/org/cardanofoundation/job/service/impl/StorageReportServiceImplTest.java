@@ -16,15 +16,15 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
 @ExtendWith(MockitoExtension.class)
-class StorageServiceImplTest {
+class StorageReportServiceImplTest {
   private final String bucketName = "test-bucket";
-  private StorageServiceImpl storageService;
+  private StorageReportServiceImpl storageService;
   @Mock
   private AmazonS3 s3Client;
 
   @BeforeEach
   void setUp() {
-    storageService = new StorageServiceImpl(s3Client);
+    storageService = new StorageReportServiceImpl(s3Client);
     ReflectionTestUtils.setField(storageService, "bucketName", bucketName);
   }
 

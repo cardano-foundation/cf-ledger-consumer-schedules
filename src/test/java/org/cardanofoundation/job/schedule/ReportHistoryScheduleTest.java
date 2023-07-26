@@ -34,7 +34,7 @@ class ReportHistoryScheduleTest {
 
   @BeforeEach
   void setUp() {
-    reportHistorySchedule = new ReportHistorySchedule(reportHistoryRepository, storageService);
+    reportHistorySchedule = new ReportHistorySchedule(reportHistoryRepository);
   }
 
   @Test
