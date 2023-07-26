@@ -158,7 +158,7 @@ cloud:
         name: ${S3_BUCKET_NAME:cardano-explorer-api-storage-mainnet}
       path-style:
         enabled: true
-      endpoint: ${STORAGE_ENDPOINT:http://10.4.10.112:9000}
+      endpoint: ${STORAGE_ENDPOINT:http://localhost:9099}
 logging:
   level:
     org.cardanofoundation: ${LOG:INFO}
