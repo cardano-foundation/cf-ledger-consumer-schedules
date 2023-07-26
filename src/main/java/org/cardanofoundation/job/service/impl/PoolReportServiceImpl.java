@@ -12,6 +12,9 @@ import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
@@ -29,11 +32,17 @@ import org.cardanofoundation.job.util.report.ExportContent;
 @RequiredArgsConstructor
 public class PoolReportServiceImpl implements PoolReportService {
 
-  private final StorageService storageService;
+  @Autowired
+  @Qualifier("storageReportServiceImpl")
+  private StorageService storageService;
+
   private final PoolReportHistoryRepository poolReportRepository;
   private final ExcelHelper excelHelper;
 
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
+
+  @Value("${application.network}")
+  private String folderPrefix;
 
   @Override
   public void exportPoolReport(PoolReportHistory poolReportHistory) throws Exception {
@@ -103,7 +112,7 @@ public class PoolReportServiceImpl implements PoolReportService {
    * @return storage key
    */
   private String generateStorageKey(PoolReportHistory poolReport) {
-    return poolReport.getReportHistory().getId()
+    return folderPrefix + "/" + poolReport.getReportHistory().getId()
         + "_"
         + poolReport.getReportHistory().getReportName();
   }

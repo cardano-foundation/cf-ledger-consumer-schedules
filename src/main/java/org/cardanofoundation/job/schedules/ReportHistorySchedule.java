@@ -14,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -34,7 +36,10 @@ import org.cardanofoundation.job.service.StorageService;
 public class ReportHistorySchedule {
 
   private final ReportHistoryRepository reportHistoryRepository;
-  private final StorageService storageService;
+
+  @Autowired
+  @Qualifier("storageReportServiceImpl")
+  private StorageService storageService;
 
   /** Find all report history expired and delete from storage and set status to EXPIRED */
   @Scheduled(fixedRateString = "${jobs.report-history.expired.rate}", initialDelay = 3000)

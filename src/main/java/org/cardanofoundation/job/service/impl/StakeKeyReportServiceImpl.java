@@ -12,6 +12,8 @@ import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +37,9 @@ import org.cardanofoundation.job.util.report.ExportContent;
 @RequiredArgsConstructor
 public class StakeKeyReportServiceImpl implements StakeKeyReportService {
 
-  private final StorageService storageService;
+  @Autowired
+  @Qualifier("storageReportServiceImpl")
+  private StorageService storageService;
   private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
   private final AddressTxBalanceRepository addressTxBalanceRepository;
@@ -44,6 +48,8 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
   @Value("${jobs.limit-content}")
   private int limitSize;
 
+  @Value("${application.network}")
+  private String folderPrefix;
   /**
    * Export stake key report
    *
@@ -171,7 +177,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
    * @return storage_key
    */
   private String generateStorageKey(StakeKeyReportHistory stakeKeyReportHistory) {
-    return stakeKeyReportHistory.getReportHistory().getId()
+    return folderPrefix + "/" + stakeKeyReportHistory.getReportHistory().getId()
         + "_"
         + stakeKeyReportHistory.getReportHistory().getReportName();
   }
