@@ -22,6 +22,8 @@ import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
+import org.cardanofoundation.job.config.datasource.DataBaseType;
+import org.cardanofoundation.job.config.datasource.SwitchDataSource;
 import org.cardanofoundation.job.repository.ReportHistoryRepository;
 import org.cardanofoundation.job.service.StorageService;
 
@@ -43,7 +45,8 @@ public class ReportHistorySchedule {
 
   /** Find all report history expired and delete from storage and set status to EXPIRED */
   @Scheduled(fixedRateString = "${jobs.report-history.expired.rate}", initialDelay = 3000)
-  void setExpiredReportHistory() {
+  @SwitchDataSource(DataBaseType.ANALYTICS)
+  public void setExpiredReportHistory() {
     var currentTime = System.currentTimeMillis();
     Timestamp timeAt7dayAgo =
         Timestamp.valueOf(
