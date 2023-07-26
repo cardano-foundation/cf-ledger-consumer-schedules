@@ -37,6 +37,7 @@
     <version.log4j>2.20.0</version.log4j>
     <version.guava>31.1-jre</version.guava>
     <version.emmbedded-redis>1.2</version.emmbedded-redis>
+    <version.axb-api>2.3.1</version.axb-api>
   </properties>
 
   <repositories>
@@ -202,7 +203,7 @@
     <dependency>
       <groupId>javax.xml.bind</groupId>
       <artifactId>jaxb-api</artifactId>
-      <version>2.3.1</version>
+      <version>${version.axb-api}</version>
     </dependency>
   </dependencies>
 
