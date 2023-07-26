@@ -47,7 +47,9 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - S3_SECRET_KEY: the AWS secret key 
 - S3_REGION: the AWS region 
 - S3_BUCKET_NAME: the AWS bucket
-- S3_STORAGE_ENDPOINT: the storage endpoint, only for S3 clone (either on localhost, Minio, etc.)
+- S3_STORAGE_ENDPOINT: the AWS storage endpoint
+- S3_BUCKET_FOLDER_REPORT: the AWS bucket folder to store reports
+- S3_BUCKET_FOLDER_TOKEN: the AWS bucket folder to store token-logo
 - SPRING_PROFILES_ACTIVE: active profiles
 - LOG: application log level
 - POOL_OFFLINE_DATA_JOB_ENABLED: enable fetch pool offline metadata job

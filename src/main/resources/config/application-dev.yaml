@@ -193,6 +193,9 @@ cloud:
     s3:
       bucket:
         name: ${S3_BUCKET_NAME:cardano-explorer-api-storage}
+        folder:
+          report: ${S3_BUCKET_FOLDER_REPORT:reports}
+          token: ${S3_BUCKET_FOLDER_TOKEN:tokens}
       path-style:
         enabled: ${S3_PATH_STYLE_ENABLED:true}
       endpoint: ${S3_STORAGE_ENDPOINT:http://172.22.0.2:9000}

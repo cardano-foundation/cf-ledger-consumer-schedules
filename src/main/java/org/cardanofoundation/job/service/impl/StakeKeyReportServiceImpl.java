@@ -48,6 +48,8 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
   @Value("${jobs.limit-content}")
   private int limitSize;
 
+  @Value("${cloud.aws.s3.bucket.folder.report}")
+  private String folderPrefix;
   /**
    * Export stake key report
    *
@@ -181,7 +183,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
    * @return storage_key
    */
   private String generateStorageKey(StakeKeyReportHistory stakeKeyReportHistory) {
-    return stakeKeyReportHistory.getReportHistory().getId()
+    return folderPrefix + "/" + stakeKeyReportHistory.getReportHistory().getId()
         + "_"
         + stakeKeyReportHistory.getReportHistory().getReportName();
   }
