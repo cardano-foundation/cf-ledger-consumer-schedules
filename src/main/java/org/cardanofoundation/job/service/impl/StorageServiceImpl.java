@@ -42,8 +42,7 @@ public class StorageServiceImpl implements StorageService {
     ObjectMetadata metadata = new ObjectMetadata();
     metadata.setContentType(MediaType.IMAGE_PNG_VALUE);
     metadata.setContentLength(inputStream.available());
-    s3Client.putObject(new PutObjectRequest(bucketName, filename, inputStream, metadata)
-                           .withCannedAcl(CannedAccessControlList.PublicRead));
+    s3Client.putObject(new PutObjectRequest(bucketName, filename, inputStream, metadata));
   }
 
   @Override

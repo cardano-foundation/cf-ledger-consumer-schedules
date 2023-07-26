@@ -62,8 +62,6 @@ public class AssetMetadataSchedule {
   private String network;
   @Value("${cloud.aws.s3.bucket.folder.token}")
   private String folderPrefix;
-  @Value("${cloud.aws.s3.endpoint}")
-  private String storageEndpoint;
   @Value("${cloud.aws.s3.bucket.name}")
   private String bucketName;
 
@@ -112,8 +110,7 @@ public class AssetMetadataSchedule {
           // if flagUpload = true then add to assetMetadataMapUpload and set logo url
           if (Boolean.TRUE.equals(flagUpload)) {
             assetMetadataMapUpload.put(assetMetadataDTO.getSubject(), assetMetadataDTO);
-            assetMetadataTarget.setLogo(storageEndpoint + "/" + bucketName + "/" +
-                                            folderPrefix + "/" + assetMetadataDTO.getSubject());
+            assetMetadataTarget.setLogo(bucketName + "/" + folderPrefix + "/" + assetMetadataDTO.getSubject());
           }
           assetMetadataList.add(assetMetadataTarget);
         });
