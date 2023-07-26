@@ -21,9 +21,12 @@ import org.springframework.stereotype.Service;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeKeyReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.job.common.enumeration.ExportType;
+import org.cardanofoundation.job.config.datasource.DataBaseType;
+import org.cardanofoundation.job.config.datasource.SwitchDataSource;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
 import org.cardanofoundation.job.repository.AddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.StakeKeyReportHistoryRepository;
+import org.cardanofoundation.job.service.ReportHistoryService;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.service.StakeKeyReportService;
 import org.cardanofoundation.job.service.StorageService;
@@ -39,6 +42,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
   private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
   private final AddressTxBalanceRepository addressTxBalanceRepository;
+  private final ReportHistoryService reportHistoryService;
   private final ExcelHelper excelHelper;
 
   @Value("${jobs.limit-content}")
@@ -71,13 +75,19 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
       log.error("Error while generating report", e);
       throw e;
     } finally {
-      stakeKeyReportHistoryRepository.save(stakeKeyReportHistory);
+      reportHistoryService.saveStakeReportHistory(stakeKeyReportHistory);
       var endTime = System.currentTimeMillis();
       log.info(
           "Persist ReportHistory {} to storage time taken: {} ms",
           stakeKeyReportHistory.getReportHistory().getId(),
           endTime - startTime);
     }
+  }
+
+  @Override
+  @SwitchDataSource(DataBaseType.ANALYTICS)
+  public StakeKeyReportHistory findByReportId(Long reportId) {
+    return stakeKeyReportHistoryRepository.findByReportHistoryId(reportId);
   }
 
   /**

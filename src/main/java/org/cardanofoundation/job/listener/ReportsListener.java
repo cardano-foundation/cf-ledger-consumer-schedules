@@ -13,8 +13,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
 import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeKeyReportHistory;
-import org.cardanofoundation.job.repository.PoolReportHistoryRepository;
-import org.cardanofoundation.job.repository.StakeKeyReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
 import org.cardanofoundation.job.service.StakeKeyReportService;
 
@@ -26,9 +24,6 @@ import org.cardanofoundation.job.service.StakeKeyReportService;
     matchIfMissing = true,
     havingValue = "true")
 public class ReportsListener {
-
-  private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
-  private final PoolReportHistoryRepository poolReportHistoryRepository;
   private final StakeKeyReportService stakeKeyReportService;
   private final PoolReportService poolReportService;
 
@@ -42,13 +37,13 @@ public class ReportsListener {
 
       switch (reportHistory.getType()) {
         case STAKE_KEY:
-          StakeKeyReportHistory stakeKeyReportHistory =
-              stakeKeyReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
+          StakeKeyReportHistory stakeKeyReportHistory = stakeKeyReportService.findByReportId(
+              reportHistory.getId());
           stakeKeyReportService.exportStakeKeyReport(stakeKeyReportHistory);
           break;
         case POOL_ID:
-          PoolReportHistory poolReportHistory =
-              poolReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
+          PoolReportHistory poolReportHistory = poolReportService.findByReportId(
+              reportHistory.getId());
           poolReportService.exportPoolReport(poolReportHistory);
           break;
         default:
