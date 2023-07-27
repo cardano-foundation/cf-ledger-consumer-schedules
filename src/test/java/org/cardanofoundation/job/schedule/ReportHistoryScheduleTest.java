@@ -7,7 +7,8 @@ import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportType;
 import org.cardanofoundation.job.repository.ReportHistoryRepository;
 import org.cardanofoundation.job.schedules.ReportHistorySchedule;
-import org.cardanofoundation.job.service.StorageService;
+import org.cardanofoundation.job.service.impl.StorageReportServiceImpl;
+
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -27,7 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ReportHistoryScheduleTest {
 
   @Mock
-  StorageService storageService;
+  StorageReportServiceImpl storageService;
+
   @Mock
   ReportHistoryRepository reportHistoryRepository;
   ReportHistorySchedule reportHistorySchedule;

@@ -16,7 +16,7 @@ public interface AssetMedataMapper {
   @Mapping(target = "policy", source = "policy")
   @Mapping(target = "ticker", source = "ticker.value")
   @Mapping(target = "url", source = "url.value")
-  @Mapping(target = "logo", source = "logo.value")
+  @Mapping(target = "logo", ignore = true)
   @Mapping(target = "decimals", source = "decimals.value")
   AssetMetadata fromDTO(AssetMetadataDTO dto);
 
