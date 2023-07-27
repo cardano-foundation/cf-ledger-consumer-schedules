@@ -19,6 +19,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 class StorageServiceImplTest {
   private final String bucketName = "test-bucket";
   private StorageReportServiceImpl storageService;
+  
   @Mock
   private AmazonS3 s3Client;
 
