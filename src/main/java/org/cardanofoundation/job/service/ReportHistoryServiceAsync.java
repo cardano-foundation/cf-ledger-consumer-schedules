@@ -36,7 +36,6 @@ import org.cardanofoundation.job.util.report.ExportContent;
 public class ReportHistoryServiceAsync {
 
   private static final String DELEGATION_HISTORY_TITLE = "Delegation History";
-  private static final String REWARDS_DISTRIBUTION_TITLE = "Rewards Distribution";
   private static final String WITHDRAWAL_HISTORY_TITLE = "Withdrawal History";
   private static final String WALLET_ACTIVITY_TITLE = "ADA Transfer";
   private static final String POOL_SIZE_TITLE = "Pool Size";
@@ -145,7 +144,7 @@ public class ReportHistoryServiceAsync {
     return CompletableFuture.completedFuture(
         ExportContent.builder()
             .clazz(StakeRewardResponse.class)
-            .headerTitle(REWARDS_DISTRIBUTION_TITLE)
+            .headerTitle(REWARD_DISTRIBUTION_TITLE)
             .lstColumn(StakeRewardResponse.buildExportColumn())
             .lstData(stakeRewards)
             .build());
