@@ -26,7 +26,6 @@ import org.cardanofoundation.job.repository.AddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.StakeKeyReportHistoryRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.service.StakeKeyReportService;
-import org.cardanofoundation.job.service.StorageService;
 import org.cardanofoundation.job.util.report.ExcelHelper;
 import org.cardanofoundation.job.util.report.ExportContent;
 
@@ -35,7 +34,7 @@ import org.cardanofoundation.job.util.report.ExportContent;
 @RequiredArgsConstructor
 public class StakeKeyReportServiceImpl implements StakeKeyReportService {
 
-  private final StorageService storageService;
+  private final StorageReportServiceImpl storageService;
   private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
   private final AddressTxBalanceRepository addressTxBalanceRepository;
@@ -44,6 +43,8 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
   @Value("${jobs.limit-content}")
   private int limitSize;
 
+  @Value("${application.network}")
+  private String folderPrefix;
   /**
    * Export stake key report
    *
@@ -171,7 +172,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
    * @return storage_key
    */
   private String generateStorageKey(StakeKeyReportHistory stakeKeyReportHistory) {
-    return stakeKeyReportHistory.getReportHistory().getId()
+    return folderPrefix + "/" + stakeKeyReportHistory.getReportHistory().getId()
         + "_"
         + stakeKeyReportHistory.getReportHistory().getReportName();
   }
