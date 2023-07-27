@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.9](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.8...v0.2.9) (2023-07-27)
+
+
+### Features
+
+* MET-1488 store logo of token to storage ([8d9817e](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/8d9817e4a5367e473ec2137155749a450ccf4316))
+* **tests:** add unit-test for report func ([202f216](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/202f2163b4502717d0810110fce67c726152c0d3))
+
 ## [0.2.8](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.7...v0.2.8) (2023-07-18)
 
 
