@@ -4,10 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
@@ -19,34 +19,27 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.cardanofoundation.job.service.StorageService;
 
 @Service
-@RequiredArgsConstructor
 @Log4j2
-public class StorageServiceImpl implements StorageService {
+public class StorageReportServiceImpl implements StorageService {
 
-  private final AmazonS3 s3Client;
+  private final AmazonS3 reportS3;
 
-  @Value("${cloud.aws.s3.bucket.name}")
+  @Value("${clouds.s3Configs[0].bucket}")
   private String bucketName;
+
+  public StorageReportServiceImpl(@Lazy AmazonS3 reportS3) {this.reportS3 = reportS3;}
 
   @Override
   public void uploadFile(byte[] bytes, String fileName) {
     ObjectMetadata metadata = new ObjectMetadata();
     metadata.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
     metadata.setContentLength(bytes.length);
-    s3Client.putObject(
+    reportS3.putObject(
         new PutObjectRequest(bucketName, fileName, new ByteArrayInputStream(bytes), metadata));
   }
 
   @Override
-  public void uploadImageFile(InputStream inputStream, String filename) throws IOException {
-    ObjectMetadata metadata = new ObjectMetadata();
-    metadata.setContentType(MediaType.IMAGE_PNG_VALUE);
-    metadata.setContentLength(inputStream.available());
-    s3Client.putObject(new PutObjectRequest(bucketName, filename, inputStream, metadata));
-  }
-
-  @Override
   public void deleteFile(String fileName) {
-    s3Client.deleteObject(bucketName, fileName);
+    reportS3.deleteObject(bucketName, fileName);
   }
 }

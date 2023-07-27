@@ -182,19 +182,23 @@ kafka:
     topics:
       reports: ${KAFKA_REPORTS_TOPIC:dev.explorer.api.mainnet.reports}
 
-cloud:
-  aws:
-    credentials:
-      access-key: ${S3_ACCESS_KEY:minio_access_key}
-      secret-key: ${S3_SECRET_KEY:minio_secret_key}
-    region:
-      static: ${S3_REGION:null}
-    s3:
-      bucket:
-        name: ${S3_BUCKET_NAME:cardano-explorer-api-storage-mainnet}
-      path-style:
-        enabled: true
-      endpoint: ${STORAGE_ENDPOINT:http://localhost:9099}
+clouds:
+  s3Configs:
+    - beanName: reportS3
+      profile: minio
+      endpoint: ${REPORT_S3_STORAGE_ENDPOINT:http://localhost:9099}
+      accessKey: ${REPORT_S3_ACCESS_KEY:minio_access_key}
+      secretKey: ${REPORT_S3_SECRET_KEY:minio_secret_key}
+      region: ${REPORT_S3_REGION:null}
+      bucket: ${REPORT_S3_BUCKET_NAME:cardano-explorer-api-storage-report}
+    - beanName: tokenLogosS3
+      profile: minio
+      endpoint: ${TOKEN_LOGO_S3_STORAGE_ENDPOINT:http://localhost:9099}
+      accessKey: ${TOKEN_LOGO_S3_ACCESS_KEY:minio_access_key}
+      secretKey: ${TOKEN_LOGO_S3_SECRET_KEY:minio_secret_key}
+      region: ${TOKEN_LOGO_S3_REGION:null}
+      bucket: ${TOKEN_LOGO_S3_BUCKET_NAME:cardano-explorer-api-storage-native-assets-logos}
+
 logging:
   level:
     org.cardanofoundation: ${LOG:INFO}

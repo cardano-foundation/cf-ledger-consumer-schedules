@@ -23,7 +23,7 @@ import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.job.config.datasource.DataBaseType;
 import org.cardanofoundation.job.config.datasource.SwitchDataSource;
 import org.cardanofoundation.job.repository.ReportHistoryRepository;
-import org.cardanofoundation.job.service.StorageService;
+import org.cardanofoundation.job.service.impl.StorageReportServiceImpl;
 
 @Component
 @RequiredArgsConstructor
@@ -36,7 +36,7 @@ import org.cardanofoundation.job.service.StorageService;
 public class ReportHistorySchedule {
 
   private final ReportHistoryRepository reportHistoryRepository;
-  private final StorageService storageService;
+  private final StorageReportServiceImpl storageService;
 
   /** Find all report history expired and delete from storage and set status to EXPIRED */
   @Scheduled(fixedRateString = "${jobs.report-history.expired.rate}", initialDelay = 3000)

@@ -25,7 +25,6 @@ import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportType;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
-import org.cardanofoundation.job.service.StorageService;
 import org.cardanofoundation.job.util.report.ExcelHelper;
 import org.cardanofoundation.job.util.report.ExportContent;
 
@@ -36,7 +35,7 @@ class PoolReportServiceImplTest {
 
   @Mock ExcelHelper excelHelper;
 
-  @Mock StorageService storageService;
+  @Mock StorageReportServiceImpl storageService;
 
   @Mock ReportHistoryService reportHistoryService;
 

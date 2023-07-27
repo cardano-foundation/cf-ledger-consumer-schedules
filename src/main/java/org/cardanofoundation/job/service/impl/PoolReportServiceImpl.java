@@ -24,7 +24,6 @@ import org.cardanofoundation.job.repository.PoolReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
 import org.cardanofoundation.job.service.ReportHistoryService;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
-import org.cardanofoundation.job.service.StorageService;
 import org.cardanofoundation.job.util.report.ExcelHelper;
 import org.cardanofoundation.job.util.report.ExportContent;
 
@@ -33,14 +32,14 @@ import org.cardanofoundation.job.util.report.ExportContent;
 @RequiredArgsConstructor
 public class PoolReportServiceImpl implements PoolReportService {
 
-  private final StorageService storageService;
+  private final StorageReportServiceImpl storageService;
   private final PoolReportHistoryRepository poolReportRepository;
   private final ReportHistoryService reportHistoryService;
   private final ExcelHelper excelHelper;
 
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
 
-  @Value("${cloud.aws.s3.bucket.folder.report}")
+  @Value("${application.network}")
   private String folderPrefix;
 
   @Override
