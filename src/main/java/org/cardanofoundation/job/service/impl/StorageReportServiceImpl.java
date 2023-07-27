@@ -39,14 +39,6 @@ public class StorageReportServiceImpl implements StorageService {
   }
 
   @Override
-  public void uploadImageFile(InputStream inputStream, String filename) throws IOException {
-    ObjectMetadata metadata = new ObjectMetadata();
-    metadata.setContentType(MediaType.IMAGE_PNG_VALUE);
-    metadata.setContentLength(inputStream.available());
-    s3Client.putObject(new PutObjectRequest(bucketName, filename, inputStream, metadata));
-  }
-
-  @Override
   public void deleteFile(String fileName) {
     reportS3.deleteObject(bucketName, fileName);
   }
