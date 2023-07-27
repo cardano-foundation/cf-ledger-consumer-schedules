@@ -1552,20 +1552,18 @@
 
 
 <tr>
-<td class='uncovered'>
+<td class='na'>
 <a name='org.pitest.mutationtest.report.html.SourceFile@6acbd477_103'/>
 103
 </td>
-<td class='survived'>
+<td class=''>
 <span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_103'>1</a>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_103'></a>
 <span>
-1. lambda$saveTokenMetada$0 : removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setId &rarr; NO_COVERAGE<br/>
-
 </span>
 </span>
 </td>
-<td class='uncovered'><pre><span  class='survived'>        assetMetadataTarget.setId(assetMetadataSource.getId());</span></pre></td></tr>
+<td class=''><pre><span  class=''>        // Check if logo hash changed then mark flagUpload = true</span></pre></td></tr>
 
 
 <tr>
@@ -1577,12 +1575,12 @@
 <span class='pop'>
 <a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_104'>1</a>
 <span>
-1. lambda$saveTokenMetada$0 : removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setLogo &rarr; NO_COVERAGE<br/>
+1. lambda$saveTokenMetada$0 : negated conditional &rarr; NO_COVERAGE<br/>
 
 </span>
 </span>
 </td>
-<td class='uncovered'><pre><span  class='survived'>        assetMetadataTarget.setLogo(assetMetadataSource.getLogo());</span></pre></td></tr>
+<td class='uncovered'><pre><span  class='survived'>        flagUpload = !Objects.equals(assetMetadataSource.getLogoHash(),</span></pre></td></tr>
 
 
 <tr>
@@ -1590,31 +1588,31 @@
 <a name='org.pitest.mutationtest.report.html.SourceFile@6acbd477_105'/>
 105
 </td>
-<td class='survived'>
+<td class=''>
 <span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_105'>1</a>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_105'></a>
 <span>
-1. lambda$saveTokenMetada$0 : removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setLogoHash &rarr; NO_COVERAGE<br/>
-
 </span>
 </span>
 </td>
-<td class='uncovered'><pre><span  class='survived'>        assetMetadataTarget.setLogoHash(assetMetadataSource.getLogoHash());</span></pre></td></tr>
+<td class='uncovered'><pre><span  class=''>                                     assetMetadataTarget.getLogoHash());</span></pre></td></tr>
 
 
 <tr>
-<td class='na'>
+<td class='uncovered'>
 <a name='org.pitest.mutationtest.report.html.SourceFile@6acbd477_106'/>
 106
 </td>
-<td class=''>
+<td class='survived'>
 <span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_106'></a>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_106'>1</a>
 <span>
+1. lambda$saveTokenMetada$0 : removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setId &rarr; NO_COVERAGE<br/>
+
 </span>
 </span>
 </td>
-<td class=''><pre><span  class=''>        // Check if logo hash changed then mark flagUpload = true</span></pre></td></tr>
+<td class='uncovered'><pre><span  class='survived'>        assetMetadataTarget.setId(assetMetadataSource.getId());</span></pre></td></tr>
 
 
 <tr>
@@ -1626,12 +1624,12 @@
 <span class='pop'>
 <a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_107'>1</a>
 <span>
-1. lambda$saveTokenMetada$0 : negated conditional &rarr; NO_COVERAGE<br/>
+1. lambda$saveTokenMetada$0 : removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setLogo &rarr; NO_COVERAGE<br/>
 
 </span>
 </span>
 </td>
-<td class='uncovered'><pre><span  class='survived'>        flagUpload = !Objects.equals(assetMetadataSource.getLogoHash(),</span></pre></td></tr>
+<td class='uncovered'><pre><span  class='survived'>        assetMetadataTarget.setLogo(assetMetadataSource.getLogo());</span></pre></td></tr>
 
 
 <tr>
@@ -1639,14 +1637,16 @@
 <a name='org.pitest.mutationtest.report.html.SourceFile@6acbd477_108'/>
 108
 </td>
-<td class=''>
+<td class='survived'>
 <span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_108'></a>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_108'>1</a>
 <span>
+1. lambda$saveTokenMetada$0 : removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setLogoHash &rarr; NO_COVERAGE<br/>
+
 </span>
 </span>
 </td>
-<td class='uncovered'><pre><span  class=''>                                     assetMetadataTarget.getLogoHash());</span></pre></td></tr>
+<td class='uncovered'><pre><span  class='survived'>        assetMetadataTarget.setLogoHash(assetMetadataSource.getLogoHash());</span></pre></td></tr>
 
 
 <tr>
@@ -3572,33 +3572,23 @@
 </td>
 </tr>
 <tr>
-<td><a href='#org.pitest.mutationtest.report.html.SourceFile@6acbd477_103'>103</a></td> 
-<td></td>
-<td>
-
-<a name='grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_103'/> 
-
-<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$saveTokenMetada$0<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setId &rarr; NO_COVERAGE</p> 
-</td>
-</tr>
-<tr>
 <td><a href='#org.pitest.mutationtest.report.html.SourceFile@6acbd477_104'>104</a></td> 
 <td></td>
 <td>
 
 <a name='grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_104'/> 
 
-<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$saveTokenMetada$0<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setLogo &rarr; NO_COVERAGE</p> 
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$saveTokenMetada$0<br/><b>Killed by : </b>none</span></span> negated conditional &rarr; NO_COVERAGE</p> 
 </td>
 </tr>
 <tr>
-<td><a href='#org.pitest.mutationtest.report.html.SourceFile@6acbd477_105'>105</a></td> 
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@6acbd477_106'>106</a></td> 
 <td></td>
 <td>
 
-<a name='grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_105'/> 
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_106'/> 
 
-<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$saveTokenMetada$0<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setLogoHash &rarr; NO_COVERAGE</p> 
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$saveTokenMetada$0<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setId &rarr; NO_COVERAGE</p> 
 </td>
 </tr>
 <tr>
@@ -3608,7 +3598,17 @@
 
 <a name='grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_107'/> 
 
-<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$saveTokenMetada$0<br/><b>Killed by : </b>none</span></span> negated conditional &rarr; NO_COVERAGE</p> 
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$saveTokenMetada$0<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setLogo &rarr; NO_COVERAGE</p> 
+</td>
+</tr>
+<tr>
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@6acbd477_108'>108</a></td> 
+<td></td>
+<td>
+
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@6acbd477_108'/> 
+
+<p class='NO_COVERAGE'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$saveTokenMetada$0<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/AssetMetadata::setLogoHash &rarr; NO_COVERAGE</p> 
 </td>
 </tr>
 <tr>
