@@ -100,12 +100,12 @@ public class AssetMetadataSchedule {
       assetMetadataTarget.setLogoHash(logoHash);
       if (assetMetadataMapSource.containsKey(assetMetadataDTO.getSubject())) {
         var assetMetadataSource = assetMetadataMapSource.get(assetMetadataDTO.getSubject());
-        assetMetadataTarget.setId(assetMetadataSource.getId());
-        assetMetadataTarget.setLogo(assetMetadataSource.getLogo());
-        assetMetadataTarget.setLogoHash(assetMetadataSource.getLogoHash());
         // Check if logo hash changed then mark flagUpload = true
         flagUpload = !Objects.equals(assetMetadataSource.getLogoHash(),
                                      assetMetadataTarget.getLogoHash());
+        assetMetadataTarget.setId(assetMetadataSource.getId());
+        assetMetadataTarget.setLogo(assetMetadataSource.getLogo());
+        assetMetadataTarget.setLogoHash(assetMetadataSource.getLogoHash());
       } else {
         // Check if logo hash not null then mark flagUpload = true
         flagUpload = !Objects.equals(assetMetadataTarget.getLogoHash(), null);
