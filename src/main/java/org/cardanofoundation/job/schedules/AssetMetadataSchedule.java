@@ -114,7 +114,7 @@ public class AssetMetadataSchedule {
       if (Boolean.TRUE.equals(flagUpload)) {
         assetMetadataMapUpload.put(assetMetadataDTO.getSubject(), assetMetadataDTO);
         assetMetadataTarget.setLogo(
-            endpoint + "/" + bucketName + "/" + network + "/" + assetMetadataDTO.getSubject());
+            endpoint + "/" + network + "/" + assetMetadataDTO.getSubject());
         assetMetadataTarget.setLogoHash(logoHash);
       }
       assetMetadataList.add(assetMetadataTarget);
