@@ -8,6 +8,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -61,6 +62,11 @@ public class KafkaConsumerConfiguration {
     props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, configs.getSessionTimeoutMs());
     props.put(ConsumerConfig.ALLOW_AUTO_CREATE_TOPICS_CONFIG, configs.getAllowAutoCreateTopics());
     props.put(JsonDeserializer.TRUSTED_PACKAGES, configs.getTrustedPackages());
+
+
+    if (kafkaProperties.getAdmin().getUseSsl()) {
+      props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+    }
 
     return props;
   }
