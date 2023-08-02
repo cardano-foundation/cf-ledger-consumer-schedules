@@ -18,8 +18,11 @@ import org.springframework.stereotype.Service;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.job.common.enumeration.ExportType;
+import org.cardanofoundation.job.config.datasource.DataBaseType;
+import org.cardanofoundation.job.config.datasource.SwitchDataSource;
 import org.cardanofoundation.job.repository.PoolReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
+import org.cardanofoundation.job.service.ReportHistoryService;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.util.report.ExcelHelper;
 import org.cardanofoundation.job.util.report.ExportContent;
@@ -31,6 +34,7 @@ public class PoolReportServiceImpl implements PoolReportService {
 
   private final StorageReportServiceImpl storageService;
   private final PoolReportHistoryRepository poolReportRepository;
+  private final ReportHistoryService reportHistoryService;
   private final ExcelHelper excelHelper;
 
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
@@ -57,13 +61,19 @@ public class PoolReportServiceImpl implements PoolReportService {
       log.error("Error while generating report", e);
       throw e;
     } finally {
-      poolReportRepository.save(poolReportHistory);
+      reportHistoryService.savePoolReportHistory(poolReportHistory);
       var endTime = System.currentTimeMillis();
       log.info(
           "Persist ReportHistory {} to storage time taken: {} ms",
           poolReportHistory.getReportHistory().getId(),
           endTime - startTime);
     }
+  }
+
+  @Override
+  @SwitchDataSource(DataBaseType.ANALYTICS)
+  public PoolReportHistory findByReportId(Long reportId) {
+    return poolReportRepository.findByReportHistoryId(reportId);
   }
 
   private List<ExportContent> getExportContents(PoolReportHistory poolReportHistory) {
