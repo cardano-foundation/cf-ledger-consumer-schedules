@@ -60,10 +60,6 @@ public class AssetMetadataSchedule {
   private String metadataFolder;
   @Value("${application.network}")
   private String network;
-  @Value("${clouds.s3Configs[1].endpoint}")
-  private String endpoint;
-  @Value("${clouds.s3Configs[1].bucket}")
-  private String bucketName;
 
   @Transactional
   @Scheduled(fixedRate = 2000000, initialDelay = 2000)
@@ -113,8 +109,7 @@ public class AssetMetadataSchedule {
       // if flagUpload = true then add to assetMetadataMapUpload and set logo url
       if (Boolean.TRUE.equals(flagUpload)) {
         assetMetadataMapUpload.put(assetMetadataDTO.getSubject(), assetMetadataDTO);
-        assetMetadataTarget.setLogo(
-            endpoint + "/" + bucketName + "/" + network + "/" + assetMetadataDTO.getSubject());
+        assetMetadataTarget.setLogo(network + "/" + assetMetadataDTO.getSubject());
         assetMetadataTarget.setLogoHash(logoHash);
       }
       assetMetadataList.add(assetMetadataTarget);
@@ -224,7 +219,7 @@ public class AssetMetadataSchedule {
     if (DataUtil.isNullOrEmpty(assetMetadataDTO.getLogo())) {
       return null;
     }
-    String hash = endpoint + "/" + bucketName + "/" + network + "/" + assetMetadataDTO.getLogo().getValue();
+    String hash = network + "/" + assetMetadataDTO.getLogo().getValue();
     return HexUtil.encodeHexString(Blake2bUtil.blake2bHash256(hash.getBytes()));
   }
 }
