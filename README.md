@@ -37,11 +37,19 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - KAFKA_BOOSTRAP_SERVER_URL: kafka bootstrap serve. Default `localhost:9092`
 - KAFKA_GROUP_ID: kafka group id.
 - KAFKA_REPORTS_TOPIC: kafka topic to consume report. Default `dev.explorer.api.mainnet.reports`
-- S3_ACCESS_KEY: the AWS access key 
-- S3_SECRET_KEY: the AWS secret key 
-- S3_REGION: the AWS region 
-- S3_BUCKET_NAME: the AWS bucket
-- S3_STORAGE_ENDPOINT: the storage endpoint, only for S3 clone (either on localhost, Minio, etc.)
+
+- REPORT_S3_ACCESS_KEY: report aws s3 access key
+- REPORT_S3_SECRET_KEY: report aws s3 secret key
+- REPORT_S3_REGION: report aws s3 region
+- REPORT_S3_BUCKET_NAME: report aws s3 bucket name
+- REPORT_S3_STORAGE_ENDPOINT: report aws s3 storage endpoint
+
+- TOKEN_LOGO_S3_ACCESS_KEY: token logo aws s3 access key
+- TOKEN_LOGO_S3_SECRET_KEY: token logo aws s3 secret key
+- TOKEN_LOGO_S3_REGION: token logo aws s3 region
+- TOKEN_LOGO_S3_BUCKET_NAME: token logo aws s3 bucket name
+- TOKEN_LOGO_S3_STORAGE_ENDPOINT: token logo aws s3 storage endpoint
+
 - SPRING_PROFILES_ACTIVE: active profiles
 - LOG: application log level
 - POOL_OFFLINE_DATA_JOB_ENABLED: enable fetch pool offline metadata job
@@ -60,3 +68,5 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - TOKEN_PAGE_CACHE_TTL: time to live of token-page cache data
 - TOKEN_INFO_JOB_ENABLED: enable token info job
 - TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
+- UNIQUE_ACCOUNT_FIXED_DELAY: fixed delay for job build cache unique account
+- UNIQUE_ACCOUNT_ENABLED: enable unique account job

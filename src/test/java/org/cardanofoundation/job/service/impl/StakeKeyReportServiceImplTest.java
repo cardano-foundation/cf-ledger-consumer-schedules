@@ -46,7 +46,7 @@ class StakeKeyReportServiceImplTest {
 
   @Mock ExcelHelper excelHelper;
 
-  @Mock StorageService storageService;
+  @Mock StorageReportServiceImpl storageService;
 
   @Mock AddressTxBalanceRepository addressTxBalanceRepository;
 

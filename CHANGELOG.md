@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.2.10](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.9...v0.2.10) (2023-08-02)
+
+
+### Bug Fixes
+
+* attempting to force a release ([70c08b9](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/70c08b99f1b23bdbfcfbf7c6f05484f9039c84fc))
+
+## [0.2.9](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.8...v0.2.9) (2023-07-27)
+
+
+### Features
+
+* MET-1488 store logo of token to storage ([8d9817e](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/8d9817e4a5367e473ec2137155749a450ccf4316))
+* **tests:** add unit-test for report func ([202f216](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/202f2163b4502717d0810110fce67c726152c0d3))
+
+## [0.2.8](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.7...v0.2.8) (2023-07-18)
+
+
+### Features
+
+* MET-1271 fix create redis key ([7f43a68](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/7f43a68ae3ad1f490d0da4adc679b58819a17699))
+
+
+### Bug Fixes
+
+* reward distribution of pool report not in epoch range ([0b96784](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/0b96784f153a01dee55b13642ebead3b1fcc04ed))
+
 ## [0.2.7](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.6...v0.2.7) (2023-07-11)
 
 

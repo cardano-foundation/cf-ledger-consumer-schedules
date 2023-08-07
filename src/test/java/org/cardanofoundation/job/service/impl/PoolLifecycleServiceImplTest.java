@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -113,19 +114,25 @@ class PoolLifecycleServiceImplTest {
     Timestamp time = Timestamp.valueOf("2023-01-01 00:00:00");
     Pageable pageable = PageRequest.of(0, 10);
     LifeCycleRewardProjection projection = Mockito.mock(LifeCycleRewardProjection.class);
+    PoolReportHistory poolReportHistory = PoolReportHistory.builder()
+        .beginEpoch(1)
+        .endEpoch(100)
+        .poolView("pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s")
+        .build();
     when(projection.getAddress())
         .thenReturn("stake1u80n7nvm3qlss9ls0krp5xh7sqxlazp8kz6n3fp5sgnul5cnxyg4p");
     when(projection.getAmount()).thenReturn(BigInteger.TWO);
     when(projection.getEpochNo()).thenReturn(69);
     when(projection.getTime()).thenReturn(time);
     when(rewardRepository.getRewardInfoByPool(
-            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
+        poolReportHistory.getPoolView(), poolReportHistory.getBeginEpoch(),
+        poolReportHistory.getEndEpoch(), pageable))
         .thenReturn(new PageImpl<>(List.of(projection)));
 
     when(fetchRewardDataService.fetchReward(anyString())).thenReturn(Boolean.TRUE);
     var response =
         poolLifecycleService.listReward(
-            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable);
+            poolReportHistory, pageable);
 
     Assertions.assertEquals(69, response.get(0).getEpochNo());
     Assertions.assertEquals(time, response.get(0).getTime());

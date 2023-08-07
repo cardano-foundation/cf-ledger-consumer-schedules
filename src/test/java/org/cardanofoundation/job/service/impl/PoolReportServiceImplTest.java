@@ -38,7 +38,7 @@ class PoolReportServiceImplTest {
 
   @Mock PoolReportHistoryRepository poolReportRepository;
 
-  @Mock StorageService storageService;
+  @Mock StorageReportServiceImpl storageService;
 
   @InjectMocks PoolReportServiceImpl poolReportService;
 
