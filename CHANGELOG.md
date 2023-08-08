@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.12](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.11...v0.2.12) (2023-08-08)
+
+
+### Bug Fixes
+
+* added string key serialiser ([2db645e](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/2db645e8ba84bfd89f4eee2ddc4555933afe64ea))
+
 ## [0.2.11](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.10...v0.2.11) (2023-08-08)
 
 
