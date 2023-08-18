@@ -216,7 +216,8 @@ public class AssetMetadataSchedule {
    * @return null if AssetMetadataDTO.logo is null or encoded logo hash
    */
   private String generateLogoHash(AssetMetadataDTO assetMetadataDTO) {
-    if (DataUtil.isNullOrEmpty(assetMetadataDTO.getLogo())) {
+    if (DataUtil.isNullOrEmpty(assetMetadataDTO.getLogo())
+        || DataUtil.isNullOrEmpty(assetMetadataDTO.getLogo().getValue())) {
       return null;
     }
     String hash = network + "/" + assetMetadataDTO.getLogo().getValue();
