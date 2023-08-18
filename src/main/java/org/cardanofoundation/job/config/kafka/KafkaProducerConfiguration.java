@@ -5,6 +5,7 @@ import java.util.Map;
 
 import lombok.SneakyThrows;
 
+import org.apache.kafka.clients.CommonClientConfigs;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -79,6 +80,11 @@ public class KafkaProducerConfiguration {
     props.put(
         org.apache.kafka.clients.producer.ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG,
         jsonConfigs.getEnableIdempotence());
+
+    if (kafkaProperties.getAdmin().getUseSsl()) {
+      props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+    }
+
     return props;
   }
 }
