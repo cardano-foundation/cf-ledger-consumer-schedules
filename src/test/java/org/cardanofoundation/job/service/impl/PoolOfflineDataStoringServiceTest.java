@@ -59,10 +59,10 @@ class PoolOfflineDataStoringServiceTest {
   @Test
   @DisplayName("Should process success pool offline data")
   void insertNonExitPoolData() {
-    when(poolOfflineDataRepository.findPoolOfflineDataHashByPoolMetadataRefIds(anyList()))
-        .thenReturn(Collections.emptySet());
+    when(poolOfflineDataRepository.findPoolOfflineDataByPoolIdIn(anyList()))
+        .thenReturn(Collections.emptyList());
 
-    Queue<PoolData> successPools = new LinkedBlockingDeque<>();
+    List<PoolData> successPools = new ArrayList<>();
 
     String json =
         "{\"name\": \"HOPECHE POOl\",\n"
@@ -89,7 +89,7 @@ class PoolOfflineDataStoringServiceTest {
         .thenReturn(
             List.of(PoolMetadataRef.builder().id(1L).poolHash(pool).hash("123123").build()));
 
-    poolOfflineDataStoringService.insertSuccessPoolOfflineData(successPools);
+    poolOfflineDataStoringService.saveSuccessPoolOfflineData(successPools);
 
     verify(poolOfflineDataRepository, times(1)).saveAll(poolOfflineDataCaptor.capture());
 
@@ -115,8 +115,8 @@ class PoolOfflineDataStoringServiceTest {
             .hash("2")
             .build();
 
-    when(poolOfflineDataRepository.findPoolOfflineDataHashByPoolMetadataRefIds(anyList()))
-        .thenReturn(Set.of(poolOfflineData));
+    when(poolOfflineDataRepository.findPoolOfflineDataByPoolIdIn(anyList()))
+        .thenReturn(List.of(poolOfflineData));
 
     String json =
         "{\"name\": \"HOPECHE POOl\",\n"
@@ -126,8 +126,8 @@ class PoolOfflineDataStoringServiceTest {
             + "\"extended\": \"https://git.io/JnKRd\"\n"
             + "}";
 
-    Queue queue = new LinkedBlockingDeque();
-    queue.add(
+    List<PoolData> poolDataList = new ArrayList<>();
+    poolDataList.add(
         PoolData.builder()
             .poolId(1L)
             .metadataRefId(1L)
@@ -136,7 +136,10 @@ class PoolOfflineDataStoringServiceTest {
             .valid(Boolean.TRUE)
             .build());
 
-    poolOfflineDataStoringService.insertSuccessPoolOfflineData(queue);
+    when(poolHashRepository.findByIdIn(anyList())).thenReturn(List.of(pool));
+    when(poolMetadataRefRepository.findByIdIn(anyList())).thenReturn(List.of(poolMetadataRef));
+
+    poolOfflineDataStoringService.saveSuccessPoolOfflineData(poolDataList);
 
     verify(poolOfflineDataRepository, times(1)).saveAll(poolOfflineDataCaptor.capture());
 
@@ -153,59 +156,20 @@ class PoolOfflineDataStoringServiceTest {
   @Test
   @DisplayName("Should process fetch fail pool offline data with existed pool")
   void insertNonExistFailPoolData() {
-    when(poolOfflineFetchErrorRepository.findPoolOfflineFetchErrorByPoolMetadataRefIn(anyList()))
-        .thenReturn(Collections.emptyList());
-
     PoolHash poolHash = PoolHash.builder().id(1L).hashRaw("1").epochNo(1).build();
 
     PoolMetadataRef poolMetadataRef =
         PoolMetadataRef.builder().id(1L).poolHash(poolHash).hash("123123").build();
 
-    when(poolHashRepository.findByIdIn(anyList())).thenReturn(Collections.emptyList());
+    when(poolHashRepository.findByIdIn(anyList())).thenReturn(List.of(poolHash));
+    when(poolMetadataRefRepository.findByIdIn(anyList())).thenReturn(List.of(poolMetadataRef));
+    when(poolOfflineFetchErrorRepository.findByPoolHashAndPoolMetadataRef(any(), any()))
+        .thenReturn(PoolOfflineFetchError.builder()
+                        .id(1L)
+                        .retryCount(1)
+                        .build());
 
-    when(poolMetadataRefRepository.findByIdIn(anyList())).thenReturn(Collections.emptyList());
-
-    poolOfflineDataStoringService.insertFailOfflineData(
-        List.of(
-            PoolData.builder()
-                .poolId(1L)
-                .metadataRefId(1L)
-                .hash("1")
-                .errorMessage("error ")
-                .build()));
-
-    verify(poolOfflineFetchErrorRepository, times(1))
-        .saveAll(poolOfflineFetchErrorCaptor.capture());
-  }
-
-  @Test
-  @DisplayName("Should process fetch fail pool offline data with existed pool")
-  void insertExistFailPoolData() {
-    PoolHash poolHash = PoolHash.builder().id(1L).hashRaw("1").epochNo(1).build();
-
-    PoolMetadataRef poolMetadataRef =
-        PoolMetadataRef.builder().id(1L).poolHash(poolHash).hash("123123").build();
-
-    PoolOfflineFetchError error =
-        PoolOfflineFetchError.builder()
-            .id(1L)
-            .poolHash(poolHash)
-            .poolMetadataRef(poolMetadataRef)
-            .retryCount(BigInteger.ONE.intValue())
-            .fetchError("errrot")
-            .build();
-
-    when(poolHashRepository.findByIdIn(any())).thenReturn(List.of(poolHash));
-
-    when(poolMetadataRefRepository.findByIdIn(any())).thenReturn(List.of(poolMetadataRef));
-
-    when(poolOfflineFetchErrorRepository.findPoolOfflineFetchErrorByPoolMetadataRefIn(anyList()))
-        .thenReturn(Collections.emptyList());
-
-    when(poolOfflineFetchErrorRepository.findPoolOfflineFetchErrorByPoolMetadataRefIn(anyList()))
-        .thenReturn(List.of(error));
-
-    poolOfflineDataStoringService.insertFailOfflineData(
+    poolOfflineDataStoringService.saveFailOfflineData(
         List.of(
             PoolData.builder()
                 .poolId(1L)
@@ -219,8 +183,33 @@ class PoolOfflineDataStoringServiceTest {
 
     PoolOfflineFetchError actualError =
         new ArrayList<>(poolOfflineFetchErrorCaptor.getValue()).get(0);
-
     Assertions.assertEquals(1L, actualError.getId());
     Assertions.assertEquals(2, actualError.getRetryCount());
+  }
+
+  @Test
+  @DisplayName("Should process fetch fail pool offline data with not existed pool")
+  void insertExistFailPoolData() {
+    PoolHash poolHash = PoolHash.builder().id(1L).hashRaw("1").epochNo(1).build();
+
+    PoolMetadataRef poolMetadataRef =
+        PoolMetadataRef.builder().id(1L).poolHash(poolHash).hash("123123").build();
+
+    when(poolHashRepository.findByIdIn(anyList())).thenReturn(List.of(poolHash));
+    when(poolMetadataRefRepository.findByIdIn(anyList())).thenReturn(List.of(poolMetadataRef));
+    when(poolOfflineFetchErrorRepository.findByPoolHashAndPoolMetadataRef(any(), any()))
+        .thenReturn(null);
+
+    poolOfflineDataStoringService.saveFailOfflineData(
+        List.of(
+            PoolData.builder()
+                .poolId(1L)
+                .metadataRefId(1L)
+                .hash("1")
+                .errorMessage("error ")
+                .build()));
+
+    verify(poolOfflineFetchErrorRepository, times(1))
+        .saveAll(poolOfflineFetchErrorCaptor.capture());
   }
 }

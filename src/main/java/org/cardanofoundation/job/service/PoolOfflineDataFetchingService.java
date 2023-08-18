@@ -1,24 +1,22 @@
 package org.cardanofoundation.job.service;
 
-import java.util.stream.Stream;
+import java.util.List;
 
 import org.cardanofoundation.job.dto.PoolData;
 
 public interface PoolOfflineDataFetchingService {
 
   /**
-   * Insert PoolOfflineData and PoolOfflineFetchError with batch with Map object key is hash String
-   * and value is PoolOfflineData | PoolOfflineFetchError If map size equal to batch size,
-   * PoolOfflineData would be committed.
+   * Fetch pool offline data.
    *
-   * @param start start position
+   * @return the poll data list
    */
-  int fetchPoolOfflineDataByBatch(Integer start);
+  List<PoolData> fetchPoolOfflineData();
 
   /**
-   * Fetch extended logo and icon field from success pool data
+   * Fetch pool offline data logo. then update to poolDataSuccess list
    *
-   * @param stream
+   * @param poolDataSuccess the pool offline data fetched success
    */
-  void fetchPoolOfflineDataLogo(Stream<PoolData> stream);
+  void fetchPoolOfflineDataLogo(List<PoolData> poolDataSuccess);
 }
