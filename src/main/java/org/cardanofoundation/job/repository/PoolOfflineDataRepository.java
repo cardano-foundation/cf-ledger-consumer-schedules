@@ -1,6 +1,7 @@
 package org.cardanofoundation.job.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,5 +22,5 @@ public interface PoolOfflineDataRepository extends JpaRepository<PoolOfflineData
   @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
   Set<PoolOfflineData> findPoolOfflineDataHashByPoolMetadataRefIds(@Param("ids") List<Long> ids);
 
-  List<PoolOfflineData> findPoolOfflineDataByPoolIdIn(List<Long> poolIds);
+  Optional<PoolOfflineData> findByPoolIdAndAndPmrId(Long poolId, Long pmrId);
 }

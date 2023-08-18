@@ -1,14 +1,18 @@
 package org.cardanofoundation.job.service.impl;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -16,31 +20,35 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolMetadataRef;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineData;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineFetchError;
+import org.cardanofoundation.job.constant.JobConstants;
 import org.cardanofoundation.job.dto.PoolData;
+import org.cardanofoundation.job.projection.PoolOfflineHashProjection;
 import org.cardanofoundation.job.repository.PoolHashRepository;
 import org.cardanofoundation.job.repository.PoolMetadataRefRepository;
 import org.cardanofoundation.job.repository.PoolOfflineDataRepository;
 import org.cardanofoundation.job.repository.PoolOfflineFetchErrorRepository;
 import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
-import org.cardanofoundation.ledgersync.common.util.JsonUtil;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
 public class PoolOfflineDataStoringServiceImpl implements PoolOfflineDataStoringService {
 
+  public static final int MAX_RECORDS = 300;
   final PoolOfflineFetchErrorRepository poolOfflineFetchErrorRepository;
   private final PoolMetadataRefRepository poolMetadataRefRepository;
   final PoolOfflineDataRepository poolOfflineDataRepository;
@@ -64,151 +72,309 @@ public class PoolOfflineDataStoringServiceImpl implements PoolOfflineDataStoring
   }
 
   @Override
-  @Transactional
-  public void saveSuccessPoolOfflineData(List<PoolData> successPools) {
-    long startTime = System.currentTimeMillis();
-    log.info("Start saving success pool offline data");
-    List<PoolOfflineData> poolOfflineDataNeedSave = new ArrayList<>();
+  public void insertSuccessPoolOfflineData(Queue<PoolData> successPools) {
+    // key::A Pair of pool id, pool offline data hash
+    final ConcurrentHashMap<Pair<Long, String>, PoolOfflineData> savingPoolData =
+        new ConcurrentHashMap<>();
+    // key::Long, value::PoolOfflineData
+    final Set<PoolOfflineData> poolOfflineData = ConcurrentHashMap.newKeySet();
+    // key::Long, value::PoolHash
+    final ConcurrentHashMap<Long, PoolHash> poolHashes = new ConcurrentHashMap<>();
+    // key::Long, value::PoolMetadataRef
+    final ConcurrentHashMap<Long, PoolMetadataRef> poolMetadata = new ConcurrentHashMap<>();
+    final int successPoolsPartition = (int) Math.ceil((double) successPools.size() / MAX_RECORDS);
 
-    List<Long> poolIds = successPools.stream().map(PoolData::getPoolId).toList();
-    List<Long> poolMetadataRefIds = successPools.stream().map(PoolData::getMetadataRefId).toList();
+    /*
+     * Get list of exist PoolOfflineData and put it and relate entity to map
+     * for speed up find process
+     */
+    Lists.partition(successPools.stream().filter(PoolData::isValid).toList(), successPoolsPartition)
+        .parallelStream()
+        .forEach(
+            pools -> {
+              Set<PoolOfflineData> offlineDataBatch =
+                  poolOfflineDataRepository.findPoolOfflineDataHashByPoolMetadataRefIds(
+                      pools.stream().map(PoolData::getMetadataRefId).toList());
+              poolOfflineData.addAll(offlineDataBatch);
+            });
 
-    Map<Long, PoolData> poolDataMap = successPools.stream()
-        .collect(Collectors.toMap(PoolData::getPoolId, Function.identity()));
-    // pool hash map {key, value} = {poolId, PoolHash}
-    Map<Long, PoolHash> poolHashMap = poolHashRepository
-        .findByIdIn(poolIds)
-        .stream()
-        .collect(Collectors.toMap(PoolHash::getId, Function.identity()));
-    // pool metadata ref map {key, value} = {poolMetadataRefId, PoolMetadataRef}
-    Map<Long, PoolMetadataRef> poolMetadataRefMap = poolMetadataRefRepository
-        .findByIdIn(poolMetadataRefIds)
-        .stream()
-        .collect(Collectors.toMap(PoolMetadataRef::getId, Function.identity()));
-    // pool offline data map existed {key, value} = {poolId, PoolOfflineData}
-    Map<Long, PoolOfflineData> poolOfflineDataSourceMap = poolOfflineDataRepository
-        .findPoolOfflineDataByPoolIdIn(poolIds)
-        .stream()
-        .collect(Collectors.toMap(PoolOfflineData::getPoolId, Function.identity()));
+    // Get pool metadata  that not existed in pool offline data
+    final List<Long> poolMetadataIds =
+        successPools.stream()
+            .filter(PoolData::isValid)
+            .map(PoolData::getMetadataRefId)
+            .filter(poolMetaDataId -> !poolMetadata.containsKey(poolMetaDataId))
+            .toList();
 
-    poolDataMap.entrySet().parallelStream().forEach(poolDataEntry -> {
-      Long poolId = poolDataEntry.getKey();
-      PoolData poolData = poolDataEntry.getValue();
-      PoolHash poolHash = poolHashMap.get(poolId);
-      PoolMetadataRef poolMetadataRef = poolMetadataRefMap.get(poolData.getMetadataRefId());
-      PoolOfflineData poolOfflineData = buildPoolOfflineData(poolData, poolHash,
-                                                             poolMetadataRef).orElse(null);
-      if (Objects.nonNull(poolOfflineData)) {
-        // if pool offline data exist then update
-        if (poolOfflineDataSourceMap.containsKey(poolId)) {
-          poolOfflineData.setId(poolOfflineDataSourceMap.get(poolId).getId());
-        }
-        poolOfflineDataNeedSave.add(poolOfflineData);
-      }
-    });
+    Lists.partition(poolMetadataIds, MAX_RECORDS).parallelStream()
+        .forEach(
+            splitPoolMetadataIds ->
+                poolMetadataRefRepository.findByIdIn(splitPoolMetadataIds).parallelStream()
+                    .forEach(
+                        poolMetadataRef ->
+                            poolMetadata.putIfAbsent(poolMetadataRef.getId(), poolMetadataRef)));
 
-    poolOfflineDataRepository.saveAll(poolOfflineDataNeedSave);
-    log.info("Saved success pool offline data, count: {}, time taken: {} ms",
-             poolOfflineDataNeedSave.size(), System.currentTimeMillis() - startTime);
+    // Get pool hash that not existed in pool offline data
+    final List<Long> poolHashIds =
+        successPools.stream()
+            .filter(PoolData::isValid)
+            .map(PoolData::getPoolId)
+            .filter(poolId -> !poolHashes.containsKey(poolId))
+            .toList();
+
+    Lists.partition(poolHashIds, MAX_RECORDS).parallelStream()
+        .forEach(
+            splitPoolMetadataIds ->
+                poolHashRepository.findByIdIn(splitPoolMetadataIds).parallelStream()
+                    .forEach(poolHash -> poolHashes.putIfAbsent(poolHash.getId(), poolHash)));
+
+    successPools.parallelStream()
+        .filter(PoolData::isValid)
+        .forEach(
+            poolData ->
+                findPoolWithPoolRef(poolOfflineData, poolData)
+                    .ifPresentOrElse(
+                        existedPod -> { // if  pool offline data exist check hash change
+                          // update exist pool metadata when if json data change
+                          if (!existedPod.getHash().equals(poolData.getHash())) {
+                            existedPod.setJson(Arrays.toString(poolData.getJson()));
+                            existedPod.setBytes(poolData.getJson());
+                            existedPod.setHash(poolData.getHash());
+                            existedPod.setLogoUrl(poolData.getLogoUrl());
+                            existedPod.setIconUrl(poolData.getIconUrl());
+                            savingPoolData.put(
+                                Pair.of(existedPod.getPoolId(), existedPod.getHash()), existedPod);
+                          } else {
+                            if (ObjectUtils.isEmpty(existedPod.getIconUrl())
+                                && ObjectUtils.isEmpty(existedPod.getLogoUrl())) {
+                              // this will update pool offline data missing logo
+                              existedPod.setLogoUrl(
+                                  !ObjectUtils.isEmpty(poolData.getLogoUrl())
+                                      ? poolData.getIconUrl()
+                                      : poolData.getLogoUrl());
+                              existedPod.setIconUrl(
+                                  !ObjectUtils.isEmpty(poolData.getIconUrl())
+                                      ? poolData.getIconUrl()
+                                      : poolData.getLogoUrl());
+
+                              savingPoolData.put(
+                                  Pair.of(existedPod.getPoolId(), existedPod.getHash()),
+                                  existedPod);
+                            }
+                          }
+                        },
+                        () -> {
+                          final var offlineDataKey =
+                              Pair.of(poolData.getPoolId(), poolData.getHash());
+                          Optional<PoolOfflineData> existSavingPoolData =
+                              Optional.ofNullable(
+                                  savingPoolData.get(
+                                      offlineDataKey)); // check if handle duplicate data
+
+                          if (existSavingPoolData.isPresent()) {
+                            final var onSavingOfflineData = existSavingPoolData.get();
+                            if (onSavingOfflineData.getPmrId() > poolData.getMetadataRefId()) {
+                              return;
+                            }
+                          }
+
+                          mapPoolOfflineData(poolData, poolHashes, poolMetadata)
+                              .ifPresent(
+                                  offlineData -> savingPoolData.put(offlineDataKey, offlineData));
+                        }));
+
+    poolOfflineDataRepository.saveAll(
+        savingPoolData.values().stream()
+            .sorted(
+                Comparator.comparing(PoolOfflineData::getPoolId)
+                    .thenComparing(offlineData -> offlineData.getPoolMetadataRef().getId()))
+            .toList());
+    log.info("Insert batch size {}", savingPoolData.size());
   }
 
   @Override
-  @Transactional
-  public void saveFailOfflineData(List<PoolData> failedPools) {
-    long startTime = System.currentTimeMillis();
+  public void insertFailOfflineData(List<PoolData> failedPools) {
 
-    log.info("Start saving fail pool offline data");
-    List<PoolOfflineFetchError> poolOfflineFetchErrorsNeedSave = new ArrayList<>();
+    // key: PoolOfflineFetchError::getId, value: PoolOfflineFetchError
+    Map<Long, PoolOfflineFetchError> failPoolOfflineData =
+        poolOfflineFetchErrorRepository
+            .findPoolOfflineFetchErrorByPoolMetadataRefIn(
+                failedPools.stream().map(PoolData::getMetadataRefId).toList())
+            .stream()
+            .collect(
+                Collectors.toMap(
+                    poolOfflineFetchError -> poolOfflineFetchError.getPoolMetadataRef().getId(),
+                    Function.identity()));
 
-    List<Long> poolIds = failedPools.stream().map(PoolData::getPoolId).toList();
-    List<Long> poolMetadataRefIds = failedPools.stream().map(PoolData::getMetadataRefId).toList();
+    List<Long> usedPoolId =
+        failPoolOfflineData.values().stream()
+            .map(poolOfflineFetchError -> poolOfflineFetchError.getPoolHash().getId())
+            .toList();
 
-    // raw pool offline data map {key, value} = {poolId, PoolData}
-    Map<Long, PoolData> poolDataMap = failedPools.stream()
-        .collect(Collectors.toMap(PoolData::getPoolId, Function.identity(), (a, b) -> a));
-    // pool hash map {key, value} = {poolId, PoolHash}
-    Map<Long, PoolHash> poolHashMap = poolHashRepository
-        .findByIdIn(poolIds)
-        .stream()
-        .collect(Collectors.toMap(PoolHash::getId, Function.identity()));
-    // pool metadata ref map {key, value} = {poolMetadataRefId, PoolMetadataRef}
-    Map<Long, PoolMetadataRef> poolMetadataRefMap = poolMetadataRefRepository
-        .findByIdIn(poolMetadataRefIds)
-        .stream()
-        .collect(Collectors.toMap(PoolMetadataRef::getId, Function.identity()));
+    List<Long> usedPoolMetadataRef = failPoolOfflineData.keySet().stream().toList();
 
-    poolDataMap.entrySet().parallelStream().forEach(poolDataEntry -> {
-      Long poolId = poolDataEntry.getKey();
-      PoolData poolData = poolDataEntry.getValue();
-      PoolHash poolHash = poolHashMap.get(poolId);
-      PoolMetadataRef poolMetadataRef = poolMetadataRefMap.get(poolData.getMetadataRefId());
-      // if pool offline data exist then update
-      PoolOfflineFetchError poolOfflineFetchError = poolOfflineFetchErrorRepository
-          .findByPoolHashAndPoolMetadataRef(poolHash, poolMetadataRef);
+    Map<Long, PoolHash> poolHashMap =
+        poolHashRepository
+            .findByIdIn(
+                failedPools.stream()
+                    .map(PoolData::getPoolId)
+                    .filter(poolId -> !usedPoolId.contains(poolId))
+                    .toList())
+            .stream()
+            .collect(Collectors.toMap(PoolHash::getId, Function.identity()));
 
-      // if pool offline fetch error exist then update
-      if (!Objects.isNull(poolOfflineFetchError)) {
-        poolOfflineFetchError.setFetchTime(Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC)));
-        poolOfflineFetchError.setRetryCount(poolOfflineFetchError.getRetryCount() + 1);
-        poolOfflineFetchError.setFetchError(poolData.getErrorMessage());
-      } else {
-        poolOfflineFetchError = PoolOfflineFetchError.builder()
-            .poolHash(poolHash)
-            .poolMetadataRef(poolMetadataRef)
-            .fetchError(poolData.getErrorMessage())
-            .retryCount(BigInteger.ONE.intValue())
-            .fetchTime(Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC)))
-            .build();
-      }
-      poolOfflineFetchErrorsNeedSave.add(poolOfflineFetchError);
-    });
+    Map<Long, PoolMetadataRef> poolMetadataRef =
+        poolMetadataRefRepository
+            .findByIdIn(
+                failedPools.stream()
+                    .map(PoolData::getMetadataRefId)
+                    .filter(failedMetaData -> !usedPoolMetadataRef.contains(failedMetaData))
+                    .toList())
+            .stream()
+            .collect(Collectors.toMap(PoolMetadataRef::getId, Function.identity()));
 
-    poolOfflineFetchErrorRepository.saveAll(poolOfflineFetchErrorsNeedSave);
-    log.info("Saved success fail pool offline data, count: {}, time taken: {} ms",
-             poolOfflineFetchErrorsNeedSave.size(), System.currentTimeMillis() - startTime);
+    failPoolOfflineData
+        .values()
+        .forEach(
+            poolOfflineFetchError -> {
+              final Long poolId = poolOfflineFetchError.getPoolHash().getId();
+              if (!poolHashMap.containsKey(poolId)) {
+                poolHashMap.put(poolId, poolOfflineFetchError.getPoolHash());
+              }
+
+              final Long poolMetaDataRefId = poolOfflineFetchError.getPoolMetadataRef().getId();
+              if (!poolMetadataRef.containsKey(poolMetaDataRefId)) {
+                poolMetadataRef.put(poolMetaDataRefId, poolOfflineFetchError.getPoolMetadataRef());
+              }
+            });
+
+    failedPools.parallelStream()
+        .forEach(
+            failData ->
+                Optional.ofNullable(failPoolOfflineData.get(failData.getMetadataRefId()))
+                    .ifPresentOrElse(
+                        poolOfflineFetchError -> {
+                          poolOfflineFetchError.setFetchTime(
+                              Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC)));
+                          poolOfflineFetchError.setRetryCount(
+                              poolOfflineFetchError.getRetryCount() + BigInteger.ONE.intValue());
+                        },
+                        () -> {
+                          PoolOfflineFetchError error =
+                              PoolOfflineFetchError.builder()
+                                  .poolHash(poolHashMap.get(failData.getPoolId()))
+                                  .poolMetadataRef(poolMetadataRef.get(failData.getMetadataRefId()))
+                                  .fetchError(failData.getErrorMessage())
+                                  .retryCount(BigInteger.ONE.intValue())
+                                  .fetchTime(Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC)))
+                                  .build();
+
+                          failPoolOfflineData.put(failData.getMetadataRefId(), error);
+                        }));
+    poolOfflineFetchErrorRepository.saveAll(failPoolOfflineData.values());
   }
 
   /**
-   * Constructs a PoolOfflineData object by extracting relevant information from the provided
-   * PoolData, PoolHash, and PoolMetadataRef objects.
-   * @param poolData poolData
-   * @param poolHash poolHash
-   * @param poolMetadataRef poolMetadataRef
-   * @return Optional<PoolOfflineData>
+   * Find pool have offline data of not
+   *
+   * @param existedPoolData Set of existed Pool Offline Data
+   * @param pod data object transfer of pool offline data {
+   * @return if existed Optional of {@link PoolOfflineHashProjection} projection of empty
    */
-  private Optional<PoolOfflineData> buildPoolOfflineData(PoolData poolData, PoolHash poolHash,
-                                                         PoolMetadataRef poolMetadataRef) {
-    try {
-      String json = new String(poolData.getJson());
-      Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {});
-      String name;
-      if (ObjectUtils.isEmpty(map.get(POOL_NAME))) {
-        name = poolHash.getView();
-      } else {
-        name = String.valueOf(map.get(POOL_NAME));
-      }
-      String jsonFormatted = JsonUtil.getPrettyJson(json);
-      return Optional.of(PoolOfflineData.builder()
-                             .poolId(poolData.getPoolId())
-                             .pmrId(poolData.getMetadataRefId())
-                             .pool(poolHash)
-                             .poolMetadataRef(poolMetadataRef)
-                             .hash(poolData.getHash())
-                             .poolName(name)
-                             .tickerName(String.valueOf(map.get(TICKER)))
-                             .json(jsonFormatted)
-                             .bytes(poolData.getJson())
-                             .logoUrl(
-                                 !ObjectUtils.isEmpty(poolData.getLogoUrl())
-                                 ? poolData.getLogoUrl()
-                                 : poolData.getIconUrl())
-                             .iconUrl(
-                                 !ObjectUtils.isEmpty(poolData.getIconUrl())
-                                 ? poolData.getIconUrl()
-                                 : poolData.getLogoUrl())
-                             .build());
-    } catch (JsonProcessingException e) {
+  private Optional<PoolOfflineData> findPoolWithPoolRef(
+      Set<PoolOfflineData> existedPoolData, PoolData pod) {
+    return existedPoolData.stream()
+        .filter(
+            exPod ->
+                exPod.getPmrId().equals(pod.getMetadataRefId())
+                    && pod.getPoolId().equals(exPod.getPoolId()))
+        .findFirst();
+  }
+
+  /**
+   * Extract json of return pool data for mapping entity pool offline data
+   *
+   * @param poolData data object transfer of pool offline data
+   * @param poolHashes
+   * @param poolMetadata
+   * @return Optional of PoolOfflineData or empty
+   */
+  private Optional<PoolOfflineData> mapPoolOfflineData(
+      PoolData poolData, Map<Long, PoolHash> poolHashes, Map<Long, PoolMetadataRef> poolMetadata) {
+
+    if (ObjectUtils.isEmpty(poolData.getJson())) {
       return Optional.empty();
     }
+
+    String json = new String(poolData.getJson());
+    try {
+      Map<String, Object> map = objectMapper.readValue(json, new TypeReference<>() {});
+
+      if (CollectionUtils.isEmpty(map)) {
+        log.error(
+            String.format("pool id %d response data can't convert to json", poolData.getPoolId()));
+        return Optional.empty();
+      }
+
+      return buildOfflineData(poolData, map, poolHashes, poolMetadata);
+    } catch (JsonMappingException e) {
+      log.error("can't map {}", json);
+    } catch (IOException e) {
+      log.error("can't deserializer {} {}", poolData.getMetadataRefId(), json);
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Mapping pool offline data features input parameters
+   *
+   * @param poolData data object transfer of pool offline data
+   * @param map map contains features extracted from json
+   * @param poolHashes
+   * @param poolMetadata
+   * @return Optional of PoolOfflineData or empty
+   */
+  private Optional<PoolOfflineData> buildOfflineData(
+      PoolData poolData,
+      Map<String, Object> map,
+      Map<Long, PoolHash> poolHashes,
+      Map<Long, PoolMetadataRef> poolMetadata) {
+    String name;
+
+    var poolHash = poolHashes.get(poolData.getPoolId());
+    var poolMetadataRef = poolMetadata.get(poolData.getMetadataRefId());
+
+    if (ObjectUtils.isEmpty(map.get(POOL_NAME))) {
+      name = poolHash.getView();
+    } else {
+      name = String.valueOf(map.get(POOL_NAME));
+    }
+    String jsonFormatted =
+        new String(poolData.getJson())
+            .replace(String.valueOf(JobConstants.END_LINE), "")
+            .replace("\\t+", "")
+            .replace("\\s+", "")
+            .strip();
+
+    return Optional.of(
+        PoolOfflineData.builder()
+            .poolId(poolData.getPoolId())
+            .pmrId(poolData.getMetadataRefId())
+            .pool(poolHash)
+            .poolMetadataRef(poolMetadataRef)
+            .hash(poolData.getHash())
+            .poolName(name)
+            .tickerName(String.valueOf(map.get(TICKER)))
+            .json(jsonFormatted)
+            .bytes(poolData.getJson())
+            .logoUrl(
+                !ObjectUtils.isEmpty(poolData.getLogoUrl())
+                    ? poolData.getIconUrl()
+                    : poolData.getLogoUrl())
+            .iconUrl(
+                !ObjectUtils.isEmpty(poolData.getIconUrl())
+                    ? poolData.getIconUrl()
+                    : poolData.getLogoUrl())
+            .build());
   }
 }

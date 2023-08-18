@@ -1,23 +1,27 @@
 package org.cardanofoundation.job.service;
 
 import java.util.List;
+import java.util.Queue;
+
+import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.job.dto.PoolData;
 
 public interface PoolOfflineDataStoringService {
 
   /**
-   * Saving the fetched success offline data
+   * Insert success pool
    *
-   * @param successPools the fetched success pools
+   * @param successPools
    */
-  void saveSuccessPoolOfflineData(List<PoolData> successPools);
-
+  @Transactional
+  void insertSuccessPoolOfflineData(Queue<PoolData> successPools);
 
   /**
-   * Saving the fetched fail offline data
+   * Insert fail pool
    *
-   * @param failedPools the fetched fail pools
+   * @param failedPools
    */
-  void saveFailOfflineData(List<PoolData> failedPools);
+  @Transactional
+  void insertFailOfflineData(List<PoolData> failedPools);
 }

@@ -115,7 +115,6 @@ kafka:
       replicationFactor: 1
   admin:
     bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:9092}
-    useSsl: ${KAFKA_USE_SSL:false}
   producers:
     json-producer:
       clientId: json-producer

@@ -79,6 +79,5 @@ public class KafkaProperties {
   @FieldDefaults(level = AccessLevel.PRIVATE)
   public static class Admin {
     String bootstrapServers;
-    Boolean useSsl;
   }
 }
