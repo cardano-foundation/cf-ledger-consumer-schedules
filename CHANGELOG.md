@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.13](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.12...v0.2.13) (2023-08-18)
+
+
+### Bug Fixes
+
+* MET-1590,MET-1599 update logic insert pool offline data ([7f91636](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/7f916364bf2bada7bec6083ee566cc897b3e1c1d))
+
 ## [0.2.12](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.11...v0.2.12) (2023-08-08)
 
 
