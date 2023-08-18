@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.util.concurrent.CompletableFuture;
 
+import org.cardanofoundation.job.service.ReportHistoryService;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,9 +24,7 @@ import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
 import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportType;
-import org.cardanofoundation.job.repository.PoolReportHistoryRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
-import org.cardanofoundation.job.service.StorageService;
 import org.cardanofoundation.job.util.report.ExcelHelper;
 import org.cardanofoundation.job.util.report.ExportContent;
 
@@ -36,9 +35,9 @@ class PoolReportServiceImplTest {
 
   @Mock ExcelHelper excelHelper;
 
-  @Mock PoolReportHistoryRepository poolReportRepository;
-
   @Mock StorageReportServiceImpl storageService;
+
+  @Mock ReportHistoryService reportHistoryService;
 
   @InjectMocks PoolReportServiceImpl poolReportService;
 
@@ -117,7 +116,7 @@ class PoolReportServiceImplTest {
 
     when(excelHelper.writeContent(anyList())).thenReturn(new ByteArrayInputStream(new byte[0]));
     doNothing().when(storageService).uploadFile(any(), anyString());
-    when(poolReportRepository.save(any())).thenReturn(new PoolReportHistory());
+    doNothing().when(reportHistoryService).savePoolReportHistory(any(PoolReportHistory.class));
 
     Assertions.assertDoesNotThrow(() -> poolReportService.exportPoolReport(poolReportHistory));
     Assertions.assertEquals(
