@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.14](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.13...v0.2.14) (2023-08-28)
+
+
+### Bug Fixes
+
+* drop column ts_json of tx_metadata ([89c3ba7](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/89c3ba711712a9e93fe41f44fcb538d2a74c153f))
+* MET 1479 return empty if epoch no is null ([de5ad60](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/de5ad601b66e9680f4f9dd38ba9e8bfd42cf2670))
+
+## [0.2.13](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.12...v0.2.13) (2023-08-18)
+
+
+### Bug Fixes
+
+* MET-1590,MET-1599 update logic insert pool offline data ([7f91636](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/7f916364bf2bada7bec6083ee566cc897b3e1c1d))
+
 ## [0.2.12](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.11...v0.2.12) (2023-08-08)
 
 
