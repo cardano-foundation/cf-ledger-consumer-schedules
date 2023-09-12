@@ -31,7 +31,7 @@ public enum ColumnFieldEnum {
   ADA_VALUE_FEE_COLUMN("rawAdaValueFee"),
   OWNER_COLUMN("owner"),
   OPERATOR_REWARD_COLUMN("rawOperatorReward"),
-  REWARD_ACCOUNT_COLUMN("rewardAccount");
-
+  REWARD_ACCOUNT_COLUMN("rewardAccount"),
+  POOL_NAME_COLUMN("poolName");
   private String value;
 }

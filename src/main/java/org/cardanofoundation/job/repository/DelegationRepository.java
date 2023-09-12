@@ -19,10 +19,12 @@ public interface DelegationRepository extends JpaRepository<Delegation, Long> {
 
   @Query(
       "SELECT tx.hash as txHash, block.time as time, block.epochSlotNo as epochSlotNo,"
+          + " poolOfflineData.poolName as poolName, delegation.poolHash.view as poolId,"
           + " block.blockNo as blockNo, block.epochNo as epochNo, tx.fee as fee, tx.outSum as outSum"
           + " FROM Delegation delegation"
           + " INNER JOIN Tx tx ON delegation.tx = tx"
           + " INNER JOIN Block block ON tx.block = block"
+          + " LEFT JOIN PoolOfflineData poolOfflineData on poolOfflineData.pool = delegation.poolHash"
           + " WHERE delegation.address = :stakeKey"
           + " AND (block.time >= :fromTime ) "
           + " AND (block.time <= :toTime)"
