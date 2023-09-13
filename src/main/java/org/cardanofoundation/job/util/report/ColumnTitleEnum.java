@@ -30,6 +30,7 @@ public enum ColumnTitleEnum {
   ADA_VALUE_FEE_TITLE("Fees"),
   OWNER_TITLE("Owner"),
   OPERATOR_REWARD_TITLE("Operator Reward ADA"),
-  REWARD_ACCOUNT_TITLE("Reward Account");
+  REWARD_ACCOUNT_TITLE("Reward Account"),
+  POOL_NAME_TITLE("Delegating to");
   private String value;
 }
