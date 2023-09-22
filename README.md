@@ -70,3 +70,5 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
 - UNIQUE_ACCOUNT_FIXED_DELAY: fixed delay for job build cache unique account
 - UNIQUE_ACCOUNT_ENABLED: enable unique account job
+- STAKE_TX_BALANCE_JOB_ENABLED: enable stake tx balance job
+- STAKE_TX_BALANCE_FIXED_DELAY: fixed delay for job stake tx balance
