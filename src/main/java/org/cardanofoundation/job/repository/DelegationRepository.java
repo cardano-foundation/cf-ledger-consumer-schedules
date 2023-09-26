@@ -1,6 +1,7 @@
 package org.cardanofoundation.job.repository;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import org.cardanofoundation.explorer.consumercommon.entity.Delegation;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
+import org.cardanofoundation.job.projection.PoolCountProjection;
 import org.cardanofoundation.job.projection.StakeDelegationProjection;
 
 @Repository
@@ -51,4 +53,19 @@ public interface DelegationRepository extends JpaRepository<Delegation, Long> {
           + "AND d.txId >= re.txId "
           + "AND (d.poolHash.id IN :poolIds)")
   Integer countCurrentDelegator(@Param("poolIds") Set<Long> poolIds);
+
+  @Query(value =
+      "SELECT ph.id AS poolId, count(dg1.address.id) AS countValue "
+          + "FROM Delegation dg1 "
+          + "JOIN PoolHash ph ON dg1.poolHash.id = ph.id "
+          + "WHERE NOT EXISTS (SELECT TRUE "
+          + "FROM Delegation dg2 "
+          + "WHERE dg2.address.id = dg1.address.id "
+          + "AND dg2.tx.id > dg1.tx.id) "
+          + "AND NOT EXISTS (SELECT TRUE "
+          + "FROM StakeDeregistration sd "
+          + "WHERE sd.addr.id = dg1.address.id "
+          + "AND sd.tx.id > dg1.tx.id) "
+          + "GROUP BY ph.id ")
+  List<PoolCountProjection> getAllLivePoolDelegatorsCount();
 }
