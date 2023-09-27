@@ -21,4 +21,11 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
       + "JOIN Block bk ON bk.slotLeader.id = sl.id "
       + "GROUP BY ph.id")
   List<PoolCountProjection> getCountBlockByPools();
+
+  @Query("select max(b.blockNo) from Block b")
+  Optional<Long> findMaxBlocKNo();
+
+  @Query("select b from Block b where b.blockNo = "
+      + "(select max(blockNo) from Block)")
+  Optional<Block> findLatestBlock();
 }

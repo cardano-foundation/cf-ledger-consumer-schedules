@@ -66,5 +66,9 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - NUMBER_DELEGATOR_FIXED_DELAY: delay time between each time get number delegator
 - TOKEN_PAGE_CACHE_FIXED_DELAY: fixed delay for job build cache token-page
 - TOKEN_PAGE_CACHE_TTL: time to live of token-page cache data
+- TOKEN_INFO_JOB_ENABLED: enable token info job
+- TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
 - UNIQUE_ACCOUNT_FIXED_DELAY: fixed delay for job build cache unique account
 - UNIQUE_ACCOUNT_ENABLED: enable unique account job
+- STAKE_TX_BALANCE_JOB_ENABLED: enable stake tx balance job
+- STAKE_TX_BALANCE_FIXED_DELAY: fixed delay for job stake tx balance
