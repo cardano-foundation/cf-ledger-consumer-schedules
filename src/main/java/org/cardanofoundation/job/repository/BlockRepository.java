@@ -22,6 +22,14 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
       + "GROUP BY ph.id")
   List<PoolCountProjection> getCountBlockByPools();
 
+  @Query(value = "SELECT ph.id AS poolId, count(bk.id) AS countValue "
+      + "FROM PoolHash ph "
+      + "JOIN SlotLeader sl ON sl.poolHash.id = ph.id "
+      + "JOIN Block bk ON bk.slotLeader.id = sl.id "
+      + "WHERE bk.epochNo = (SELECT MAX(e.no) FROM Epoch e)"
+      + "GROUP BY ph.id")
+  List<PoolCountProjection> getAllCountBlockInCurrentEpoch();
+
   @Query("select max(b.blockNo) from Block b")
   Optional<Long> findMaxBlocKNo();
 
