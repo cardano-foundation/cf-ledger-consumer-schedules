@@ -29,4 +29,11 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
       + "WHERE bk.epochNo = (SELECT MAX(e.no) FROM Epoch e)"
       + "GROUP BY ph.id")
   List<PoolCountProjection> getAllCountBlockInCurrentEpoch();
+
+  @Query("select max(b.blockNo) from Block b")
+  Optional<Long> findMaxBlocKNo();
+
+  @Query("select b from Block b where b.blockNo = "
+      + "(select max(blockNo) from Block)")
+  Optional<Block> findLatestBlock();
 }

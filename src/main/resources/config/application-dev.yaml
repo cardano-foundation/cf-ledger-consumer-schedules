@@ -87,6 +87,9 @@ jobs:
   token-page-cache:
     fixed-delay: ${TOKEN_PAGE_CACHE_FIXED_DELAY:200000}
     ttl: ${TOKEN_PAGE_CACHE_TTL:200000}
+  token-info:
+    enabled: ${TOKEN_INFO_JOB_ENABLED:true}
+    fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
   unique-account:
     enabled: ${UNIQUE_ACCOUNT_ENABLED:false}
     fixed-delay: ${UNIQUE_ACCOUNT_FIXED_DELAY:300000}
