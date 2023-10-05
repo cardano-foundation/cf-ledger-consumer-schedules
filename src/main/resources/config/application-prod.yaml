@@ -93,6 +93,8 @@ jobs:
   stake-tx-balance:
     enabled: ${STAKE_TX_BALANCE_JOB_ENABLED:true}
     fixed-delay: ${STAKE_TX_BALANCE_FIXED_DELAY:300000}
+  aggregate-pool-info:
+    fixed-delay: ${AGGREGATE_POOL_INFO_FIXED_DELAY:10000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
@@ -107,7 +109,7 @@ application:
       base-url: ${API_CHECK_REWARD_URL:http://10.4.10.231:8888/api/v1/rewards/fetch}
     check-pool-history:
       base-url: ${API_CHECK_POOL_HISTORY_URL:http://10.4.10.231:8888/api/v1/pool-history/fetch}
-  token-logo-endpoint: ${TOKEN_LOGO_ENDPOINT:http://localhost:9001/}
+  token-logo-endpoint: https://${TOKEN_LOGO_S3_BUCKET_NAME}.s3.${TOKEN_LOGO_S3_REGION}.amazonaws.com/
 
 kafka:
   configuration-enabled: ${KAFKA_CONFIGURATION_ENABLED:true}
@@ -156,14 +158,12 @@ clouds:
   s3Configs:
     - beanName: reportS3
       profile: s3
-      endpoint: ${REPORT_S3_STORAGE_ENDPOINT:http://localhost:9099}
       accessKey: ${REPORT_S3_ACCESS_KEY:minio_access_key}
       secretKey: ${REPORT_S3_SECRET_KEY:minio_secret_key}
       region: ${REPORT_S3_REGION:null}
       bucket: ${REPORT_S3_BUCKET_NAME:cardano-explorer-api-storage-report}
     - beanName: tokenLogosS3
       profile: s3
-      endpoint: ${TOKEN_LOGO_S3_STORAGE_ENDPOINT:http://localhost:9099}
       accessKey: ${TOKEN_LOGO_S3_ACCESS_KEY:minio_access_key}
       secretKey: ${TOKEN_LOGO_S3_SECRET_KEY:minio_secret_key}
       region: ${TOKEN_LOGO_S3_REGION:null}
