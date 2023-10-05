@@ -5,9 +5,9 @@ spring:
   # Datasource specific configs
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:54321}/${POSTGRES_DB:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
-    username: ${POSTGRES_USER:cardano_read}
-    password: ${POSTGRES_PASSWORD:1}
+    url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:54323}/${POSTGRES_DB:explorer_api}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
+    username: ${POSTGRES_USER:cardano-master}
+    password: ${POSTGRES_PASSWORD:dbpass}
     driver-class-name: org.postgresql.Driver
     # Hikari specific configs
     hikari:
@@ -52,7 +52,7 @@ spring:
       thread-name-prefix: Executorxx-
   ## Flyway config
   flyway:
-    enabled: ${FLYWAY_ENABLE:true}
+    enabled: ${FLYWAY_ENABLE:false}
     url: ${spring.datasource.url}
     user: ${spring.datasource.username}
     password: ${spring.datasource.password}
@@ -93,8 +93,10 @@ jobs:
     enabled: ${UNIQUE_ACCOUNT_ENABLED:false}
     fixed-delay: ${UNIQUE_ACCOUNT_FIXED_DELAY:300000}
   stake-tx-balance:
-    enabled: ${STAKE_TX_BALANCE_JOB_ENABLED:true}
+    enabled: ${STAKE_TX_BALANCE_JOB_ENABLED:false}
     fixed-delay: ${STAKE_TX_BALANCE_FIXED_DELAY:300000}
+  aggregate-pool-info:
+    fixed-delay: ${AGGREGATE_POOL_INFO_FIXED_DELAY:10000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
@@ -112,7 +114,7 @@ application:
   token-logo-endpoint: ${TOKEN_LOGO_ENDPOINT:http://localhost:9001/}
 
 kafka:
-  configuration-enabled: ${KAFKA_CONFIGURATION_ENABLED:true}
+  configuration-enabled: ${KAFKA_CONFIGURATION_ENABLED:false}
   topics:
     reports:
       name: reports

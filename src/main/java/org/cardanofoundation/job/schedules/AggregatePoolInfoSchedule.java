@@ -30,27 +30,31 @@ import org.cardanofoundation.job.service.DelegationService;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class AggregatePoolInfoSchedule {
+
   final DelegationService delegatorService;
 
   final BlockRepository blockRepository;
   final AggregatePoolInfoRepository aggregatePoolInfoRepository;
   final PoolHashRepository poolHashRepository;
 
-  @Scheduled(fixedDelayString = "10000")
+  @Scheduled(fixedDelayString = "${jobs.aggregate-pool-info.fixed-delay}")
   @Transactional
-  public void updatePoolInfoCache() {
+  public void updateAggregatePoolInfoJob() {
     long startTime = System.currentTimeMillis();
     Map<Long, PoolHash> poolHashMap = poolHashRepository.findAll()
         .parallelStream()
         .collect(Collectors.toMap(PoolHash::getId, Function.identity()));
 
-    Map<Long, AggregatePoolInfo> aggregatePoolInfoMap = aggregatePoolInfoRepository.findAllByPoolIdIn(poolHashMap.keySet())
+    Map<Long, AggregatePoolInfo> aggregatePoolInfoMap = aggregatePoolInfoRepository.findAllByPoolIdIn(
+            poolHashMap.keySet())
         .parallelStream()
         .collect(Collectors.toMap(AggregatePoolInfo::getPoolId, Function.identity()));
 
     aggregatePoolInfoMap.putAll(poolHashMap.keySet().parallelStream()
-        .filter(poolId -> !aggregatePoolInfoMap.containsKey(poolId))
-        .collect(Collectors.toMap(poolId -> poolId, poolId -> AggregatePoolInfo.builder().poolId(poolId).build())));
+                                    .filter(poolId -> !aggregatePoolInfoMap.containsKey(poolId))
+                                    .collect(Collectors.toMap(poolId -> poolId,
+                                                              poolId -> AggregatePoolInfo.builder()
+                                                                  .poolId(poolId).build())));
 
     Map<Long, Integer> livePoolDelegatorsCountMap =
         delegatorService.getAllLivePoolDelegatorsCount()
@@ -89,6 +93,7 @@ public class AggregatePoolInfoSchedule {
         });
 
     aggregatePoolInfoRepository.saveAll(aggregatePoolInfoMap.values());
-    log.info("Update aggregate pool info done! Time taken: {} ms", System.currentTimeMillis() - startTime);
+    log.info("Update aggregate pool info done! Time taken: {} ms",
+             System.currentTimeMillis() - startTime);
   }
 }
