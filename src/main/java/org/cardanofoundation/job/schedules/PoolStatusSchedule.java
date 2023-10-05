@@ -36,7 +36,7 @@ public class PoolStatusSchedule {
     String poolActivateKey = getRedisKey(RedisKey.POOL_ACTIVATE.name());
     String poolInActivateKey = getRedisKey(RedisKey.POOL_INACTIVATE.name());
     String totalPoolKey = getRedisKey(RedisKey.TOTAL_POOL.name());
-    String poolIdsInactivate = getRedisKey(RedisKey.POOL_IDS_INACTIVATE.name())
+    String poolIdsInactivate = getRedisKey(RedisKey.POOL_IDS_INACTIVATE.name());
     int totalPoolSize =
         poolStatus.getPoolActivateIds().size() + poolStatus.getPoolInactivateIds().size();
     redisTemplate.opsForValue().set(poolActivateKey, poolStatus.getPoolActivateIds().size());
