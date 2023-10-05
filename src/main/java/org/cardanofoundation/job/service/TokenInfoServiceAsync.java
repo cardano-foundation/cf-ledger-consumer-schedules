@@ -25,7 +25,7 @@ import org.cardanofoundation.job.util.StreamUtil;
 public class TokenInfoServiceAsync {
 
   private final JOOQAddressTokenRepository jooqAddressTokenRepository;
-  private final MultiAssetDataProcessorService multiAssetDataProcessorService;
+  private final MultiAssetService multiAssetService;
 
   /**
    * Asynchronously builds a list of TokenInfo entities based on the provided list of MultiAsset.
@@ -52,7 +52,7 @@ public class TokenInfoServiceAsync {
     var tokenVolumeMap =
         StreamUtil.toMap(
             volumes, TokenVolume::getIdent, TokenVolume::getVolume);
-    var mapNumberHolder = multiAssetDataProcessorService.getMapNumberHolder(multiAssetIds);
+    var mapNumberHolder = multiAssetService.getMapNumberHolder(multiAssetIds);
 
     // Clear unnecessary lists to free up memory.
     multiAssetIds.clear();

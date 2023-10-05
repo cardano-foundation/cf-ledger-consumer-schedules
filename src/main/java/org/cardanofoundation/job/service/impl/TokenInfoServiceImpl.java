@@ -32,7 +32,7 @@ import org.cardanofoundation.job.repository.TxRepository;
 import org.cardanofoundation.job.repository.jooq.JOOQAddressTokenRepository;
 import org.cardanofoundation.job.repository.jooq.JOOQMultiAssetRepository;
 import org.cardanofoundation.job.repository.jooq.JOOQTokenInfoRepository;
-import org.cardanofoundation.job.service.MultiAssetDataProcessorService;
+import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
 import org.cardanofoundation.job.util.BatchUtils;
@@ -52,7 +52,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final JOOQTokenInfoRepository jooqTokenInfoRepository;
   private final JOOQMultiAssetRepository jooqMultiAssetRepository;
   private final JOOQAddressTokenRepository jooqAddressTokenRepository;
-  private final MultiAssetDataProcessorService multiAssetDataProcessorService;
+  private final MultiAssetService multiAssetService;
 
   @Override
   @Transactional
@@ -229,7 +229,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
       var tokenVolumeMap =
           StreamUtil.toMap(
               volumes, TokenVolume::getIdent, TokenVolume::getVolume);
-      var mapNumberHolder = multiAssetDataProcessorService.getMapNumberHolder(multiAssetIds);
+      var mapNumberHolder = multiAssetService.getMapNumberHolder(multiAssetIds);
 
       var tokenInfoMap = tokenInfoRepository.findByMultiAssetIdIn(
               multiAssetIds).stream()

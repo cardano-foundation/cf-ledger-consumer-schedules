@@ -1,22 +1,26 @@
-package org.cardanofoundation.job.service;
+package org.cardanofoundation.job.service.impl;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.job.model.TokenNumberHolders;
 import org.cardanofoundation.job.repository.jooq.JOOQAddressTokenBalanceRepository;
+import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.util.StreamUtil;
 
 @Service
 @RequiredArgsConstructor
-public class MultiAssetDataProcessorService {
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class MultiAssetServiceImpl implements MultiAssetService {
 
-  private final JOOQAddressTokenBalanceRepository jooqAddressTokenBalanceRepository;
+  JOOQAddressTokenBalanceRepository jooqAddressTokenBalanceRepository;
 
   /**
    * Build a mapping of multiAsset IDs to the total number of holders for each multi-asset. The
@@ -27,6 +31,7 @@ public class MultiAssetDataProcessorService {
    * @param multiAssetIds The list of multi-asset IDs for which to calculate the number of holders.
    * @return A map containing multi-asset IDs as keys and the total number of holders as values.
    */
+  @Override
   public Map<Long, Long> getMapNumberHolder(List<Long> multiAssetIds) {
     var numberOfHoldersWithStakeKey =
         jooqAddressTokenBalanceRepository.countByMultiAssetIn(multiAssetIds);
