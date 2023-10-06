@@ -15,6 +15,10 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
   @Query("select max(b.time) from Block b")
   Optional<Timestamp> getMaxTime();
 
+  @Query("select b from Block b where b.blockNo = "
+      + "(select max(blockNo) from Block)")
+  Optional<Block> findLatestBlock();
+
   @Query(value = "SELECT ph.id AS poolId, count(bk.id) AS countValue "
       + "FROM PoolHash ph "
       + "JOIN SlotLeader sl ON sl.poolHash.id = ph.id "

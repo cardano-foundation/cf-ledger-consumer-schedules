@@ -94,6 +94,9 @@ jobs:
     fixed-delay: ${STAKE_TX_BALANCE_FIXED_DELAY:300000}
   aggregate-pool-info:
     fixed-delay: ${AGGREGATE_POOL_INFO_FIXED_DELAY:10000}
+  token-info:
+    enabled: ${TOKEN_INFO_JOB_ENABLED:true}
+    fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
