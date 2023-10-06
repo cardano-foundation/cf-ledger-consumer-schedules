@@ -35,4 +35,3 @@ CREATE SEQUENCE IF NOT EXISTS token_info_checkpoint_id_seq
     CACHE 1;
 
 ALTER SEQUENCE token_info_checkpoint_id_seq OWNED BY token_info_checkpoint.id;
-

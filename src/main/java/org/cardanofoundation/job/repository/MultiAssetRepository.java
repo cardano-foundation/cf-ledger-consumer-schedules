@@ -1,7 +1,7 @@
 package org.cardanofoundation.job.repository;
 
-import java.sql.Timestamp;
 import java.util.List;
+import java.sql.Timestamp;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +12,7 @@ import org.cardanofoundation.explorer.consumercommon.entity.MultiAsset;
 
 @Repository
 public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
+
   @Query("select distinct multiAsset "
       + " from MultiAsset multiAsset join AddressToken addressToken"
       + " on multiAsset.id = addressToken.multiAssetId"
@@ -33,5 +34,6 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
       + " where block.time >= :fromTime and block.time <= :toTime")
   List<MultiAsset> getTokensInTransactionInTimeRange(@Param("fromTime") Timestamp fromTime,
                                                      @Param("toTime") Timestamp toTime);
+
 
 }
