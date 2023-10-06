@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.15](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.14...v0.2.15) (2023-10-06)
+
+
+### Features
+
+* MET-1528 add StakeTxBalance job to sync data for stake chart ([d225ca7](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/d225ca745582956e12366704720ff2acec277abf))
+* MET-1654 add poolName column to stake-key delegation transactions in export file ([2cd5040](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/2cd5040eb3977b52bae0719256601ef7d5a73496))
+
+
+### Documentation
+
+* add env for stake-tx-balance job ([6fb26a4](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/6fb26a4a6ebe0a799c1fb71b83fc5dc8771fc8ef))
+
 ## [0.2.14](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.13...v0.2.14) (2023-08-28)
 
 
