@@ -18,6 +18,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import io.micrometer.common.util.StringUtils;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
 import org.cardanofoundation.explorer.consumercommon.entity.Tx;
 import org.cardanofoundation.job.common.enumeration.TxStatus;
@@ -151,6 +152,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
                     .time(item.getTime().toLocalDateTime())
                     .outSum(item.getOutSum())
                     .rawFee(item.getFee().doubleValue() / 1000000)
+                    .poolName(StringUtils.isEmpty(item.getPoolName()) ? item.getPoolId() : item.getPoolName())
                     .build())
         .collect(Collectors.toList());
   }

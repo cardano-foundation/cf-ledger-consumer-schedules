@@ -23,6 +23,7 @@ public class StakeDelegationFilterResponse {
   private BigInteger fee;
   private Double rawFee;
   private LocalDateTime time;
+  private String poolName;
 
   public static List<ExportColumn> buildExportColumn() {
     List<ExportColumn> columns = new ArrayList<>();
@@ -34,6 +35,9 @@ public class StakeDelegationFilterResponse {
             ColumnFieldEnum.TIME_COLUMN, ColumnTitleEnum.TIMESTAMP_TITLE, Alignment.CENTER));
     columns.add(
         new ExportColumn(ColumnFieldEnum.FEE_COLUMN, ColumnTitleEnum.FEES_TITLE, Alignment.RIGHT));
+    columns.add(
+        new ExportColumn(
+            ColumnFieldEnum.POOL_NAME_COLUMN, ColumnTitleEnum.POOL_NAME_TITLE, Alignment.LEFT));
     return columns;
   }
 }
