@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.16](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.15...v0.2.16) (2023-10-11)
+
+
+### Features
+
+* MET-1700 add aggregated data of token scheduler ([c47e6ea](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/c47e6eafbea51d7e7e5bd9aa6a9f1d95495d2910))
+* rename flyway name ([5cb908a](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/5cb908aec991c3a9f5d65a8ccb570a285030f85e))
+* update pool status for each pool ([102a7b2](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/102a7b2065443fe89f9fdade6c6b7966d4ad3d1e))
+
 ## [0.2.15](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.14...v0.2.15) (2023-10-06)
 
 
