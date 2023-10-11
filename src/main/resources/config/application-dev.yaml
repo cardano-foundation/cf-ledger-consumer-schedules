@@ -84,15 +84,17 @@ jobs:
     fixed-delay: ${POOL_STATUS_FIXED_DELAY:300000}
   number-delegator:
     fixed-delay: ${NUMBER_DELEGATOR_FIXED_DELAY:300000}
-  token-page-cache:
-    fixed-delay: ${TOKEN_PAGE_CACHE_FIXED_DELAY:200000}
-    ttl: ${TOKEN_PAGE_CACHE_TTL:200000}
   unique-account:
     enabled: ${UNIQUE_ACCOUNT_ENABLED:false}
     fixed-delay: ${UNIQUE_ACCOUNT_FIXED_DELAY:300000}
   stake-tx-balance:
     enabled: ${STAKE_TX_BALANCE_JOB_ENABLED:true}
     fixed-delay: ${STAKE_TX_BALANCE_FIXED_DELAY:300000}
+  aggregate-pool-info:
+    fixed-delay: ${AGGREGATE_POOL_INFO_FIXED_DELAY:10000}
+  token-info:
+    enabled: ${TOKEN_INFO_JOB_ENABLED:true}
+    fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
