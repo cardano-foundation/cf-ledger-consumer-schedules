@@ -1,5 +1,8 @@
 package org.cardanofoundation.job.schedules;
 
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -33,11 +36,15 @@ public class PoolStatusSchedule {
     String poolActivateKey = getRedisKey(RedisKey.POOL_ACTIVATE.name());
     String poolInActivateKey = getRedisKey(RedisKey.POOL_INACTIVATE.name());
     String totalPoolKey = getRedisKey(RedisKey.TOTAL_POOL.name());
+    String poolIdsInactivate = getRedisKey(RedisKey.POOL_IDS_INACTIVATE.name());
     int totalPoolSize =
         poolStatus.getPoolActivateIds().size() + poolStatus.getPoolInactivateIds().size();
     redisTemplate.opsForValue().set(poolActivateKey, poolStatus.getPoolActivateIds().size());
     redisTemplate.opsForValue().set(poolInActivateKey, poolStatus.getPoolInactivateIds().size());
     redisTemplate.opsForValue().set(totalPoolKey, totalPoolSize);
+    redisTemplate.opsForHash()
+        .putAll(poolIdsInactivate, poolStatus.getPoolInactivateIds().stream().collect(
+            Collectors.toMap(Function.identity(), Function.identity())));
     log.info(
         "Update pool status done! total pool: {}, pool activate {}, pool inactivate {}",
         totalPoolSize,
