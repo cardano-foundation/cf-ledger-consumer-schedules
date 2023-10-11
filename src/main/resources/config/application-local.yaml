@@ -5,9 +5,9 @@ spring:
   # Datasource specific configs
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
-    url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:54323}/${POSTGRES_DB:explorer_api}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
-    username: ${POSTGRES_USER:cardano-master}
-    password: ${POSTGRES_PASSWORD:dbpass}
+    url: jdbc:postgresql://${infrastructure.host}:${POSTGRES_PORT:54321}/${POSTGRES_DB:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
+    username: ${POSTGRES_USER:cardano_read}
+    password: ${POSTGRES_PASSWORD:1}
     driver-class-name: org.postgresql.Driver
     # Hikari specific configs
     hikari:
