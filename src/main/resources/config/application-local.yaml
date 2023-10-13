@@ -73,10 +73,6 @@ jobs:
     enabled: ${REPORT_HISTORY_JOB_ENABLED:false}
     expired:
       rate: ${SET_EXPIRED_REPORTS_DELAY:86400000} # 1 day
-  pool-offline-data:
-    enabled: ${POOL_OFFLINE_DATA_JOB_ENABLED:false}
-    fetch:
-      delay: ${CRAWL_POOL_DATA_DELAY:172800000}
   top-delegators:
     fixed-delay: ${TOP_DELEGATORS_FIXED_DELAY:300000}
   pool-status:
