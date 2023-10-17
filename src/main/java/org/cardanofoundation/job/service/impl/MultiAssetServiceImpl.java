@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.job.model.TokenNumberHolders;
-import org.cardanofoundation.job.repository.jooq.JOOQAddressTokenBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenBalanceRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.util.StreamUtil;
 

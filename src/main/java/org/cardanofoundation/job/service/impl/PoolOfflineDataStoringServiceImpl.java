@@ -29,10 +29,10 @@ import org.cardanofoundation.explorer.consumercommon.entity.PoolMetadataRef;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineData;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineFetchError;
 import org.cardanofoundation.job.dto.PoolData;
-import org.cardanofoundation.job.repository.PoolHashRepository;
-import org.cardanofoundation.job.repository.PoolMetadataRefRepository;
-import org.cardanofoundation.job.repository.PoolOfflineDataRepository;
-import org.cardanofoundation.job.repository.PoolOfflineFetchErrorRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolMetadataRefRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolOfflineDataRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolOfflineFetchErrorRepository;
 import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
 import org.cardanofoundation.ledgersync.common.util.JsonUtil;
 

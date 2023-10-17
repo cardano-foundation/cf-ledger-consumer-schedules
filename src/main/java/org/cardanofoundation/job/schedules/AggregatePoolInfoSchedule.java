@@ -20,9 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
 import org.cardanofoundation.explorer.consumercommon.entity.aggregation.AggregatePoolInfo;
 import org.cardanofoundation.job.projection.PoolCountProjection;
-import org.cardanofoundation.job.repository.BlockRepository;
-import org.cardanofoundation.job.repository.PoolHashRepository;
-import org.cardanofoundation.job.repository.aggregate.AggregatePoolInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
+import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregatePoolInfoRepository;
 import org.cardanofoundation.job.service.DelegationService;
 
 @Slf4j
@@ -37,7 +37,7 @@ public class AggregatePoolInfoSchedule {
   final AggregatePoolInfoRepository aggregatePoolInfoRepository;
   final PoolHashRepository poolHashRepository;
 
-  @Scheduled(fixedDelayString = "${jobs.aggregate-pool-info.fixed-delay}")
+//  @Scheduled(fixedDelayString = "${jobs.aggregate-pool-info.fixed-delay}")
   @Transactional
   public void updateAggregatePoolInfoJob() {
     long startTime = System.currentTimeMillis();

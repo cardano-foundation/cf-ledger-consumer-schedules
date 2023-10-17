@@ -15,9 +15,9 @@ import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.job.dto.PoolStatus;
 import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
-import org.cardanofoundation.job.repository.EpochRepository;
-import org.cardanofoundation.job.repository.PoolRetireRepository;
-import org.cardanofoundation.job.repository.PoolUpdateRepository;
+import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolRetireRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolUpdateRepository;
 import org.cardanofoundation.job.service.PoolService;
 
 @Service

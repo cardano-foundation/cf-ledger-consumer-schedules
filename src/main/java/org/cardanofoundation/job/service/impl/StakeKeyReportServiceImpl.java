@@ -18,12 +18,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import org.cardanofoundation.explorer.consumercommon.entity.StakeKeyReportHistory;
+import org.cardanofoundation.explorer.consumercommon.analytics.entity.StakeKeyReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.job.common.enumeration.ExportType;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
-import org.cardanofoundation.job.repository.AddressTxBalanceRepository;
-import org.cardanofoundation.job.repository.StakeKeyReportHistoryRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.StakeKeyReportHistoryRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.service.StakeKeyReportService;
 import org.cardanofoundation.job.util.report.ExcelHelper;

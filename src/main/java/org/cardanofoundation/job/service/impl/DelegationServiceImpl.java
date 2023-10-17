@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.job.projection.PoolCountProjection;
-import org.cardanofoundation.job.repository.DelegationRepository;
+import org.cardanofoundation.job.repository.ledgersync.DelegationRepository;
 import org.cardanofoundation.job.service.DelegationService;
 import org.cardanofoundation.job.service.PoolService;
 

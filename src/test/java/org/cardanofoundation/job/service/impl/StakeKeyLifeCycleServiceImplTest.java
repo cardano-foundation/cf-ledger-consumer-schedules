@@ -34,14 +34,14 @@ import org.cardanofoundation.job.projection.StakeHistoryProjection;
 import org.cardanofoundation.job.projection.StakeRewardProjection;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.projection.StakeWithdrawalProjection;
-import org.cardanofoundation.job.repository.AddressTxBalanceRepository;
-import org.cardanofoundation.job.repository.DelegationRepository;
-import org.cardanofoundation.job.repository.RewardRepository;
-import org.cardanofoundation.job.repository.StakeAddressRepository;
-import org.cardanofoundation.job.repository.StakeDeRegistrationRepository;
-import org.cardanofoundation.job.repository.StakeRegistrationRepository;
-import org.cardanofoundation.job.repository.TxRepository;
-import org.cardanofoundation.job.repository.WithdrawalRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.DelegationRepository;
+import org.cardanofoundation.job.repository.ledgersync.RewardRepository;
+import org.cardanofoundation.job.repository.ledgersync.StakeAddressRepository;
+import org.cardanofoundation.job.repository.ledgersync.StakeDeRegistrationRepository;
+import org.cardanofoundation.job.repository.ledgersync.StakeRegistrationRepository;
+import org.cardanofoundation.job.repository.ledgersync.TxRepository;
+import org.cardanofoundation.job.repository.ledgersync.WithdrawalRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 
 @ExtendWith(MockitoExtension.class)

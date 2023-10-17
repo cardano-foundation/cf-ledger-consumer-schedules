@@ -6,9 +6,9 @@ import java.util.Set;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
-import org.cardanofoundation.job.repository.PoolHistoryCheckpointRepository;
-import org.cardanofoundation.job.repository.PoolUpdateRepository;
-import org.cardanofoundation.job.repository.RewardCheckpointRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolHistoryCheckpointRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolUpdateRepository;
+import org.cardanofoundation.job.repository.ledgersync.RewardCheckpointRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
