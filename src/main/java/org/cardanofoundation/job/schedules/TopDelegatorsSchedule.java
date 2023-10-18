@@ -19,7 +19,7 @@ import com.google.gson.Gson;
 
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.StakeAddressProjection;
-import org.cardanofoundation.job.repository.StakeAddressRepository;
+import org.cardanofoundation.job.repository.ledgersync.StakeAddressRepository;
 
 @Slf4j
 @Component

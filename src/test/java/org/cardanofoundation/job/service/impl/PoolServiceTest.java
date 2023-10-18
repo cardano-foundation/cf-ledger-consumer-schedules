@@ -20,9 +20,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
-import org.cardanofoundation.job.repository.EpochRepository;
-import org.cardanofoundation.job.repository.PoolRetireRepository;
-import org.cardanofoundation.job.repository.PoolUpdateRepository;
+import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolRetireRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolUpdateRepository;
 
 @ActiveProfiles({"test", "standalone"})
 @EnableAutoConfiguration(exclude = RedisAutoConfiguration.class)

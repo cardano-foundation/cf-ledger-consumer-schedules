@@ -13,8 +13,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
 import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeKeyReportHistory;
-import org.cardanofoundation.job.repository.PoolReportHistoryRepository;
-import org.cardanofoundation.job.repository.StakeKeyReportHistoryRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolReportHistoryRepository;
+import org.cardanofoundation.job.repository.ledgersync.StakeKeyReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
 import org.cardanofoundation.job.service.StakeKeyReportService;
 

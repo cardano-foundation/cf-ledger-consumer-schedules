@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
-import org.cardanofoundation.job.repository.ReportHistoryRepository;
+import org.cardanofoundation.job.repository.ledgersync.ReportHistoryRepository;
 import org.cardanofoundation.job.service.impl.StorageReportServiceImpl;
 
 @Component

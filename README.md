@@ -18,15 +18,22 @@ To ensure the stability and reliability of this project, unit and mutation tests
 📊 [Mutation report](https://cardano-foundation.github.io/cf-ledger-consumer-schedules/mutation-report/)
 
 ## Environment value
-- POSTGRES_HOST: database host
-- POSTGRES_PORT: database port
-- POSTGRES_DB: database name
-- POSTGRES_USER: database access user name
-- POSTGRES_PASSWORD:database user password
+- LEDGER_SYNC_HOST: Ledger-sync database host.
+- LEDGER_SYNC_PORT: Ledger-sync database port
+- LEDGER_SYNC_USER: Ledger-sync database username
+- LEDGER_SYNC_PASSWORD: Ledger-sync database password
+- LEDGER_SYNC_DB: Ledger-sync database name
+- LEDGER_SYNC_FLYWAY_ENABLE: Ledger-sync Migrate schema, set `true` if this is the first time run app
+- LEDGER_SYNC_FLYWAY_VALIDATE: Ledger-sync Flyway schema validation, default `false`
+- ANALYTICS_HOST: Analytics database host.
+- ANALYTICS_PORT: Analytics database port
+- ANALYTICS_USER: Analytics database username
+- ANALYTICS_PASSWORD: Analytics database password
+- ANALYTICS_DB: Analytics database name
+- ANALYTICS_FLYWAY_ENABLE: Analytics Migrate schema, set `true` if this is the first time run app
+- ANALYTICS_FLYWAY_VALIDATE: Analytics Flyway schema validation, default `false`
 - POSTGRES_SCHEMA: database schema
-- MAXIMUM_POOL_SIZE: Schedule will have job select parallel from database. If you want to task schedule as fast as possible set the `MAXIMUM_POOL_SIZE` as much as possible (cpu core * 4). This will reduce another app performance. 
-- FLYWAY_ENABLE: Migrate schema, set `true` if this is the first time run app
-- FLYWAY_VALIDATE: Flyway schema validation, default `false`
+- MAXIMUM_POOL_SIZE: Schedule will have job select parallel from database. If you want to task schedule as fast as possible set the `MAXIMUM_POOL_SIZE` as much as possible (cpu core * 4). This will reduce another app performance.
 - REPORT_HISTORY_JOB_ENABLED: enable a report history job to delete expired file. Default `true`
 - SET_EXPIRED_REPORTS_DELAY: delay time between each report history job run. Default `86400000` as 1 day
 - LIMIT_CONTENT_PER_SHEET: limit content per sheet of export file, default `1000000`

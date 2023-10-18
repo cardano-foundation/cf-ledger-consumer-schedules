@@ -29,10 +29,10 @@ import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
-import org.cardanofoundation.job.repository.PoolHashRepository;
-import org.cardanofoundation.job.repository.PoolRetireRepository;
-import org.cardanofoundation.job.repository.PoolUpdateRepository;
-import org.cardanofoundation.job.repository.RewardRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolRetireRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolUpdateRepository;
+import org.cardanofoundation.job.repository.ledgersync.RewardRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 
 @ExtendWith(MockitoExtension.class)

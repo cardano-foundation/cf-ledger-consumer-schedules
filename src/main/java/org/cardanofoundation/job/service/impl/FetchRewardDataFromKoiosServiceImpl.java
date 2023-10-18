@@ -15,9 +15,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import org.cardanofoundation.job.repository.PoolHistoryCheckpointRepository;
-import org.cardanofoundation.job.repository.PoolUpdateRepository;
-import org.cardanofoundation.job.repository.RewardCheckpointRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolHistoryCheckpointRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolUpdateRepository;
+import org.cardanofoundation.job.repository.ledgersync.RewardCheckpointRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 
 @Profile("koios")

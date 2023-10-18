@@ -5,7 +5,7 @@ import java.util.Collections;
 import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportType;
-import org.cardanofoundation.job.repository.ReportHistoryRepository;
+import org.cardanofoundation.job.repository.ledgersync.ReportHistoryRepository;
 import org.cardanofoundation.job.schedules.ReportHistorySchedule;
 import org.cardanofoundation.job.service.impl.StorageReportServiceImpl;
 

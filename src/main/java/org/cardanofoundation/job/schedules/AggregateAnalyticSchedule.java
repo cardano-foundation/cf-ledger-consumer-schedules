@@ -14,10 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import org.cardanofoundation.job.repository.AddressTxBalanceRepository;
-import org.cardanofoundation.job.repository.BlockRepository;
-import org.cardanofoundation.job.repository.aggregate.AggregateAddressTokenRepository;
-import org.cardanofoundation.job.repository.aggregate.AggregateAddressTxBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
+import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
+import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
 
 @Component
 @Slf4j
