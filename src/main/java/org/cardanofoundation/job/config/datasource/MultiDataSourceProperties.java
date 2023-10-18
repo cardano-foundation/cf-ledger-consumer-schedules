@@ -25,7 +25,7 @@ import org.flywaydb.core.Flyway;
 public class MultiDataSourceProperties {
 
   DataSourceConfig datasourceLedgerSync;
-  DataSourceConfig datasourceAnalytics;
+  DataSourceConfig datasourceExplorer;
 
   @Data
   @FieldDefaults(level = AccessLevel.PRIVATE)
