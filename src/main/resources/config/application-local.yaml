@@ -4,7 +4,7 @@ multi-datasource: #specified for HikariDataSource
     hikariConfig:
       jdbcUrl: jdbc:postgresql://${LEDGER_SYNC_HOST:10.4.10.112}:${LEDGER_SYNC_PORT:54323}/${LEDGER_SYNC_DB:explorer_api}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
       username: ${LEDGER_SYNC_USER:cardano-master}
-      password: ${LEDGER_SYNC_USER:dbpass}
+      password: ${LEDGER_SYNC_PASSWORD:dbpass}
       driverClassName: org.postgresql.Driver
       poolName: explorer-schedule-ledgersync-pool
       minimumIdle: 1 #minimum number of idle connections maintained by HikariCP in a connection pool
@@ -39,9 +39,9 @@ multi-datasource: #specified for HikariDataSource
 
   datasourceExplorer:
     hikariConfig:
-      jdbcUrl: jdbc:postgresql://localhost:${ANALYTICS_HOST:54321}/${ANALYTICS_PORT:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
-      username: ${ANALYTICS_USER:cardano-master}
-      password: ${ANALYTICS_PASSWORD:Y2FyZGFuby1kYXRhYmFzZS1tYXN0ZXI=}
+      jdbcUrl: jdbc:postgresql://localhost:${EXPLORER_HOST:54321}/${EXPLORER_PORT:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
+      username: ${EXPLORER_USER:cardano-master}
+      password: ${EXPLORER_PASSWORD:Y2FyZGFuby1kYXRhYmFzZS1tYXN0ZXI=}
       driverClassName: org.postgresql.Driver
       poolName: explorer-schedule-explorer-pool
       minimumIdle: 1 #minimum number of idle connections maintained by HikariCP in a connection pool
@@ -63,7 +63,7 @@ multi-datasource: #specified for HikariDataSource
         elideSetAutoCommits: true
         maintainTimeStats: false
     flyway:
-      enabled: ${ANALYTICS_FLYWAY_ENABLE:false}
+      enabled: ${EXPLORER_FLYWAY_ENABLE:false}
       group: true
       sqlMigrationPrefix: V
       sqlMigrationSeparator: __
@@ -71,7 +71,7 @@ multi-datasource: #specified for HikariDataSource
       locations: db/migration/explorer
       defaultSchema: ${spring.jpa.properties.hibernate.default_schema}
       schemas: ${spring.jpa.properties.hibernate.default_schema}
-      validateOnMigrate: ${ANALYTICS_FLYWAY_VALIDATE:false}
+      validateOnMigrate: ${EXPLORER_FLYWAY_VALIDATE:false}
       outOfOrder: true
 
 spring:
