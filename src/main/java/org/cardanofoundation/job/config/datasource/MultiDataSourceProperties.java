@@ -37,7 +37,7 @@ public class MultiDataSourceProperties {
   public DataSource buildDataSource(DataSourceConfig dataSourceConfig) {
     HikariDataSource hikariDataSource = new HikariDataSource(dataSourceConfig.getHikariConfig());
     FlywayProperties flywayProperties = dataSourceConfig.getFlyway();
-    if (flywayProperties.isEnabled()) {
+    if (flywayProperties != null && flywayProperties.isEnabled()) {
       Flyway.configure()
           .dataSource(hikariDataSource)
           .locations(flywayProperties.getLocations().toArray(new String[0]))
