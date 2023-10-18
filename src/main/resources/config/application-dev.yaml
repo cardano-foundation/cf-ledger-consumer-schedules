@@ -39,7 +39,7 @@ multi-datasource: #specified for HikariDataSource
 
   datasourceExplorer:
     hikariConfig:
-      jdbcUrl: jdbc:postgresql://localhost:${EXPLORER_HOST:54321}/${EXPLORER_PORT:explorer}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
+      jdbcUrl: jdbc:postgresql://${EXPLORER_HOST:10.4.10.112}:${EXPLORER_PORT:54323}/${EXPLORER_DB:explorer_api}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
       username: ${EXPLORER_USER:cardano-master}
       password: ${EXPLORER_PASSWORD:Y2FyZGFuby1kYXRhYmFzZS1tYXN0ZXI=}
       driverClassName: org.postgresql.Driver
