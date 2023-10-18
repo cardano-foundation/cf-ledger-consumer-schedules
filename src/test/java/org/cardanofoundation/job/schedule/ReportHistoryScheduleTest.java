@@ -2,7 +2,7 @@ package org.cardanofoundation.job.schedule;
 
 import java.sql.Timestamp;
 import java.util.Collections;
-import org.cardanofoundation.explorer.consumercommon.analytics.entity.ReportHistory;
+import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportType;
 import org.cardanofoundation.job.repository.ledgersync.ReportHistoryRepository;

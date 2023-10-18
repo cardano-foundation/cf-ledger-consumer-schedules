@@ -12,7 +12,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import org.cardanofoundation.explorer.consumercommon.analytics.entity.PoolReportHistory;
+import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;

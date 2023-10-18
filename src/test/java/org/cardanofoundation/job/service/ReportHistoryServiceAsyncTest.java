@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.cardanofoundation.explorer.consumercommon.analytics.entity.PoolReportHistory;
+import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
 import org.cardanofoundation.job.dto.report.pool.EpochSize;
 import org.cardanofoundation.job.dto.report.pool.PoolDeregistration;
 import org.cardanofoundation.job.dto.report.pool.PoolRegistration;

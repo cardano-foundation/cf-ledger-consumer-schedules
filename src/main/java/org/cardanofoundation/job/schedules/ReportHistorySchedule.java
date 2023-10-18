@@ -18,7 +18,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import org.cardanofoundation.explorer.consumercommon.analytics.entity.ReportHistory;
+import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.job.repository.ledgersync.ReportHistoryRepository;
 import org.cardanofoundation.job.service.impl.StorageReportServiceImpl;

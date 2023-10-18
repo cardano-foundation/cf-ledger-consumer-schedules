@@ -19,8 +19,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.cardanofoundation.explorer.consumercommon.analytics.entity.PoolReportHistory;
-import org.cardanofoundation.explorer.consumercommon.analytics.entity.ReportHistory;
+import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
+import org.cardanofoundation.explorer.consumercommon.entity.ReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportType;
 import org.cardanofoundation.job.repository.ledgersync.PoolReportHistoryRepository;
