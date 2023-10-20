@@ -18,11 +18,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
-import org.cardanofoundation.explorer.consumercommon.entity.aggregation.AggregatePoolInfo;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.AggregatePoolInfo;
 import org.cardanofoundation.job.projection.PoolCountProjection;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
-import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregatePoolInfoRepository;
+import org.cardanofoundation.job.repository.explorer.AggregatePoolInfoRepository;
 import org.cardanofoundation.job.service.DelegationService;
 
 @Slf4j
@@ -37,7 +37,7 @@ public class AggregatePoolInfoSchedule {
   final AggregatePoolInfoRepository aggregatePoolInfoRepository;
   final PoolHashRepository poolHashRepository;
 
-//  @Scheduled(fixedDelayString = "${jobs.aggregate-pool-info.fixed-delay}")
+  @Scheduled(fixedDelayString = "${jobs.aggregate-pool-info.fixed-delay}")
   @Transactional
   public void updateAggregatePoolInfoJob() {
     long startTime = System.currentTimeMillis();
@@ -89,7 +89,7 @@ public class AggregatePoolInfoSchedule {
           aggregatePoolInfo
               .setBlockInEpoch(blockInEpochMap.getOrDefault(entry.getKey(), 0));
           aggregatePoolInfo.setUpdateTime(currentTime);
-          aggregatePoolInfo.setPoolHash(poolHashMap.get(entry.getKey()));
+          aggregatePoolInfo.setPoolId(entry.getKey());
         });
 
     aggregatePoolInfoRepository.saveAll(aggregatePoolInfoMap.values());
