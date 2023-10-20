@@ -325,7 +325,7 @@
 </span>
 </span>
 </td>
-<td class=''><pre><span  class=''>import org.cardanofoundation.explorer.consumercommon.entity.aggregation.AggregatePoolInfo;</span></pre></td></tr>
+<td class=''><pre><span  class=''>import org.cardanofoundation.explorer.consumercommon.explorer.entity.AggregatePoolInfo;</span></pre></td></tr>
 
 
 <tr>
@@ -385,7 +385,7 @@
 </span>
 </span>
 </td>
-<td class=''><pre><span  class=''>import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregatePoolInfoRepository;</span></pre></td></tr>
+<td class=''><pre><span  class=''>import org.cardanofoundation.job.repository.explorer.AggregatePoolInfoRepository;</span></pre></td></tr>
 
 
 <tr>
@@ -610,7 +610,7 @@
 </span>
 </span>
 </td>
-<td class=''><pre><span  class=''>//  @Scheduled(fixedDelayString = &#34;${jobs.aggregate-pool-info.fixed-delay}&#34;)</span></pre></td></tr>
+<td class=''><pre><span  class=''>  @Scheduled(fixedDelayString = &#34;${jobs.aggregate-pool-info.fixed-delay}&#34;)</span></pre></td></tr>
 
 
 <tr>
@@ -1308,7 +1308,7 @@
 <span class='pop'>
 <a href='#grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_86'>1</a>
 <span>
-1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setDelegatorCount &rarr; KILLED<br/>
+1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setDelegatorCount &rarr; KILLED<br/>
 
 </span>
 </span>
@@ -1340,7 +1340,7 @@
 <span class='pop'>
 <a href='#grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_88'>1</a>
 <span>
-1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setBlockLifeTime &rarr; KILLED<br/>
+1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setBlockLifeTime &rarr; KILLED<br/>
 
 </span>
 </span>
@@ -1372,7 +1372,7 @@
 <span class='pop'>
 <a href='#grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_90'>1</a>
 <span>
-1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setBlockInEpoch &rarr; KILLED<br/>
+1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setBlockInEpoch &rarr; KILLED<br/>
 
 </span>
 </span>
@@ -1389,7 +1389,7 @@
 <span class='pop'>
 <a href='#grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_91'>1</a>
 <span>
-1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setUpdateTime &rarr; SURVIVED<br/>
+1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setUpdateTime &rarr; SURVIVED<br/>
 
 </span>
 </span>
@@ -1406,12 +1406,12 @@
 <span class='pop'>
 <a href='#grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_92'>1</a>
 <span>
-1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setPoolHash &rarr; SURVIVED<br/>
+1. lambda$updateAggregatePoolInfoJob$3 : removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setPoolId &rarr; SURVIVED<br/>
 
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class='survived'>          aggregatePoolInfo.setPoolHash(poolHashMap.get(entry.getKey()));</span></pre></td></tr>
+<td class='covered'><pre><span  class='survived'>          aggregatePoolInfo.setPoolId(entry.getKey());</span></pre></td></tr>
 
 
 <tr>
@@ -1581,7 +1581,7 @@
 
 <a name='grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_86'/> 
 
-<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest]/[method:updateAggregatePoolInfoJobTest()]</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setDelegatorCount &rarr; KILLED</p> 
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest]/[method:updateAggregatePoolInfoJobTest()]</span></span> removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setDelegatorCount &rarr; KILLED</p> 
 </td>
 </tr>
 <tr>
@@ -1591,7 +1591,7 @@
 
 <a name='grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_88'/> 
 
-<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest]/[method:updateAggregatePoolInfoJobTest()]</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setBlockLifeTime &rarr; KILLED</p> 
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest]/[method:updateAggregatePoolInfoJobTest()]</span></span> removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setBlockLifeTime &rarr; KILLED</p> 
 </td>
 </tr>
 <tr>
@@ -1601,7 +1601,7 @@
 
 <a name='grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_90'/> 
 
-<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest]/[method:updateAggregatePoolInfoJobTest()]</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setBlockInEpoch &rarr; KILLED</p> 
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest]/[method:updateAggregatePoolInfoJobTest()]</span></span> removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setBlockInEpoch &rarr; KILLED</p> 
 </td>
 </tr>
 <tr>
@@ -1611,7 +1611,7 @@
 
 <a name='grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_91'/> 
 
-<p class='SURVIVED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setUpdateTime &rarr; SURVIVED</p> 
+<p class='SURVIVED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setUpdateTime &rarr; SURVIVED</p> 
 </td>
 </tr>
 <tr>
@@ -1621,7 +1621,7 @@
 
 <a name='grouporg.pitest.mutationtest.report.html.SourceFile@14b7e76e_92'/> 
 
-<p class='SURVIVED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/entity/aggregation/AggregatePoolInfo::setPoolHash &rarr; SURVIVED</p> 
+<p class='SURVIVED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>lambda$updateAggregatePoolInfoJob$3<br/><b>Killed by : </b>none</span></span> removed call to org/cardanofoundation/explorer/consumercommon/explorer/entity/AggregatePoolInfo::setPoolId &rarr; SURVIVED</p> 
 </td>
 </tr>
 <tr>
@@ -1656,7 +1656,7 @@
 
 <h2>Tests examined</h2>
 <ul>
-<li>org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest]/[method:updateAggregatePoolInfoJobTest()] (730 ms)</li>
+<li>org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.AggregatePoolInfoScheduleTest]/[method:updateAggregatePoolInfoJobTest()] (631 ms)</li>
 </ul>
 
 <br/>
