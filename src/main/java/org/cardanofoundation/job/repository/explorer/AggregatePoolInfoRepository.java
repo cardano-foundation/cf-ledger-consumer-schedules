@@ -1,11 +1,11 @@
-package org.cardanofoundation.job.repository.ledgersync.aggregate;
+package org.cardanofoundation.job.repository.explorer;
 
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import org.cardanofoundation.explorer.consumercommon.entity.aggregation.AggregatePoolInfo;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.AggregatePoolInfo;
 
 public interface AggregatePoolInfoRepository extends JpaRepository<AggregatePoolInfo, Long> {
 
