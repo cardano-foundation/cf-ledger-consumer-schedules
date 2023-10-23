@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS agg_pool_info
     block_in_epoch  bigint,
     block_life_time bigint,
     delegator_cnt bigint,
+    block_check_point bigint,
     update_time timestamp
 );
 
