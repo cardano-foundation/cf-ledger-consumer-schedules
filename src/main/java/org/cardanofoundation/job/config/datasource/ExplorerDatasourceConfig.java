@@ -56,7 +56,7 @@ public class ExplorerDatasourceConfig {
   }
 
   @Bean(name = "explorerTransactionManager")
-  public PlatformTransactionManager todosTransactionManager(
+  public PlatformTransactionManager explorerTransactionManager(
       @Qualifier("explorerEntityManagerFactory") LocalContainerEntityManagerFactoryBean ledgerSyncEntityManagerFactory) {
     return new JpaTransactionManager(
         Objects.requireNonNull(ledgerSyncEntityManagerFactory.getObject()));

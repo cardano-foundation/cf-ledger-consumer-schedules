@@ -55,7 +55,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final MultiAssetService multiAssetService;
 
   @Override
-  @Transactional
+  @Transactional(value = "explorerTransactionManager")
   @SneakyThrows
   public void updateTokenInfoList() {
     Optional<Block> latestBlock = blockRepository.findLatestBlock();
