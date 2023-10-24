@@ -1,8 +1,10 @@
 package org.cardanofoundation.job.repository.ledgersync.jooq;
 
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
@@ -24,7 +26,7 @@ public class JOOQAddressTokenRepository {
   private final DSLContext dsl;
   private final EntityUtil entityUtil;
 
-  public JOOQAddressTokenRepository(DSLContext dsl,
+  public JOOQAddressTokenRepository(@Qualifier("ledgerSyncDSLContext") DSLContext dsl,
                                     @Value("${spring.jpa.properties.hibernate.default_schema}") String schema) {
     this.dsl = dsl;
     this.entityUtil = new EntityUtil(schema, AddressToken.class);
@@ -34,7 +36,7 @@ public class JOOQAddressTokenRepository {
     var tableName = this.entityUtil.getTableName();
     var result = dsl.select(
             field(this.entityUtil.getColumnField(AddressTokenBalance_.MULTI_ASSET_ID)),
-            coalesce(sum(field(this.entityUtil.getColumnField(AddressToken_.BALANCE)).cast(Long.class)),
+            coalesce(sum(field(this.entityUtil.getColumnField(AddressToken_.BALANCE)).cast(BigInteger.class)),
                 0L).as(
                 "volume"))
         .from(table(tableName))
