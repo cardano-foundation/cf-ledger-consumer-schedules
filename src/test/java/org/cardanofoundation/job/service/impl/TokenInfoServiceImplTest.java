@@ -187,7 +187,7 @@ class TokenInfoServiceImplTest {
     when(blockRepository.findLatestBlock()).thenReturn(Optional.of(latestBlock));
 
     TokenInfoCheckpoint tokenInfoCheckpoint = Mockito.mock(TokenInfoCheckpoint.class);
-    when(tokenInfoCheckpoint.getBlockNo()).thenReturn(9999L);
+    when(tokenInfoCheckpoint.getBlockNo()).thenReturn(9990L);
     when(tokenInfoCheckpoint.getUpdateTime()).thenReturn(
         Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC).minusHours(1)));
 
@@ -263,7 +263,7 @@ class TokenInfoServiceImplTest {
   }
 
   @Test
-  void testUpdateTokenInfoLisNonInitialUpdate_WhenLastUpdateTimeMoreThanADayAgo_ShouldSkipUpdatingTokenInfo() {
+  void testUpdateTokenInfoLisNonInitialUpdate_WhenMaxBlockNoEqualBlockNoCheckPoint_ShouldSkipUpdatingTokenInfo() {
     Block latestBlock = Mockito.mock(Block.class);
     when(latestBlock.getBlockNo()).thenReturn(9999L);
     when(latestBlock.getTime()).thenReturn(
@@ -272,8 +272,7 @@ class TokenInfoServiceImplTest {
     when(blockRepository.findLatestBlock()).thenReturn(Optional.of(latestBlock));
 
     TokenInfoCheckpoint tokenInfoCheckpoint = Mockito.mock(TokenInfoCheckpoint.class);
-    when(tokenInfoCheckpoint.getUpdateTime()).thenReturn(
-        Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC).minusDays(3)));
+    when(tokenInfoCheckpoint.getBlockNo()).thenReturn(9999L);
     when(tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint())
         .thenReturn(Optional.of(tokenInfoCheckpoint));
     tokenInfoService.updateTokenInfoList();
