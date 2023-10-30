@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.17](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.16...v0.2.17) (2023-10-30)
+
+
+### Bug Fixes
+
+* MET-1700 fix wrong condition when update existing token info ([8023af5](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/8023af5d37148485bc5a22f6edf972092dc5de41))
+
 ## [0.2.16](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.15...v0.2.16) (2023-10-11)
 
 
