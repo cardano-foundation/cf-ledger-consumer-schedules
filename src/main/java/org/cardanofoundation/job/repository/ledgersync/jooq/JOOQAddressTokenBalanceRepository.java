@@ -2,6 +2,7 @@ package org.cardanofoundation.job.repository.ledgersync.jooq;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
@@ -21,7 +22,7 @@ public class JOOQAddressTokenBalanceRepository {
   private final DSLContext dsl;
   private final EntityUtil entityUtil;
 
-  public JOOQAddressTokenBalanceRepository(DSLContext dsl,
+  public JOOQAddressTokenBalanceRepository(@Qualifier("ledgerSyncDSLContext") DSLContext dsl,
                                            @Value("${spring.jpa.properties.hibernate.default_schema}") String schema) {
     this.dsl = dsl;
     this.entityUtil = new EntityUtil(schema, AddressTokenBalance.class);

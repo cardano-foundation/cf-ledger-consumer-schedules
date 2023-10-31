@@ -1,13 +1,14 @@
-package org.cardanofoundation.job.repository.ledgersync.jooq;
+package org.cardanofoundation.job.repository.explorer.jooq;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
-import org.cardanofoundation.explorer.consumercommon.entity.TokenInfo;
-import org.cardanofoundation.explorer.consumercommon.entity.TokenInfo_;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfo;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfo_;
 import org.cardanofoundation.job.util.EntityUtil;
 import org.jooq.DSLContext;
 import org.jooq.Query;
@@ -21,7 +22,7 @@ public class JOOQTokenInfoRepository {
   private final DSLContext dsl;
   private final EntityUtil entityUtil;
 
-  public JOOQTokenInfoRepository(DSLContext dsl,
+  public JOOQTokenInfoRepository(@Qualifier("explorerDSLContext") DSLContext dsl,
                                  @Value("${spring.jpa.properties.hibernate.default_schema}") String schema) {
     this.dsl = dsl;
     this.entityUtil = new EntityUtil(schema, TokenInfo.class);

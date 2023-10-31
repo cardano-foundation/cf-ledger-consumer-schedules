@@ -21,17 +21,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.consumercommon.entity.Block;
 import org.cardanofoundation.explorer.consumercommon.entity.MultiAsset;
-import org.cardanofoundation.explorer.consumercommon.entity.TokenInfo;
-import org.cardanofoundation.explorer.consumercommon.entity.TokenInfoCheckpoint;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfo;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfoCheckpoint;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
-import org.cardanofoundation.job.repository.ledgersync.TokenInfoCheckpointRepository;
-import org.cardanofoundation.job.repository.ledgersync.TokenInfoRepository;
+import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
+import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQMultiAssetRepository;
-import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQTokenInfoRepository;
+import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
@@ -55,7 +55,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final MultiAssetService multiAssetService;
 
   @Override
-  @Transactional
+  @Transactional(value = "explorerTransactionManager")
   @SneakyThrows
   public void updateTokenInfoList() {
     Optional<Block> latestBlock = blockRepository.findLatestBlock();
@@ -237,7 +237,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
       multiAssetIds.forEach(multiAssetId -> {
         var tokenInfo = tokenInfoMap.getOrDefault(multiAssetId, new TokenInfo());
-        tokenInfo.setMultiAsset(tokenToProcessMap.get(multiAssetId));
+        tokenInfo.setMultiAssetId(multiAssetId);
         tokenInfo.setVolume24h(tokenVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
         tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAssetId, 0L));
         tokenInfo.setUpdateTime(updateTime);

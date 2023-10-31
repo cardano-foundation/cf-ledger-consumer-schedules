@@ -5,15 +5,24 @@ import java.util.Objects;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.jooq.JooqProperties;
+import org.springframework.boot.autoconfigure.jooq.SpringTransactionProvider;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+
+import org.jooq.DSLContext;
+import org.jooq.impl.DataSourceConnectionProvider;
+import org.jooq.impl.DefaultConfiguration;
+import org.jooq.impl.DefaultDSLContext;
 
 @Configuration
 @EnableTransactionManagement
@@ -21,6 +30,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
     entityManagerFactoryRef = "ledgerSyncEntityManagerFactory",
     transactionManagerRef = "ledgerSyncTransactionManager",
     basePackages = {"org.cardanofoundation.job.repository.ledgersync"})
+@EnableConfigurationProperties(JooqProperties.class)
 public class LedgerSyncDatasourceConfig {
 
   private final MultiDataSourceProperties multiDataSourceProperties;
@@ -50,9 +60,21 @@ public class LedgerSyncDatasourceConfig {
 
   @Primary
   @Bean(name = "ledgerSyncTransactionManager")
-  public PlatformTransactionManager todosTransactionManager(
+  public PlatformTransactionManager ledgerSyncTransactionManager(
       @Qualifier("ledgerSyncEntityManagerFactory") LocalContainerEntityManagerFactoryBean ledgerSyncEntityManagerFactory) {
     return new JpaTransactionManager(
         Objects.requireNonNull(ledgerSyncEntityManagerFactory.getObject()));
+  }
+
+  @Bean(name = "ledgerSyncDSLContext")
+  public DSLContext ledgerSyncDSLContext(@Qualifier("ledgerSyncDataSource") DataSource dataSource,
+                                         @Qualifier("ledgerSyncTransactionManager") PlatformTransactionManager txManager,
+                                         JooqProperties properties) {
+    DefaultConfiguration configuration = new DefaultConfiguration();
+    configuration.set(properties.determineSqlDialect(dataSource));
+    configuration.set(
+        new DataSourceConnectionProvider(new TransactionAwareDataSourceProxy(dataSource)));
+    configuration.set(new SpringTransactionProvider(txManager));
+    return new DefaultDSLContext(configuration);
   }
 }
