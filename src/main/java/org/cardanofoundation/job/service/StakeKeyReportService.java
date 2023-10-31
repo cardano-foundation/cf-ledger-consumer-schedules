@@ -1,6 +1,6 @@
 package org.cardanofoundation.job.service;
 
-import org.cardanofoundation.explorer.consumercommon.entity.StakeKeyReportHistory;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.StakeKeyReportHistory;
 
 public interface StakeKeyReportService {
 

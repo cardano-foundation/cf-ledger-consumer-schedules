@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
-import org.cardanofoundation.explorer.consumercommon.entity.aggregation.AggregatePoolInfo;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.AggregatePoolInfo;
 import org.cardanofoundation.job.projection.PoolCountProjectionImpl;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
-import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregatePoolInfoRepository;
+import org.cardanofoundation.job.repository.explorer.AggregatePoolInfoRepository;
 import org.cardanofoundation.job.schedules.AggregatePoolInfoSchedule;
 import org.cardanofoundation.job.service.DelegationService;
 import org.mockito.ArgumentCaptor;
@@ -72,7 +72,6 @@ class AggregatePoolInfoScheduleTest {
 
     AggregatePoolInfo api1 = spy(AggregatePoolInfo.builder()
                                      .poolId(1L)
-                                     .poolHash(poolHash1)
                                      .build());
 
     when(poolHashRepository.findAll()).thenReturn(List.of(poolHash1, poolHash2));
