@@ -17,7 +17,7 @@ import org.mockito.Mockito;
 import org.junit.jupiter.api.Test;
 
 import org.cardanofoundation.job.dto.PoolStatus;
-import org.cardanofoundation.job.repository.DelegationRepository;
+import org.cardanofoundation.job.repository.ledgersync.DelegationRepository;
 import org.cardanofoundation.job.service.PoolService;
 
 @ActiveProfiles({"test", "standalone"})

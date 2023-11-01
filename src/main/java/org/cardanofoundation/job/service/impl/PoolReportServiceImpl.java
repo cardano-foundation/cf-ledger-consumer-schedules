@@ -15,10 +15,10 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import org.cardanofoundation.explorer.consumercommon.entity.PoolReportHistory;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
 import org.cardanofoundation.job.common.enumeration.ExportType;
-import org.cardanofoundation.job.repository.PoolReportHistoryRepository;
+import org.cardanofoundation.job.repository.explorer.PoolReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.util.report.ExcelHelper;

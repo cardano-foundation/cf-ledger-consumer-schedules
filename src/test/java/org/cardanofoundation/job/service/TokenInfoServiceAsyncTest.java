@@ -10,9 +10,9 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.cardanofoundation.explorer.consumercommon.entity.MultiAsset;
-import org.cardanofoundation.explorer.consumercommon.entity.TokenInfo;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfo;
 import org.cardanofoundation.job.model.TokenVolume;
-import org.cardanofoundation.job.repository.jooq.JOOQAddressTokenRepository;
+import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenRepository;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
