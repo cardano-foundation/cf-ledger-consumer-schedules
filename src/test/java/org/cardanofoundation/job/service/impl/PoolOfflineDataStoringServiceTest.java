@@ -6,14 +6,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.LinkedBlockingDeque;
 
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -35,10 +31,10 @@ import org.cardanofoundation.explorer.consumercommon.entity.PoolMetadataRef;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineData;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineFetchError;
 import org.cardanofoundation.job.dto.PoolData;
-import org.cardanofoundation.job.repository.PoolHashRepository;
-import org.cardanofoundation.job.repository.PoolMetadataRefRepository;
-import org.cardanofoundation.job.repository.PoolOfflineDataRepository;
-import org.cardanofoundation.job.repository.PoolOfflineFetchErrorRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolMetadataRefRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolOfflineDataRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolOfflineFetchErrorRepository;
 
 @ExtendWith(MockitoExtension.class)
 class PoolOfflineDataStoringServiceTest {
