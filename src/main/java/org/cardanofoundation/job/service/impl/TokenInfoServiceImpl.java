@@ -175,13 +175,13 @@ public class TokenInfoServiceImpl implements TokenInfoService {
    */
   private void updateExistingTokenInfo(TokenInfoCheckpoint tokenInfoCheckpoint, Long maxBlockNo,
                                        Timestamp updateTime) {
+    if(maxBlockNo.equals(tokenInfoCheckpoint.getBlockNo())) {
+      return;
+    }
+
     Timestamp time24hAgo =
         Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC).minusDays(1));
     var lastUpdateTime = tokenInfoCheckpoint.getUpdateTime();
-
-    if (lastUpdateTime.compareTo(time24hAgo) < 0) {
-      return;
-    }
 
     Long txId = txRepository.findMinTxByAfterTime(time24hAgo).orElse(Long.MAX_VALUE);
 
