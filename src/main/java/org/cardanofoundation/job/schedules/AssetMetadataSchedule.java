@@ -109,7 +109,9 @@ public class AssetMetadataSchedule {
       // if flagUpload = true then add to assetMetadataMapUpload and set logo url
       if (Boolean.TRUE.equals(flagUpload)) {
         assetMetadataMapUpload.put(assetMetadataDTO.getSubject(), assetMetadataDTO);
-        assetMetadataTarget.setLogo(network + "/" + assetMetadataDTO.getSubject());
+        String logo = DataUtil.isNullOrEmpty(assetMetadataDTO.getLogo())
+            ? null : assetMetadataDTO.getLogo().getValue();
+        assetMetadataTarget.setLogo(logo);
         assetMetadataTarget.setLogoHash(logoHash);
       }
       assetMetadataList.add(assetMetadataTarget);
@@ -122,11 +124,17 @@ public class AssetMetadataSchedule {
     List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
     assetMetadataMapUpload.forEach(
         (key, value) -> completableFutures.add(CompletableFuture.runAsync(() -> {
-          try (InputStream inputStream = base64ToInputStream(value.getLogo().getValue())) {
-            storageService.uploadFile(inputStream.readAllBytes(),
-                                      network + "/" + value.getSubject());
-          } catch (IOException e) {
-            throw new RuntimeException(e);
+          try {
+            String logoFileName = network + "/" + value.getSubject();
+            if (DataUtil.isNullOrEmpty(value.getLogo())
+                || DataUtil.isNullOrEmpty(value.getLogo().getValue())) {
+              storageService.deleteFile(logoFileName);
+            } else {
+              InputStream inputStream = base64ToInputStream(value.getLogo().getValue());
+              storageService.uploadFile(inputStream.readAllBytes(), logoFileName);
+            }
+          } catch (Exception e) {
+            log.info("Upload token {} logo error: {}", key, e.getMessage());
           }
         })));
     completableFutures.forEach(CompletableFuture::join);
