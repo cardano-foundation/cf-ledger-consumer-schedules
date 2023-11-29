@@ -468,16 +468,16 @@
 <a name='org.pitest.mutationtest.report.html.SourceFile@5473efcd_31'/>
 31
 </td>
-<td class='uncertain'>
+<td class='killed'>
 <span class='pop'>
 <a href='#grouporg.pitest.mutationtest.report.html.SourceFile@5473efcd_31'>1</a>
 <span>
-1. updateNumberDelegator : removed call to org/springframework/data/redis/core/ValueOperations::set &rarr; TIMED_OUT<br/>
+1. updateNumberDelegator : removed call to org/springframework/data/redis/core/ValueOperations::set &rarr; KILLED<br/>
 
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class='uncertain'>    redisTemplate.opsForValue().set(delegatorKey, numberDelegator);</span></pre></td></tr>
+<td class='covered'><pre><span  class='killed'>    redisTemplate.opsForValue().set(delegatorKey, numberDelegator);</span></pre></td></tr>
 
 
 <tr>
@@ -597,7 +597,7 @@
 
 <a name='grouporg.pitest.mutationtest.report.html.SourceFile@5473efcd_31'/> 
 
-<p class='TIMED_OUT'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>updateNumberDelegator<br/><b>Killed by : </b>none</span></span> removed call to org/springframework/data/redis/core/ValueOperations::set &rarr; TIMED_OUT</p> 
+<p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>updateNumberDelegator<br/><b>Killed by : </b>org.cardanofoundation.job.schedule.DelegationScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.DelegationScheduleTest]/[method:test_updateNumberDelegator()]</span></span> removed call to org/springframework/data/redis/core/ValueOperations::set &rarr; KILLED</p> 
 </td>
 </tr>
 <tr>
@@ -632,7 +632,7 @@
 
 <h2>Tests examined</h2>
 <ul>
-<li>org.cardanofoundation.job.schedule.DelegationScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.DelegationScheduleTest]/[method:test_updateNumberDelegator()] (402 ms)</li>
+<li>org.cardanofoundation.job.schedule.DelegationScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.DelegationScheduleTest]/[method:test_updateNumberDelegator()] (629 ms)</li>
 </ul>
 
 <br/>
