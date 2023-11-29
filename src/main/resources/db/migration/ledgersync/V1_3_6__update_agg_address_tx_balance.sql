@@ -1,3 +1,13 @@
+CREATE TABLE IF NOT EXISTS agg_address_tx_balance
+(
+    id                  bigserial
+        PRIMARY KEY,
+    stake_address_id    bigint,
+    address_id          bigint      NOT NULL,
+    balance             NUMERIC(39) NOT NULL,
+    day                 DATE        NOT NULL
+);
+
 truncate table agg_address_tx_balance;
 
 ALTER SEQUENCE agg_address_tx_balance_id_seq RESTART;
