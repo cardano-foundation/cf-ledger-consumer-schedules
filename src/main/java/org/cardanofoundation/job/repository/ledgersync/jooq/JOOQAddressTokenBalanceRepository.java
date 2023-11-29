@@ -62,4 +62,41 @@ public class JOOQAddressTokenBalanceRepository {
 
     return result.into(TokenNumberHolders.class);
   }
+
+
+  public List<TokenNumberHolders> countAddressNotHaveStakeByMultiAssetBetween(Long startIdent,
+                                                                         Long endIdent) {
+    var tableName = this.entityUtil.getTableName();
+
+    var result = dsl.select(
+            DSL.count(field(this.entityUtil.getColumnField(AddressTokenBalance_.ADDRESS_ID)))
+                .as("numberOfHolders"),
+            field(this.entityUtil.getColumnField(AddressTokenBalance_.MULTI_ASSET_ID)).as("ident"))
+        .from(table(tableName))
+        .where(field(this.entityUtil.getColumnField(AddressTokenBalance_.MULTI_ASSET_ID))
+                   .between(startIdent, endIdent))
+        .and(field(this.entityUtil.getColumnField(AddressTokenBalance_.STAKE_ADDRESS)).isNull())
+        .and(field(this.entityUtil.getColumnField(AddressTokenBalance_.BALANCE)).gt(0))
+        .groupBy(field(this.entityUtil.getColumnField(AddressTokenBalance_.MULTI_ASSET_ID)))
+        .fetch();
+
+    return result.into(TokenNumberHolders.class);
+  }
+
+  public List<TokenNumberHolders> countByMultiAssetBetween(Long startIdent, Long endIdent) {
+    var tableName = this.entityUtil.getTableName();
+    var result = dsl.select(
+            DSL.countDistinct(
+                field(this.entityUtil.getColumnField(AddressTokenBalance_.STAKE_ADDRESS))).as(
+                "numberOfHolders"),
+            field(this.entityUtil.getColumnField(AddressTokenBalance_.MULTI_ASSET_ID)).as("ident"))
+        .from(table(tableName))
+        .where(field(this.entityUtil.getColumnField(AddressTokenBalance_.MULTI_ASSET_ID))
+                   .between(startIdent, endIdent))
+        .and(field(this.entityUtil.getColumnField(AddressTokenBalance_.BALANCE)).gt(0))
+        .groupBy(field(this.entityUtil.getColumnField(AddressTokenBalance_.MULTI_ASSET_ID)))
+        .fetch();
+
+    return result.into(TokenNumberHolders.class);
+  }
 }

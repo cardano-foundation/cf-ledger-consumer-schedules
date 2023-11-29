@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -86,38 +87,13 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private void initializeTokenInfoDataForFirstTime(Long maxBlockNo, Timestamp updateTime) {
     log.info("Init token info data for the first time");
 
-    // The sublist size to divide the multi-asset list into smaller batches for processing.
-    int subListSize = 10000;
-
     List<CompletableFuture<List<TokenInfo>>> tokenInfoFutures = new ArrayList<>();
-    List<CompletableFuture<List<MultiAsset>>> multiAssetFutures = new ArrayList<>();
-    long multiAssetSize = multiAssetRepository.count();
 
-    // Calculate the total number of pages needed to process all the multi-assets in batches.
-    long totalPage = multiAssetSize % subListSize == 0 ?
-                     multiAssetSize / subListSize :
-                     multiAssetSize / subListSize + 1;
-    var startTime = System.currentTimeMillis();
-
-    // Fetch multi-assets data in parallel by dividing them into batches (pages).
-    for (int page = 0; page < totalPage; page++) {
-      final int _page = page;
-      multiAssetFutures.add(CompletableFuture.supplyAsync(
-          () -> {
-            log.info("Page {}", _page);
-            return jooqMultiAssetRepository.getMultiAsset(
-                _page, subListSize);
-          }).exceptionally(e -> {
-        throw new RuntimeException("Exception occurs when getting multiAsset list", e);
-      }));
-    }
-
+    var maxMultiAssetId = multiAssetRepository.getCurrentMaxIdent();
     // Collect the results from all CompletableFuture instances to get the list of multi-assets.
-    var multiAssetList = multiAssetFutures.stream().map(CompletableFuture::join)
-        .flatMap(List::stream)
+    var multiAssetIdList = LongStream.rangeClosed(1, maxMultiAssetId)
+        .boxed()
         .collect(Collectors.toList());
-
-    log.info("Get MultiAsset take {} ms", System.currentTimeMillis() - startTime);
 
     Timestamp time24hAgo =
         Timestamp.valueOf(LocalDateTime.now(ZoneOffset.UTC).minusDays(1));
@@ -129,12 +105,14 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     int multiAssetListSize = 50000;
 
     // Process the multi-assets in batches to build token info data.
-    for (int i = 0; i < multiAssetList.size(); i += multiAssetListSize) {
-      int toIndex = Math.min(i + multiAssetListSize, multiAssetList.size());
-      var subList = multiAssetList.subList(i, toIndex);
+    for (int i = 0; i < multiAssetIdList.size(); i += multiAssetListSize) {
+      int toIndex = Math.min(i + multiAssetListSize, multiAssetIdList.size());
+      var subList = multiAssetIdList.subList(i, toIndex);
+      Long startIdent = subList.get(0);
+      Long endIdent = subList.get(subList.size() - 1);
 
       tokenInfoFutures.add(
-          tokenInfoServiceAsync.buildTokenInfoList(subList, maxBlockNo, txId, updateTime)
+          tokenInfoServiceAsync.buildTokenInfoList(startIdent, endIdent, maxBlockNo, txId, updateTime)
               .exceptionally(e -> {
                 throw new RuntimeException("Exception occurs when initializing token info list",
                     e);
@@ -159,7 +137,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         .toList();
     BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
 
-    multiAssetList.clear();
+    multiAssetIdList.clear();
 
     tokenInfoCheckpointRepository.save(
         TokenInfoCheckpoint.builder().blockNo(maxBlockNo)

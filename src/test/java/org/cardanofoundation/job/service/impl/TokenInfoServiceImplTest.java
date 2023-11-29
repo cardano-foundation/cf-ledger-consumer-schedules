@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import org.cardanofoundation.explorer.consumercommon.entity.Block;
 import org.cardanofoundation.explorer.consumercommon.entity.MultiAsset;
@@ -94,27 +94,16 @@ class TokenInfoServiceImplTest {
     when(tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint())
         .thenReturn(Optional.empty());
     long multiAssetCount = 180000;
-    when(multiAssetRepository.count()).thenReturn(multiAssetCount);
-
-    List<MultiAsset> multiAssets = new ArrayList<>();
-    IntStream.range(0, (int) multiAssetCount).forEach(value -> multiAssets.add(new MultiAsset()));
-
-    when(jooqMultiAssetRepository.getMultiAsset(anyInt(), anyInt()))
-        .thenAnswer(invocation -> {
-          int page = invocation.getArgument(0);
-          int subListSize = invocation.getArgument(1);
-          int startIndex = page * subListSize;
-          int endIndex = Math.min(startIndex + subListSize, multiAssets.size());
-          return multiAssets.subList(startIndex, endIndex);
-        });
+    when(multiAssetRepository.getCurrentMaxIdent()).thenReturn(multiAssetCount);
 
     when(txRepository.findMinTxByAfterTime(any())).thenReturn(Optional.of(200000L));
-    when(tokenInfoServiceAsync.buildTokenInfoList(anyList(), anyLong(), anyLong(),
+    when(tokenInfoServiceAsync.buildTokenInfoList(anyLong(), anyLong(), anyLong(), anyLong(),
         any(Timestamp.class)))
         .thenAnswer(invocation -> {
-          List<MultiAsset> subList = invocation.getArgument(0);
+          Long startIdent = invocation.getArgument(0);
+          Long endIdent = invocation.getArgument(1);
           List<TokenInfo> mockTokenInfoList = new ArrayList<>();
-          IntStream.range(0, subList.size()).forEach(i -> mockTokenInfoList.add(new TokenInfo()));
+          LongStream.rangeClosed(startIdent, endIdent).forEach(i -> mockTokenInfoList.add(new TokenInfo()));
           return CompletableFuture.completedFuture(mockTokenInfoList);
         });
 
@@ -131,22 +120,6 @@ class TokenInfoServiceImplTest {
   }
 
   @Test
-  void testUpdateTokenInfoListForFirstTime_WhenGetMultiAssetsFailed_ShouldThrowException() {
-    Block latestBlock = Mockito.mock(Block.class);
-    when(latestBlock.getBlockNo()).thenReturn(10000L);
-    when(latestBlock.getTime()).thenReturn(
-        Timestamp.valueOf(LocalDateTime.of(2021, 11, 5, 11, 15, 13)));
-    when(blockRepository.findLatestBlock()).thenReturn(Optional.of(latestBlock));
-    when(tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint())
-        .thenReturn(Optional.empty());
-    long multiAssetCount = 180000;
-    when(multiAssetRepository.count()).thenReturn(multiAssetCount);
-    when(jooqMultiAssetRepository.getMultiAsset(anyInt(), anyInt())).thenThrow(RuntimeException.class);
-
-    assertThrows(RuntimeException.class, () -> tokenInfoService.updateTokenInfoList());
-  }
-
-  @Test
   void testUpdateTokenInfoListForFirstTime_WhenBuildTokenInfoListFailed_ShouldThrowException() {
     Block latestBlock = Mockito.mock(Block.class);
     when(latestBlock.getBlockNo()).thenReturn(10000L);
@@ -156,22 +129,10 @@ class TokenInfoServiceImplTest {
     when(tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint())
         .thenReturn(Optional.empty());
     long multiAssetCount = 180000;
-    when(multiAssetRepository.count()).thenReturn(multiAssetCount);
-
-    List<MultiAsset> multiAssets = new ArrayList<>();
-    IntStream.range(0, (int) multiAssetCount).forEach(value -> multiAssets.add(new MultiAsset()));
-
-    when(jooqMultiAssetRepository.getMultiAsset(anyInt(), anyInt()))
-        .thenAnswer(invocation -> {
-          int page = invocation.getArgument(0);
-          int subListSize = invocation.getArgument(1);
-          int startIndex = page * subListSize;
-          int endIndex = Math.min(startIndex + subListSize, multiAssets.size());
-          return multiAssets.subList(startIndex, endIndex);
-        });
+    when(multiAssetRepository.getCurrentMaxIdent()).thenReturn(multiAssetCount);
 
     when(txRepository.findMinTxByAfterTime(any())).thenReturn(Optional.of(200000L));
-    when(tokenInfoServiceAsync.buildTokenInfoList(anyList(), anyLong(), anyLong(),
+    when(tokenInfoServiceAsync.buildTokenInfoList(anyLong(), anyLong(), anyLong(), anyLong(),
         any(Timestamp.class))).thenThrow(RuntimeException.class);
 
     assertThrows(RuntimeException.class, () -> tokenInfoService.updateTokenInfoList());
