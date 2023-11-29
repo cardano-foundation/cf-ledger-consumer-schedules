@@ -682,7 +682,7 @@
 
 
 <tr>
-<td class='na'>
+<td class='covered'>
 <a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_45'/>
 45
 </td>
@@ -693,22 +693,24 @@
 </span>
 </span>
 </td>
-<td class=''><pre><span  class=''></span></pre></td></tr>
+<td class='covered'><pre><span  class=''>    redisTemplate.opsForHash()</span></pre></td></tr>
 
 
 <tr>
-<td class='na'>
+<td class='covered'>
 <a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_46'/>
 46
 </td>
-<td class=''>
+<td class='survived'>
 <span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_46'></a>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_46'>1</a>
 <span>
+1. updatePoolStatus : removed call to org/springframework/data/redis/core/HashOperations::putAll &rarr; SURVIVED<br/>
+
 </span>
 </span>
 </td>
-<td class=''><pre><span  class=''>    // Delete old pool ids inactivate</span></pre></td></tr>
+<td class='covered'><pre><span  class='survived'>        .putAll(poolIdsInactivate, poolStatus.getPoolInactivateIds().stream().collect(</span></pre></td></tr>
 
 
 <tr>
@@ -723,7 +725,7 @@
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class=''>    redisTemplate.delete(poolIdsInactivate);</span></pre></td></tr>
+<td class='covered'><pre><span  class=''>            Collectors.toMap(Function.identity(), Function.identity())));</span></pre></td></tr>
 
 
 <tr>
@@ -738,24 +740,22 @@
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class=''>    redisTemplate.opsForHash()</span></pre></td></tr>
+<td class='covered'><pre><span  class=''>    log.info(</span></pre></td></tr>
 
 
 <tr>
-<td class='covered'>
+<td class='na'>
 <a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_49'/>
 49
 </td>
-<td class='survived'>
+<td class=''>
 <span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_49'>1</a>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_49'></a>
 <span>
-1. updatePoolStatus : removed call to org/springframework/data/redis/core/HashOperations::putAll &rarr; SURVIVED<br/>
-
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class='survived'>        .putAll(poolIdsInactivate, poolStatus.getPoolInactivateIds().stream().collect(</span></pre></td></tr>
+<td class=''><pre><span  class=''>        &#34;Update pool status done! total pool: {}, pool activate {}, pool inactivate {}&#34;,</span></pre></td></tr>
 
 
 <tr>
@@ -770,7 +770,7 @@
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class=''>            Collectors.toMap(Function.identity(), Function.identity())));</span></pre></td></tr>
+<td class='covered'><pre><span  class=''>        totalPoolSize,</span></pre></td></tr>
 
 
 <tr>
@@ -785,11 +785,11 @@
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class=''>    log.info(</span></pre></td></tr>
+<td class='covered'><pre><span  class=''>        poolStatus.getPoolActivateIds().size(),</span></pre></td></tr>
 
 
 <tr>
-<td class='na'>
+<td class='covered'>
 <a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_52'/>
 52
 </td>
@@ -800,7 +800,7 @@
 </span>
 </span>
 </td>
-<td class=''><pre><span  class=''>        &#34;Update pool status done! total pool: {}, pool activate {}, pool inactivate {}&#34;,</span></pre></td></tr>
+<td class='covered'><pre><span  class=''>        poolStatus.getPoolInactivateIds().size());</span></pre></td></tr>
 
 
 <tr>
@@ -815,11 +815,11 @@
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class=''>        totalPoolSize,</span></pre></td></tr>
+<td class='covered'><pre><span  class=''>  }</span></pre></td></tr>
 
 
 <tr>
-<td class='covered'>
+<td class='na'>
 <a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_54'/>
 54
 </td>
@@ -830,11 +830,11 @@
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class=''>        poolStatus.getPoolActivateIds().size(),</span></pre></td></tr>
+<td class=''><pre><span  class=''></span></pre></td></tr>
 
 
 <tr>
-<td class='covered'>
+<td class='na'>
 <a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_55'/>
 55
 </td>
@@ -845,7 +845,7 @@
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class=''>        poolStatus.getPoolInactivateIds().size());</span></pre></td></tr>
+<td class=''><pre><span  class=''>  private String getRedisKey(String prefix) {</span></pre></td></tr>
 
 
 <tr>
@@ -853,14 +853,16 @@
 <a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_56'/>
 56
 </td>
-<td class=''>
+<td class='killed'>
 <span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_56'></a>
+<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_56'>1</a>
 <span>
+1. getRedisKey : replaced return value with &#34;&#34; for org/cardanofoundation/job/schedules/PoolStatusSchedule::getRedisKey &rarr; KILLED<br/>
+
 </span>
 </span>
 </td>
-<td class='covered'><pre><span  class=''>  }</span></pre></td></tr>
+<td class='covered'><pre><span  class='killed'>    return prefix + &#34;_&#34; + network;</span></pre></td></tr>
 
 
 <tr>
@@ -875,7 +877,7 @@
 </span>
 </span>
 </td>
-<td class=''><pre><span  class=''></span></pre></td></tr>
+<td class=''><pre><span  class=''>  }</span></pre></td></tr>
 
 
 <tr>
@@ -886,53 +888,6 @@
 <td class=''>
 <span class='pop'>
 <a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_58'></a>
-<span>
-</span>
-</span>
-</td>
-<td class=''><pre><span  class=''>  private String getRedisKey(String prefix) {</span></pre></td></tr>
-
-
-<tr>
-<td class='covered'>
-<a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_59'/>
-59
-</td>
-<td class='killed'>
-<span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_59'>1</a>
-<span>
-1. getRedisKey : replaced return value with &#34;&#34; for org/cardanofoundation/job/schedules/PoolStatusSchedule::getRedisKey &rarr; KILLED<br/>
-
-</span>
-</span>
-</td>
-<td class='covered'><pre><span  class='killed'>    return prefix + &#34;_&#34; + network;</span></pre></td></tr>
-
-
-<tr>
-<td class='na'>
-<a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_60'/>
-60
-</td>
-<td class=''>
-<span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_60'></a>
-<span>
-</span>
-</span>
-</td>
-<td class=''><pre><span  class=''>  }</span></pre></td></tr>
-
-
-<tr>
-<td class='na'>
-<a name='org.pitest.mutationtest.report.html.SourceFile@1e4acc53_61'/>
-61
-</td>
-<td class=''>
-<span class='pop'>
-<a href='#grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_61'></a>
 <span>
 </span>
 </span>
@@ -984,21 +939,21 @@
 </td>
 </tr>
 <tr>
-<td><a href='#org.pitest.mutationtest.report.html.SourceFile@1e4acc53_49'>49</a></td> 
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@1e4acc53_46'>46</a></td> 
 <td></td>
 <td>
 
-<a name='grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_49'/> 
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_46'/> 
 
 <p class='SURVIVED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>updatePoolStatus<br/><b>Killed by : </b>none</span></span> removed call to org/springframework/data/redis/core/HashOperations::putAll &rarr; SURVIVED</p> 
 </td>
 </tr>
 <tr>
-<td><a href='#org.pitest.mutationtest.report.html.SourceFile@1e4acc53_59'>59</a></td> 
+<td><a href='#org.pitest.mutationtest.report.html.SourceFile@1e4acc53_56'>56</a></td> 
 <td></td>
 <td>
 
-<a name='grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_59'/> 
+<a name='grouporg.pitest.mutationtest.report.html.SourceFile@1e4acc53_56'/> 
 
 <p class='KILLED'><span class='pop'>1.<span><b>1</b><br/><b>Location : </b>getRedisKey<br/><b>Killed by : </b>org.cardanofoundation.job.schedule.PoolStatusScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.PoolStatusScheduleTest]/[method:test_getPoolStatus()]</span></span> replaced return value with &#34;&#34; for org/cardanofoundation/job/schedules/PoolStatusSchedule::getRedisKey &rarr; KILLED</p> 
 </td>
@@ -1025,7 +980,7 @@
 
 <h2>Tests examined</h2>
 <ul>
-<li>org.cardanofoundation.job.schedule.PoolStatusScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.PoolStatusScheduleTest]/[method:test_getPoolStatus()] (44 ms)</li>
+<li>org.cardanofoundation.job.schedule.PoolStatusScheduleTest.[engine:junit-jupiter]/[class:org.cardanofoundation.job.schedule.PoolStatusScheduleTest]/[method:test_getPoolStatus()] (65 ms)</li>
 </ul>
 
 <br/>
