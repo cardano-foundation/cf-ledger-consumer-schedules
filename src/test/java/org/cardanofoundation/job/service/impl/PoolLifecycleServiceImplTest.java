@@ -60,9 +60,9 @@ class PoolLifecycleServiceImplTest {
         .thenReturn("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda");
     when(registrationProjection.getFee()).thenReturn(BigInteger.TEN);
     when(registrationProjection.getDeposit()).thenReturn(BigInteger.valueOf(500));
-    when(poolHashRepository.getPoolRegistrationByPool(
-            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
-        .thenReturn(new PageImpl<>(List.of(registrationProjection)));
+//    when(poolHashRepository.getPoolRegistrationByPool(
+//            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
+//        .thenReturn(new PageImpl<>(List.of(registrationProjection)));
 
     var response =
         poolLifecycleService.registrationList(
@@ -90,9 +90,9 @@ class PoolLifecycleServiceImplTest {
     when(projection.getVrfKey())
         .thenReturn("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda");
     when(projection.getPoolUpdateId()).thenReturn(69L);
-    when(poolUpdateRepository.findPoolUpdateByPool(
-            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
-        .thenReturn(new PageImpl<>(List.of(projection)));
+//    when(poolUpdateRepository.findPoolUpdateByPool(
+//            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
+//        .thenReturn(new PageImpl<>(List.of(projection)));
     when(poolUpdateRepository.findOwnerAccountByPoolUpdate(69L))
         .thenReturn(List.of("stake1u80n7nvm3qlss9ls0krp5xh7sqxlazp8kz6n3fp5sgnul5cnxyg4p"));
     PoolUpdate poolUpdate = Mockito.mock(PoolUpdate.class);
@@ -148,9 +148,9 @@ class PoolLifecycleServiceImplTest {
     when(retireProjection.getTxHash())
         .thenReturn("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda");
     when(retireProjection.getFee()).thenReturn(BigInteger.TEN);
-    when(poolRetireRepository.getPoolDeRegistration(
-            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
-        .thenReturn(new PageImpl<>(List.of(retireProjection)));
+//    when(poolRetireRepository.getPoolDeRegistration(
+//            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
+//        .thenReturn(new PageImpl<>(List.of(retireProjection)));
     PoolInfoProjection projection = Mockito.mock(PoolInfoProjection.class);
     when(projection.getPoolView())
         .thenReturn("pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s");
