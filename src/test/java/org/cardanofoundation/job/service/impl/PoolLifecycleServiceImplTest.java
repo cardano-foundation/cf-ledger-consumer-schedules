@@ -1,5 +1,7 @@
 package org.cardanofoundation.job.service.impl;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +15,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
+import org.cardanofoundation.job.common.enumeration.PoolActionType;
+import org.cardanofoundation.job.dto.PoolCertificateHistory;
+import org.cardanofoundation.job.service.PoolCertificateService;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -48,11 +53,20 @@ class PoolLifecycleServiceImplTest {
 
   @Mock FetchRewardDataService fetchRewardDataService;
 
+  @Mock PoolCertificateService poolCertificateService;
+
   @InjectMocks private PoolLifecycleServiceImpl poolLifecycleService;
 
   @Test
   void registrationList_shouldReturnRegistrationList() {
     Pageable pageable = PageRequest.of(0, 10);
+    List<PoolCertificateHistory> poolCertificateHistoryList =
+        List.of(PoolCertificateHistory
+                    .builder()
+                    .poolUpdateId(69L)
+                    .txHash(
+                        "d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda")
+                    .build());
     PoolRegistrationProjection registrationProjection =
         Mockito.mock(PoolRegistrationProjection.class);
     when(registrationProjection.getPoolUpdateId()).thenReturn(69L);
@@ -60,9 +74,14 @@ class PoolLifecycleServiceImplTest {
         .thenReturn("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda");
     when(registrationProjection.getFee()).thenReturn(BigInteger.TEN);
     when(registrationProjection.getDeposit()).thenReturn(BigInteger.valueOf(500));
-//    when(poolHashRepository.getPoolRegistrationByPool(
-//            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
-//        .thenReturn(new PageImpl<>(List.of(registrationProjection)));
+    when(poolCertificateService.getPoolCertificateByAction(
+        "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s",
+        PoolActionType.POOL_REGISTRATION))
+        .thenReturn(poolCertificateHistoryList);
+
+    when(poolHashRepository.getPoolRegistrationByPool(
+        anySet(), any(Pageable.class)))
+        .thenReturn(new PageImpl<>(List.of(registrationProjection)));
 
     var response =
         poolLifecycleService.registrationList(
@@ -90,9 +109,23 @@ class PoolLifecycleServiceImplTest {
     when(projection.getVrfKey())
         .thenReturn("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda");
     when(projection.getPoolUpdateId()).thenReturn(69L);
-//    when(poolUpdateRepository.findPoolUpdateByPool(
-//            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
-//        .thenReturn(new PageImpl<>(List.of(projection)));
+    List<PoolCertificateHistory> poolCertificateHistoryList =
+        List.of(PoolCertificateHistory
+                    .builder()
+                    .poolUpdateId(69L)
+                    .txHash(
+                        "d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda")
+                    .build());
+
+    when(poolCertificateService.getPoolCertificateByAction(
+        "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s",
+        PoolActionType.POOL_UPDATE))
+        .thenReturn(poolCertificateHistoryList);
+
+    when(poolUpdateRepository.findPoolUpdateByPool(
+        anySet(), any(Pageable.class)))
+        .thenReturn(new PageImpl<>(List.of(projection)));
+
     when(poolUpdateRepository.findOwnerAccountByPoolUpdate(69L))
         .thenReturn(List.of("stake1u80n7nvm3qlss9ls0krp5xh7sqxlazp8kz6n3fp5sgnul5cnxyg4p"));
     PoolUpdate poolUpdate = Mockito.mock(PoolUpdate.class);
@@ -148,9 +181,24 @@ class PoolLifecycleServiceImplTest {
     when(retireProjection.getTxHash())
         .thenReturn("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda");
     when(retireProjection.getFee()).thenReturn(BigInteger.TEN);
-//    when(poolRetireRepository.getPoolDeRegistration(
-//            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable))
-//        .thenReturn(new PageImpl<>(List.of(retireProjection)));
+
+    List<PoolCertificateHistory> poolCertificateHistoryList =
+        List.of(PoolCertificateHistory
+                    .builder()
+                    .poolUpdateId(69L)
+                    .txHash(
+                        "d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda")
+                    .build());
+
+    when(poolCertificateService.getPoolCertificateByAction(
+        "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s",
+        PoolActionType.POOL_DEREGISTRATION))
+        .thenReturn(poolCertificateHistoryList);
+
+    when(poolRetireRepository.getPoolDeRegistration(
+        anySet(), any(Pageable.class)))
+        .thenReturn(new PageImpl<>(List.of(retireProjection)));
+
     PoolInfoProjection projection = Mockito.mock(PoolInfoProjection.class);
     when(projection.getPoolView())
         .thenReturn("pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s");
