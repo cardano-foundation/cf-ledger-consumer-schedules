@@ -42,6 +42,9 @@ public class PoolStatusSchedule {
     redisTemplate.opsForValue().set(poolActivateKey, poolStatus.getPoolActivateIds().size());
     redisTemplate.opsForValue().set(poolInActivateKey, poolStatus.getPoolInactivateIds().size());
     redisTemplate.opsForValue().set(totalPoolKey, totalPoolSize);
+
+    // Delete old pool ids inactivate
+    redisTemplate.delete(poolIdsInactivate);
     redisTemplate.opsForHash()
         .putAll(poolIdsInactivate, poolStatus.getPoolInactivateIds().stream().collect(
             Collectors.toMap(Function.identity(), Function.identity())));
