@@ -2,6 +2,7 @@ package org.cardanofoundation.job.repository.ledgersync;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,17 +33,16 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
   )
   List<PoolHashUrlProjection> findPoolHashAndUrl(Pageable pageable);
 
-  @Query(
-      value =
-          "SELECT pu.id AS poolUpdateId, pu.pledge AS pledge, pu.margin AS margin, pu.vrfKeyHash AS vrfKey, pu.fixedCost AS cost, tx.hash AS txHash, bk.time AS time, tx.deposit AS deposit, tx.fee AS fee, sa.view AS rewardAccount "
-              + "FROM PoolHash ph "
-              + "JOIN PoolUpdate pu ON ph.id = pu.poolHash.id "
-              + "JOIN Tx tx ON pu.registeredTx.id = tx.id AND tx.deposit IS NOT NULL AND tx.deposit > 0 "
-              + "JOIN Block bk ON tx.block.id  = bk.id "
-              + "JOIN StakeAddress sa ON pu.rewardAddr.id = sa.id "
-              + "WHERE ph.view = :poolView")
-  Page<PoolRegistrationProjection> getPoolRegistrationByPool(
-      @Param("poolView") String poolView, Pageable pageable);
+  @Query(value =
+      "SELECT pu.id AS poolUpdateId, pu.pledge AS pledge, pu.margin AS margin, pu.vrfKeyHash AS vrfKey, pu.fixedCost AS cost, tx.hash AS txHash, bk.time AS time, ep.poolDeposit AS deposit, tx.fee AS fee, sa.view AS rewardAccount "
+          + "FROM PoolUpdate pu "
+          + "JOIN Tx tx ON pu.registeredTx.id = tx.id "
+          + "JOIN Block bk ON tx.block.id  = bk.id "
+          + "JOIN EpochParam ep ON ep.epochNo = bk.epochNo "
+          + "JOIN StakeAddress sa ON pu.rewardAddr.id = sa.id "
+          + "WHERE pu.id IN :poolCertificateIds ")
+  Page<PoolRegistrationProjection> getPoolRegistrationByPool(@Param("poolCertificateIds") Set<Long> poolCertificateIds,
+                                                             Pageable pageable);
 
   Optional<PoolHash> findById(Long id);
 
@@ -51,7 +51,8 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
           "SELECT ph.id AS id, pod.poolName AS poolName, ph.hashRaw AS poolId, ph.view AS poolView "
               + "FROM PoolHash ph "
               + "LEFT JOIN PoolOfflineData pod ON ph.id  = pod.pool.id AND pod.id = (SELECT max(pod2.id) FROM PoolOfflineData pod2 WHERE ph.id = pod2.pool.id ) "
-              + "WHERE ph.view = :poolView")
+              + "WHERE ph.view = :poolView "
+              + "OR ph.hashRaw = :poolView")
   PoolInfoProjection getPoolInfo(@Param("poolView") String poolView);
 
   @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
