@@ -17,6 +17,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import org.cardanofoundation.explorer.consumercommon.entity.EpochParam;
+import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -61,6 +63,7 @@ class StakeKeyLifeCycleServiceImplTest {
   @Mock private WithdrawalRepository withdrawalRepository;
   @Mock private AddressTxBalanceRepository addressTxBalanceRepository;
   @Mock private TxRepository txRepository;
+  @Mock private EpochParamRepository epochParamRepository;
   @InjectMocks private StakeKeyLifeCycleServiceImpl stakeKeyLifeCycleService;
 
   @Mock private FetchRewardDataService fetchRewardDataService;
@@ -80,13 +83,20 @@ class StakeKeyLifeCycleServiceImplTest {
     when(projection.getTxHash())
         .thenReturn("f8680884f04ef2b10fdc778e2aa981b909f7268570db231a1d0baac377620ea2");
     when(projection.getFee()).thenReturn(BigInteger.valueOf(173333));
-    when(projection.getDeposit()).thenReturn(2000000L);
+    when(projection.getEpochNo()).thenReturn(333);
     when(projection.getTime()).thenReturn(Timestamp.valueOf(LocalDateTime.now()));
     Page<StakeHistoryProjection> page = new PageImpl<>(List.of(projection), pageable, 1);
     when(stakeAddressRepository.findByView(anyString())).thenReturn(stakeAddress);
     when(stakeRegistrationRepository.getStakeRegistrationsByAddress(
             stakeAddress, null, fromDate, toDate, pageable))
         .thenReturn(page);
+
+    when(epochParamRepository.findByEpochNoIn(List.of(333)))
+        .thenReturn(List.of(EpochParam.builder()
+                                .epochNo(333)
+                                .keyDeposit(BigInteger.valueOf(2000000))
+                                .build()));
+
     var response =
         stakeKeyLifeCycleService.getStakeRegistrations(
             "stake1u98ujxfgzdm8yh6qsaar54nmmr50484t4ytphxjex3zxh7g4tuwna", pageable, condition);
@@ -231,13 +241,20 @@ class StakeKeyLifeCycleServiceImplTest {
     when(projection.getTxHash())
         .thenReturn("f8680884f04ef2b10fdc778e2aa981b909f7268570db231a1d0baac377620ea2");
     when(projection.getFee()).thenReturn(BigInteger.valueOf(173333));
-    when(projection.getDeposit()).thenReturn(2000000L);
+    when(projection.getEpochNo()).thenReturn(333);
     when(projection.getTime()).thenReturn(Timestamp.valueOf(LocalDateTime.now()));
     Page<StakeHistoryProjection> page = new PageImpl<>(List.of(projection), pageable, 1);
     when(stakeAddressRepository.findByView(anyString())).thenReturn(stakeAddress);
     when(stakeRegistrationRepository.getStakeRegistrationsByAddress(
             stakeAddress, null, fromDate, toDate, pageable))
         .thenReturn(page);
+
+    when(epochParamRepository.findByEpochNoIn(List.of(333)))
+        .thenReturn(List.of(EpochParam.builder()
+                                .epochNo(333)
+                                .keyDeposit(BigInteger.valueOf(2000000))
+                                .build()));
+
     var response =
         stakeKeyLifeCycleService.getStakeRegistrations(
             "stake1u98ujxfgzdm8yh6qsaar54nmmr50484t4ytphxjex3zxh7g4tuwna", pageable, condition);
@@ -346,13 +363,22 @@ class StakeKeyLifeCycleServiceImplTest {
     when(projection.getTxHash())
         .thenReturn("f8680884f04ef2b10fdc778e2aa981b909f7268570db231a1d0baac377620ea2");
     when(projection.getFee()).thenReturn(BigInteger.valueOf(173333));
-    when(projection.getDeposit()).thenReturn(2000000L);
+    when(projection.getEpochNo()).thenReturn(333);
     when(projection.getTime()).thenReturn(Timestamp.valueOf(LocalDateTime.now()));
     Page<StakeHistoryProjection> page = new PageImpl<>(List.of(projection), pageable, 1);
     when(stakeAddressRepository.findByView(anyString())).thenReturn(stakeAddress);
     when(stakeDeRegistrationRepository.getStakeDeRegistrationsByAddress(
             stakeAddress, null, fromDate, toDate, pageable))
         .thenReturn(page);
+
+
+    when(epochParamRepository.findByEpochNoIn(List.of(333)))
+        .thenReturn(List.of(EpochParam.builder()
+                                .epochNo(333)
+                                .keyDeposit(BigInteger.valueOf(2000000))
+                                .build()));
+
+
     var response =
         stakeKeyLifeCycleService.getStakeDeRegistrations(
             "stake1u98ujxfgzdm8yh6qsaar54nmmr50484t4ytphxjex3zxh7g4tuwna", pageable, condition);
