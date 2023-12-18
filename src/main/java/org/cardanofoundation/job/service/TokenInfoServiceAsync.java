@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -13,7 +15,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.explorer.consumercommon.entity.MultiAsset;
 import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfo;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenRepository;
@@ -31,7 +32,8 @@ public class TokenInfoServiceAsync {
    * Asynchronously builds a list of TokenInfo entities based on the provided list of MultiAsset.
    * This method is called when initializing TokenInfo data
    *
-   * @param multiAssetList The list of MultiAsset to process.
+   * @param startIdent     The starting multi-asset ID.
+   * @param endIdent       The ending multi-asset ID.
    * @param blockNo        The maximum block number to set for the TokenInfo entities.
    * @param afterTxId      The transaction ID from which to calculate token volumes.
    * @param updateTime     The timestamp to set as the update time for the TokenInfo entities.
@@ -41,28 +43,28 @@ public class TokenInfoServiceAsync {
   @Async
   @Transactional(readOnly = true)
   public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
-      List<MultiAsset> multiAssetList, Long blockNo, Long afterTxId, Timestamp updateTime) {
+      Long startIdent, Long endIdent, Long blockNo, Long afterTxId, Timestamp updateTime) {
 
-    List<TokenInfo> saveEntities = new ArrayList<>(multiAssetList.size());
+    List<TokenInfo> saveEntities = new ArrayList<>((int) (endIdent - startIdent + 1));
     var curTime = System.currentTimeMillis();
-    List<Long> multiAssetIds = StreamUtil.mapApply(multiAssetList, MultiAsset::getId);
+    List<Long> multiAssetIds = LongStream.rangeClosed(startIdent, endIdent)
+        .boxed().collect(Collectors.toList());
     List<TokenVolume> volumes =
-        jooqAddressTokenRepository.sumBalanceAfterTx(multiAssetIds, afterTxId);
+        jooqAddressTokenRepository.sumBalanceAfterTx(startIdent, endIdent, afterTxId);
 
     var tokenVolumeMap =
         StreamUtil.toMap(
             volumes, TokenVolume::getIdent, TokenVolume::getVolume);
-    var mapNumberHolder = multiAssetService.getMapNumberHolder(multiAssetIds);
+    var mapNumberHolder = multiAssetService.getMapNumberHolder(startIdent, endIdent);
 
     // Clear unnecessary lists to free up memory to avoid OOM error
-    multiAssetIds.clear();
     volumes.clear();
 
-    multiAssetList.forEach(multiAsset -> {
+    multiAssetIds.forEach(multiAssetId -> {
       var tokenInfo = new TokenInfo();
-      tokenInfo.setMultiAssetId(multiAsset.getId());
-      tokenInfo.setVolume24h(tokenVolumeMap.getOrDefault(multiAsset.getId(), BigInteger.ZERO));
-      tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAsset.getId(), 0L));
+      tokenInfo.setMultiAssetId(multiAssetId);
+      tokenInfo.setVolume24h(tokenVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
+      tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAssetId, 0L));
       tokenInfo.setUpdateTime(updateTime);
       tokenInfo.setBlockNo(blockNo);
       saveEntities.add(tokenInfo);

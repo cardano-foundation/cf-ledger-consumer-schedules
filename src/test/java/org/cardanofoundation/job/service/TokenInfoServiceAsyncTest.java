@@ -39,13 +39,6 @@ class TokenInfoServiceAsyncTest {
 
   @Test
   void testBuildTokenInfoList() {
-    MultiAsset multiAsset1 = Mockito.mock(MultiAsset.class);
-    when(multiAsset1.getId()).thenReturn(1L);
-    MultiAsset multiAsset2 = Mockito.mock(MultiAsset.class);
-    when(multiAsset2.getId()).thenReturn(2L);
-    MultiAsset multiAsset3 = Mockito.mock(MultiAsset.class);
-    when(multiAsset3.getId()).thenReturn(3L);
-    List<MultiAsset> multiAssetList = Arrays.asList(multiAsset1, multiAsset2, multiAsset3);
     Long blockNo = 1000L;
     Long afterTxId = 100000L;
     Timestamp updateTime = Timestamp.valueOf(LocalDateTime.of(2020, 1, 1, 0, 0, 0, 0));
@@ -56,10 +49,13 @@ class TokenInfoServiceAsyncTest {
     tokenVolumes.add(tokenVolume1);
     tokenVolumes.add(tokenVolume2);
     tokenVolumes.add(tokenVolume3);
-    when(jooqAddressTokenRepository.sumBalanceAfterTx(anyList(), anyLong()))
+
+    Long startIdent = 1L;
+    Long endIdent = 3L;
+    when(jooqAddressTokenRepository.sumBalanceAfterTx(anyLong(), anyLong(), anyLong()))
         .thenReturn(tokenVolumes);
 
-    when(multiAssetService.getMapNumberHolder(anyList()))
+    when(multiAssetService.getMapNumberHolder(anyLong(), anyLong()))
         .thenReturn(
             Map.ofEntries(
                 Map.entry(1L, 10L),
@@ -69,7 +65,7 @@ class TokenInfoServiceAsyncTest {
         );
 
     CompletableFuture<List<TokenInfo>> result = tokenInfoServiceAsync.buildTokenInfoList(
-        multiAssetList, blockNo, afterTxId, updateTime);
+        startIdent, endIdent, blockNo, afterTxId, updateTime);
     var tokenInfoListReturned = result.join();
 
     assertThat(tokenInfoListReturned).hasSize(3)

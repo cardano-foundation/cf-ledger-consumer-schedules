@@ -34,4 +34,6 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
   List<MultiAsset> getTokensInTransactionInTimeRange(@Param("fromTime") Timestamp fromTime,
                                                      @Param("toTime") Timestamp toTime);
 
+  @Query("SELECT max(multiAsset.id) FROM MultiAsset multiAsset")
+  Long getCurrentMaxIdent();
 }
