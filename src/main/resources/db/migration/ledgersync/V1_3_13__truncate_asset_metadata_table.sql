@@ -1,0 +1,1 @@
+TRUNCATE TABLE preprod.asset_metadata RESTART IDENTITY RESTRICT;
