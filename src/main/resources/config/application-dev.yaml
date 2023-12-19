@@ -127,6 +127,9 @@ jobs:
   token-info:
     enabled: ${TOKEN_INFO_JOB_ENABLED:true}
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
+  smart-contract-info:
+    fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:30000}
+
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 

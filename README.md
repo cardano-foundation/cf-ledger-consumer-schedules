@@ -78,3 +78,4 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - TOKEN_INFO_JOB_ENABLED: enable token info job
 - TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
 - AGGREGATE_POOL_INFO_FIXED_DELAY: fixed delay for job aggregate pool info
+- SMART_CONTRACT_INFO_FIXED_DELAY: fixed delay for job smart contract info
