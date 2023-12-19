@@ -109,8 +109,8 @@ public class AssetMetadataSchedule {
       // if flagUpload = true then add to assetMetadataMapUpload and set logo url
       if (Boolean.TRUE.equals(flagUpload)) {
         assetMetadataMapUpload.put(assetMetadataDTO.getSubject(), assetMetadataDTO);
-        String logo = DataUtil.isNullOrEmpty(assetMetadataDTO.getLogo())
-            ? null : assetMetadataDTO.getLogo().getValue();
+        String logo = DataUtil.isNullOrEmpty(assetMetadataDTO.getSubject())
+            ? null : network + "/" + assetMetadataDTO.getSubject();
         assetMetadataTarget.setLogo(logo);
         assetMetadataTarget.setLogoHash(logoHash);
       }
