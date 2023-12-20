@@ -1,5 +1,6 @@
 package org.cardanofoundation.job.service.impl;
 
+import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -15,10 +16,12 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import io.micrometer.common.util.StringUtils;
+import org.cardanofoundation.explorer.consumercommon.entity.EpochParam;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
 import org.cardanofoundation.explorer.consumercommon.entity.Tx;
 import org.cardanofoundation.job.common.enumeration.TxStatus;
@@ -28,9 +31,11 @@ import org.cardanofoundation.job.dto.report.stake.StakeRegistrationLifeCycle;
 import org.cardanofoundation.job.dto.report.stake.StakeRewardResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWalletActivityResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWithdrawalFilterResponse;
+import org.cardanofoundation.job.projection.StakeHistoryProjection;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.repository.ledgersync.AddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationRepository;
+import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.cardanofoundation.job.repository.ledgersync.RewardRepository;
 import org.cardanofoundation.job.repository.ledgersync.StakeAddressRepository;
 import org.cardanofoundation.job.repository.ledgersync.StakeDeRegistrationRepository;
@@ -56,6 +61,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
   private final FetchRewardDataService fetchRewardDataService;
   private final AddressTxBalanceRepository addressTxBalanceRepository;
   private final TxRepository txRepository;
+  private final EpochParamRepository epochParamRepository;
 
   @Override
   public List<StakeWalletActivityResponse> getStakeWalletActivities(
@@ -116,19 +122,24 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
     StakeAddress stakeAddress = stakeAddressRepository.findByView(stakeKey);
     makeCondition(condition);
 
-    return stakeRegistrationRepository
-        .getStakeRegistrationsByAddress(
-            stakeAddress, null, condition.getFromDate(), condition.getToDate(), pageable)
-        .getContent()
-        .stream()
-        .map(
+    Page<StakeHistoryProjection> stakeHistoryList =
+        stakeRegistrationRepository
+            .getStakeRegistrationsByAddress(stakeAddress, null, condition.getFromDate(), condition.getToDate(), pageable);
+
+    var epochNoList = stakeHistoryList.stream().map(StakeHistoryProjection::getEpochNo)
+        .toList();
+    var epochParams = epochParamRepository.findByEpochNoIn(epochNoList);
+    Map<Integer, BigInteger> epochNoDepositMap = epochParams.stream()
+        .collect(Collectors.toMap(EpochParam::getEpochNo, EpochParam::getKeyDeposit));
+
+    return stakeHistoryList.stream().map(
             item ->
                 StakeRegistrationLifeCycle.builder()
                     .txHash(item.getTxHash())
                     .fee(item.getFee())
-                    .deposit(item.getDeposit())
+                    .deposit(epochNoDepositMap.get(item.getEpochNo()).longValue())
                     .rawFee(item.getFee().doubleValue() / 1000000)
-                    .rawDeposit(item.getDeposit().doubleValue() / 1000000)
+                    .rawDeposit(epochNoDepositMap.get(item.getEpochNo()).doubleValue() / 1000000)
                     .time(item.getTime().toLocalDateTime())
                     .build())
         .collect(Collectors.toList());
@@ -208,10 +219,17 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
       String stakeKey, Pageable pageable, StakeLifeCycleFilterRequest condition) {
     StakeAddress stakeAddress = stakeAddressRepository.findByView(stakeKey);
     makeCondition(condition);
-    return stakeDeRegistrationRepository
-        .getStakeDeRegistrationsByAddress(
-            stakeAddress, null, condition.getFromDate(), condition.getToDate(), pageable)
-        .getContent()
+
+    Page<StakeHistoryProjection> stakeHistoryList =
+        stakeDeRegistrationRepository.getStakeDeRegistrationsByAddress(stakeAddress,
+                                                                       null, condition.getFromDate(), condition.getToDate(), pageable);
+    var epochNoList = stakeHistoryList.stream().map(StakeHistoryProjection::getEpochNo)
+        .toList();
+    var epochParams = epochParamRepository.findByEpochNoIn(epochNoList);
+    Map<Integer, BigInteger> epochNoDepositMap = epochParams.stream()
+        .collect(Collectors.toMap(EpochParam::getEpochNo, EpochParam::getKeyDeposit));
+
+    return stakeHistoryList
         .stream()
         .map(
             item ->
@@ -219,8 +237,8 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
                     .txHash(item.getTxHash())
                     .fee(item.getFee())
                     .rawFee(item.getFee().doubleValue() / 1000000)
-                    .rawDeposit(makePositive(item.getDeposit()).doubleValue() / 1000000)
-                    .deposit(makePositive(item.getDeposit()))
+                    .deposit(makePositive(epochNoDepositMap.get(item.getEpochNo()).longValue()))
+                    .rawDeposit(makePositive(epochNoDepositMap.get(item.getEpochNo()).longValue()).doubleValue() / 1000000)
                     .time(item.getTime().toLocalDateTime())
                     .build())
         .collect(Collectors.toList());

@@ -49,4 +49,22 @@ public class JOOQAddressTokenRepository {
 
     return result.into(TokenVolume.class);
   }
+
+  public List<TokenVolume> sumBalanceAfterTx(Long startIdent, Long endIdent, Long txId) {
+    var tableName = this.entityUtil.getTableName();
+    var result = dsl.select(
+            field(this.entityUtil.getColumnField(AddressTokenBalance_.MULTI_ASSET_ID)),
+            coalesce(sum(field(this.entityUtil.getColumnField(AddressToken_.BALANCE)).cast(BigInteger.class)),
+                     0L).as(
+                "volume"))
+        .from(table(tableName))
+        .where(field(this.entityUtil.getColumnField(AddressToken_.MULTI_ASSET_ID))
+                   .between(startIdent, endIdent))
+        .and(field(this.entityUtil.getColumnField(AddressToken_.BALANCE)).gt(0))
+        .and(field(this.entityUtil.getColumnField(AddressToken_.TX_ID)).greaterOrEqual(txId))
+        .groupBy(field(this.entityUtil.getColumnField(AddressToken_.MULTI_ASSET_ID)))
+        .fetch();
+
+    return result.into(TokenVolume.class);
+  }
 }
