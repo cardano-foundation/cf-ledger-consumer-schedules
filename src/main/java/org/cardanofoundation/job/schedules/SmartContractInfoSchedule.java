@@ -15,6 +15,7 @@ import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -61,21 +62,22 @@ public class SmartContractInfoSchedule {
     log.info("Start job syncSmartContractInfo");
     long startTime = System.currentTimeMillis();
 
+    final Pageable deaultPageable = PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Script_.ID).ascending());
     final String scTxCheckpointKey = getRedisKey(RedisKey.SC_TX_CHECKPOINT.name());
     final Long currentTxId = txRepository.findCurrentTxInfo().getTxId();
+
+    long scTxCheckpoint = 0;
     Slice<Script> scriptSlice;
     boolean flagInit = false;
     if (redisTemplate.opsForValue().get(scTxCheckpointKey) == null ||
         smartContractInfoRepository.count() == 0) {
       scriptSlice = scriptRepository.findAllByTypeIn(
-          Arrays.asList(ScriptType.PLUTUSV1, ScriptType.PLUTUSV2),
-          PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Script_.ID).ascending()));
+          Arrays.asList(ScriptType.PLUTUSV1, ScriptType.PLUTUSV2),deaultPageable);
       flagInit = true;
     } else {
-      Long scTxCheckpoint = Long.valueOf(redisTemplate.opsForValue().get(scTxCheckpointKey));
+      scTxCheckpoint = Long.valueOf(redisTemplate.opsForValue().get(scTxCheckpointKey));
       scriptSlice = scriptRepository.findAllByTxIn(
-          scTxCheckpoint, txRepository.findCurrentTxInfo().getTxId(),
-          PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Script_.ID).ascending()));
+          scTxCheckpoint, txRepository.findCurrentTxInfo().getTxId(),deaultPageable);
     }
 
     saveSmartContractInfo(scriptSlice.getContent());
@@ -87,7 +89,7 @@ public class SmartContractInfoSchedule {
                                          scriptSlice.nextPageable())
                              :
                     scriptRepository.findAllByTxIn(
-                        scriptSlice.nextPageable().getOffset(),
+                        scTxCheckpoint,
                         txRepository.findCurrentTxInfo().getTxId(),
                         scriptSlice.nextPageable());
 
