@@ -64,7 +64,7 @@ public class NativeScriptInfoSchedule {
     final String nativeScriptTxCheckPoint = getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());
     final Long currentTxId = txRepository.findCurrentTxInfo().getTxId();
     final Integer checkpoint = redisTemplate.opsForValue().get(nativeScriptTxCheckPoint);
-    if (Objects.isNull(checkpoint)) {
+    if (Objects.isNull(checkpoint) || nativeScriptInfoRepository.count() == 0L) {
       init();
     } else if (currentTxId > checkpoint.longValue()) {
       update(checkpoint, currentTxId);
@@ -126,16 +126,16 @@ public class NativeScriptInfoSchedule {
             .collect(Collectors
                 .toMap(ScriptNumberHolderProjection::getScriptHash, ScriptNumberHolderProjection::getNumberOfHolders));
     List<NativeScriptInfo> nativeScriptInfoList = scripts.stream().map(item -> {
-          NativeScriptInfo nativeScriptInfo;
-          if (Objects.nonNull(nativeScriptInfoMap.get(item.getHash()))) {
-            nativeScriptInfo = nativeScriptInfoMap.get(item.getHash());
-          } else {
-            nativeScriptInfo = createNativeScriptInfo(item);
-          }
-          nativeScriptInfo.setNumberOfTokens(scriptNumberTokenMap.get(item.getHash()));
-          nativeScriptInfo.setNumberOfAssetHolders(scriptNumberHolderMap.get(item.getHash()));
-          return nativeScriptInfo;
-        }).toList();
+      NativeScriptInfo nativeScriptInfo;
+      if (Objects.nonNull(nativeScriptInfoMap.get(item.getHash()))) {
+        nativeScriptInfo = nativeScriptInfoMap.get(item.getHash());
+      } else {
+        nativeScriptInfo = createNativeScriptInfo(item);
+      }
+      nativeScriptInfo.setNumberOfTokens(scriptNumberTokenMap.getOrDefault(item.getHash(), 0L));
+      nativeScriptInfo.setNumberOfAssetHolders(scriptNumberHolderMap.getOrDefault(item.getHash(), 0L));
+      return nativeScriptInfo;
+    }).toList();
     nativeScriptInfoRepository.saveAll(nativeScriptInfoList);
   }
 
