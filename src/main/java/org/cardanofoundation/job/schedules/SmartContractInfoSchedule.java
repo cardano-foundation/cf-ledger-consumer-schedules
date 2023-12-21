@@ -77,7 +77,7 @@ public class SmartContractInfoSchedule {
     } else {
       scTxCheckpoint = Long.valueOf(redisTemplate.opsForValue().get(scTxCheckpointKey));
       scriptSlice = scriptRepository.findAllByTxIn(
-          scTxCheckpoint, txRepository.findCurrentTxInfo().getTxId(),deaultPageable);
+          scTxCheckpoint, currentTxId, deaultPageable);
     }
 
     saveSmartContractInfo(scriptSlice.getContent());
