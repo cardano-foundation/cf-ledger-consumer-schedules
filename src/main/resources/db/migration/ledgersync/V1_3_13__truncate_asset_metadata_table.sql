@@ -1,1 +1,2 @@
 TRUNCATE TABLE asset_metadata RESTART IDENTITY RESTRICT;
+ALTER TABLE asset_metadata ADD COLUMN IF NOT EXISTS fingerprint varchar(255) NULL;
