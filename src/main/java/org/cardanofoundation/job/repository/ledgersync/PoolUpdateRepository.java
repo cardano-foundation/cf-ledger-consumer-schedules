@@ -13,18 +13,8 @@ import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
 import org.cardanofoundation.job.projection.PoolCertificateProjection;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
 import org.cardanofoundation.job.projection.PoolUpdateTxProjection;
-import org.cardanofoundation.job.projection.StakeKeyProjection;
 
 public interface PoolUpdateRepository extends JpaRepository<PoolUpdate, Long> {
-  @Query(
-      value =
-          "SELECT pu.id AS poolUpdateId, sa.view AS view FROM PoolUpdate pu "
-              + "JOIN PoolOwner po ON pu.id = po.poolUpdate.id "
-              + "JOIN StakeAddress sa ON po.stakeAddress.id = sa.id "
-              + "WHERE pu.id IN :poolUpdateIds ")
-  List<StakeKeyProjection> findOwnerAccountByPoolUpdate(
-      @Param("poolUpdateIds") Set<Long> poolUpdateIds);
-
   @Query(
       value =
           "SELECT sa.view FROM PoolUpdate pu "
@@ -67,10 +57,6 @@ public interface PoolUpdateRepository extends JpaRepository<PoolUpdate, Long> {
               + "GROUP BY sa.view")
   List<String> findRewardAccountByPoolView(@Param("poolView") String poolView);
 
-  //  @Query("SELECT new
-  // org.cardanofoundation.job.projection.PoolUpdateTxProjection(MAX(poolUpdate.registeredTxId) ,
-  // poolUpdate.poolHashId, MAX(poolUpdate.certIndex)) " +
-  //          "FROM PoolUpdate poolUpdate GROUP BY poolUpdate.poolHashId")
   @Query(
       "SELECT  new org.cardanofoundation.job.projection.PoolUpdateTxProjection(poolUpdate.registeredTxId, poolUpdate.poolHashId, MAX(poolUpdate.certIndex)) "
           + "FROM PoolUpdate poolUpdate "
