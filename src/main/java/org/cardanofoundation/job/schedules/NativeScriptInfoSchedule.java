@@ -11,7 +11,6 @@ import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
 import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.AddressTokenBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersync.AddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
