@@ -5,6 +5,7 @@
 <img alt="Release" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/release.yaml/badge.svg?branch=main" />
 <img alt="Publish" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/publish.yaml/badge.svg?branch=main" />
 <a href="https://conventionalcommits.org"><img alt="conventionalcommits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits" /></a>
+<a href="https://app.fossa.com/projects/custom%2B41588%2Fgit%40github.com%3Acardano-foundation%2Fcf-ledger-consumer-schedules.git?ref=badge_shield&issueType=license"><img alt="FOSSA Status" src="https://app.fossa.com/api/projects/custom%2B41588%2Fgit%40github.com%3Acardano-foundation%2Fcf-ledger-consumer-schedules.git.svg?type=shield&issueType=license" /></a>
 </p>
 
 This repository executes tasks in a periodic sequence to precompute computationally intensive jobs.
