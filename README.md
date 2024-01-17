@@ -2,6 +2,7 @@
 
 <p align="left">
 <img alt="Tests" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/tests.yaml/badge.svg" />
+<img alt="Coverage" src="https://cardano-foundation.github.io/cf-ledger-consumer-schedules/badges/jacoco.svg" />
 <img alt="Release" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/release.yaml/badge.svg?branch=main" />
 <img alt="Publish" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/publish.yaml/badge.svg?branch=main" />
 <a href="https://conventionalcommits.org"><img alt="conventionalcommits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits" /></a>
