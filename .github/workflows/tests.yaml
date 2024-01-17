@@ -2,8 +2,6 @@ name: Run Tests
 
 on:
   push:
-    branches-ignore:
-      - main
   workflow_dispatch:
 
 env:
@@ -92,7 +90,7 @@ jobs:
 
       - name: Publish mutation test report to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
-        if: always()
+        if: github.ref == 'refs/heads/main'
         with:
           BRANCH: gh-pages
           folder: target/pit-reports/
