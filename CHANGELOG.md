@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.7.0](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.18...v0.7.0) (2024-01-23)
+
+
+### Features
+
+* mapping fingerprint from subject ([956ead1](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/956ead12abc22b5cbb16d60208196167bc899b3f))
+* MET-1761 add table verified_script ([33bbb2c](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/33bbb2c04dd97592cb112ce756eb68e1680848a1))
+* MET-1856 add flyway to create index related to multi_asset and script ([7cc35f9](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/7cc35f9d88721d1da0cf5a99a15b7d97630444db))
+* MET-1856 add unit test for native script info schedule ([71d8d4e](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/71d8d4e4149d71bffee114b22e9030f179fb7aaf))
+* MET-1856 update env for native script info job ([ad13478](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/ad13478dfa831e8b5e930b40aaf016f0b7dbe5bf))
+* MET-1865 check native script not have token ([99001e3](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/99001e35d62001fe4602b81ea24ffc5825f839b8))
+* MET-1865 create job sync native script info ([2a8bad3](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/2a8bad3f00e3f2d6ae55032dca820e0c37007c1d))
+
+
+### Bug Fixes
+
+* add default sort for paging ([e105334](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/e105334f13a4ad7079388063abea20d2a1f73994))
+* check update remove logo in token metadata ([41a46b6](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/41a46b609db7ff00bad0efa5efd7fc7fed5076d7))
+* delete old poolIds inactive when run job pool status ([eec3e16](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/eec3e16a4ac591e28476166e0e409a14ff4f7d86))
+* remove network in flyway sql ([2e55ff2](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/2e55ff2423f0c538ae2841eff9c82548a9648b89))
+* sync-up logic stake and pool lifecycle when generating report ([5dee72d](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/5dee72dc35f6acd67d634f45a1b456e8713bf451))
+* update logic to save logo of token ([20b1075](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/20b107589b884642edc12833ca58ff0b346f8f90))
+* update redis standalone and cluster to synchronize with other services ([723899a](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/723899ab4ae21fca7f5a89056aed2dcc1bdf5899))
+* wrong input param when get existed data ([e6b890d](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/e6b890d0b489c191b735215f524f69b2284e7c56))
+
+
+### Performance Improvements
+
+* improve perf token info job by remove logic get multi-asset data ([a6b105f](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/a6b105f034181475b016759f63e89e260e817229))
+
 ## [0.2.18](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.17...v0.2.18) (2023-11-09)
 
 
