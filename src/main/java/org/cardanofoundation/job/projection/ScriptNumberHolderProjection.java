@@ -1,7 +1,7 @@
 package org.cardanofoundation.job.projection;
 
-public interface TokenNumberHoldersProjection {
-  Long getIdent();
+public interface ScriptNumberHolderProjection {
+  String getScriptHash();
 
   Long getNumberOfHolders();
 }

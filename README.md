@@ -70,7 +70,6 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - REDIS_SENTINEL_HOST : Redis sentinel host. Default is  cardano.redis.sentinel.
 - REDIS_SENTINEL_PORT : Redis sentinel port. Default is 26379.
 - REDIS_SENTINEL_MASTER_NAME : Redis master name. Default is mymaster.
-- TOP_DELEGATORS_FIXED_DELAY: top delegator fixed delay when run cron job
 - POOL_STATUS_FIXED_DELAY: delay time between each time get pool status
 - NUMBER_DELEGATOR_FIXED_DELAY: delay time between each time get number delegator
 - UNIQUE_ACCOUNT_FIXED_DELAY: fixed delay for job build cache unique account
@@ -80,3 +79,5 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - TOKEN_INFO_JOB_ENABLED: enable token info job
 - TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
 - AGGREGATE_POOL_INFO_FIXED_DELAY: fixed delay for job aggregate pool info
+- SMART_CONTRACT_INFO_FIXED_DELAY: fixed delay for job smart contract info
+- NATIVE_SCRIPT_INFO_FIXED_DELAY: fixed delay for job native script info

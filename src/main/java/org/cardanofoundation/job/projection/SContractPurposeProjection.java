@@ -1,17 +1,17 @@
 package org.cardanofoundation.job.projection;
 
-import java.math.BigInteger;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 
+import org.cardanofoundation.explorer.consumercommon.enumeration.ScriptPurposeType;
+
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
-public class StakeTxBalanceProjection {
+public class SContractPurposeProjection {
 
-  Long txId;
-  Long stakeAddressId;
-  BigInteger balanceChange;
+  String scriptHash;
+  ScriptPurposeType scriptPurposeType;
 }
