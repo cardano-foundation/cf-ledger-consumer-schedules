@@ -17,8 +17,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
 import org.cardanofoundation.job.common.enumeration.PoolActionType;
 import org.cardanofoundation.job.dto.PoolCertificateHistory;
 import org.cardanofoundation.job.dto.report.pool.DeRegistrationResponse;
@@ -27,13 +27,13 @@ import org.cardanofoundation.job.dto.report.pool.PoolUpdateDetailResponse;
 import org.cardanofoundation.job.dto.report.pool.RewardResponse;
 import org.cardanofoundation.job.dto.report.pool.TabularRegisResponse;
 import org.cardanofoundation.job.projection.EpochRewardProjection;
-import org.cardanofoundation.job.repository.ledgersync.EpochStakeRepository;
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolHistoryKoiOsProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolUpdateDetailProjection;
+import org.cardanofoundation.job.repository.ledgersync.EpochStakeRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolHistoryRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolRetireRepository;
@@ -60,14 +60,18 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
   @Override
   public List<TabularRegisResponse> registrationList(String poolView, Pageable pageable) {
     List<TabularRegisResponse> tabularRegisList = new ArrayList<>();
-    List<PoolCertificateHistory> poolRegistration = poolCertificateService.getPoolCertificateByAction(
-        poolView, PoolActionType.POOL_REGISTRATION);
+    List<PoolCertificateHistory> poolRegistration =
+        poolCertificateService.getPoolCertificateByAction(
+            poolView, PoolActionType.POOL_REGISTRATION);
 
-    Page<PoolRegistrationProjection> projection = poolHashRepository
-        .getPoolRegistrationByPool(poolRegistration.isEmpty() ? Set.of(-1L)
-                                                              : poolRegistration.stream()
-                                       .map(PoolCertificateHistory::getPoolUpdateId)
-                                       .collect(Collectors.toSet()), pageable);
+    Page<PoolRegistrationProjection> projection =
+        poolHashRepository.getPoolRegistrationByPool(
+            poolRegistration.isEmpty()
+                ? Set.of(-1L)
+                : poolRegistration.stream()
+                    .map(PoolCertificateHistory::getPoolUpdateId)
+                    .collect(Collectors.toSet()),
+            pageable);
     if (Objects.nonNull(projection)) {
       projection.stream()
           .forEach(tabularRegis -> tabularRegisList.add(new TabularRegisResponse(tabularRegis)));
@@ -78,12 +82,16 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
   @Override
   public List<PoolUpdateDetailResponse> poolUpdateList(String poolView, Pageable pageable) {
     List<PoolUpdateDetailResponse> poolUpdateList = new ArrayList<>();
-    List<PoolCertificateHistory> poolUpdateCert = poolCertificateService.getPoolCertificateByAction(
-        poolView, PoolActionType.POOL_UPDATE);
-    Page<PoolUpdateDetailProjection> projection = poolUpdateRepository.findPoolUpdateByPool(
-        poolUpdateCert.isEmpty() ? Set.of(-1L)
-                                 : poolUpdateCert.stream().map(PoolCertificateHistory::getPoolUpdateId).collect(
-                                     Collectors.toSet()), pageable);
+    List<PoolCertificateHistory> poolUpdateCert =
+        poolCertificateService.getPoolCertificateByAction(poolView, PoolActionType.POOL_UPDATE);
+    Page<PoolUpdateDetailProjection> projection =
+        poolUpdateRepository.findPoolUpdateByPool(
+            poolUpdateCert.isEmpty()
+                ? Set.of(-1L)
+                : poolUpdateCert.stream()
+                    .map(PoolCertificateHistory::getPoolUpdateId)
+                    .collect(Collectors.toSet()),
+            pageable);
     if (Objects.nonNull(projection)) {
       projection.stream()
           .forEach(
@@ -114,10 +122,11 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
     }
 
     Page<LifeCycleRewardProjection> projections =
-        rewardRepository.getRewardInfoByPool(poolReportHistory.getPoolView(),
-                                             poolReportHistory.getBeginEpoch(),
-                                             poolReportHistory.getEndEpoch(),
-                                             pageable);
+        rewardRepository.getRewardInfoByPool(
+            poolReportHistory.getPoolView(),
+            poolReportHistory.getBeginEpoch(),
+            poolReportHistory.getEndEpoch(),
+            pageable);
     if (Objects.nonNull(projections)) {
       projections.stream()
           .forEach(
@@ -133,12 +142,17 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
   public List<DeRegistrationResponse> deRegistration(String poolView, Pageable pageable) {
     PoolInfoProjection poolInfo = poolHashRepository.getPoolInfo(poolView);
 
-    List<PoolCertificateHistory> poolRetire = poolCertificateService.getPoolCertificateByAction(
-        poolView, PoolActionType.POOL_DEREGISTRATION);
-    Page<PoolDeRegistrationProjection> projections = poolRetireRepository.getPoolDeRegistration(
-        poolRetire.isEmpty() ? Set.of(-1L)
-                             : poolRetire.stream().map(PoolCertificateHistory::getPoolRetireId).collect(
-                                 Collectors.toSet()), pageable);
+    List<PoolCertificateHistory> poolRetire =
+        poolCertificateService.getPoolCertificateByAction(
+            poolView, PoolActionType.POOL_DEREGISTRATION);
+    Page<PoolDeRegistrationProjection> projections =
+        poolRetireRepository.getPoolDeRegistration(
+            poolRetire.isEmpty()
+                ? Set.of(-1L)
+                : poolRetire.stream()
+                    .map(PoolCertificateHistory::getPoolRetireId)
+                    .collect(Collectors.toSet()),
+            pageable);
 
     List<DeRegistrationResponse> deRegistrations = new ArrayList<>();
     if (Objects.nonNull(projections)) {

@@ -80,8 +80,8 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
     List<CompletableFuture<Void>> futures = new ArrayList<>();
     int start = 0;
     while (true) {
-      List<PoolHashUrlProjection> poolHashUrlProjections = poolHashRepository.findPoolHashAndUrl(
-          PageRequest.of(start, JobConstants.DEFAULT_BATCH));
+      List<PoolHashUrlProjection> poolHashUrlProjections =
+          poolHashRepository.findPoolHashAndUrl(PageRequest.of(start, JobConstants.DEFAULT_BATCH));
 
       if (CollectionUtils.isEmpty(poolHashUrlProjections)) {
         break;
@@ -91,8 +91,10 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
     }
 
     futures.forEach(CompletableFuture::join);
-    log.info("Fetched pool offline data count: {}, time taken: {} ms", poolDataList.size(),
-             System.currentTimeMillis() - startTime);
+    log.info(
+        "Fetched pool offline data count: {}, time taken: {} ms",
+        poolDataList.size(),
+        System.currentTimeMillis() - startTime);
     return poolDataList;
   }
 
@@ -104,22 +106,26 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
     poolDataSuccess.forEach(poolData -> futures.add(fetchPoolOfflineDataLogo(poolData)));
     futures.forEach(CompletableFuture::join);
 
-    long fetchedCount = poolDataSuccess.stream()
-        .filter(poolData -> !ObjectUtils.isEmpty(poolData.getLogoUrl()) ||
-            !ObjectUtils.isEmpty(poolData.getIconUrl()))
-        .count();
-    log.info("Fetched pool offline logo count: {}, time taken: {} ms", fetchedCount,
-             System.currentTimeMillis() - startTime);
+    long fetchedCount =
+        poolDataSuccess.stream()
+            .filter(
+                poolData ->
+                    !ObjectUtils.isEmpty(poolData.getLogoUrl())
+                        || !ObjectUtils.isEmpty(poolData.getIconUrl()))
+            .count();
+    log.info(
+        "Fetched pool offline logo count: {}, time taken: {} ms",
+        fetchedCount,
+        System.currentTimeMillis() - startTime);
   }
 
-
   /**
-   * Asynchronously fetching metadata from a specified URL(poolHash.url)
-   * using a WebClient in a non-blocking manner.
+   * Asynchronously fetching metadata from a specified URL(poolHash.url) using a WebClient in a
+   * non-blocking manner.
    *
    * @param poolHash
-   * @return a CompletableFuture<Void> representing the asynchronous operation of
-   * fetching the metadata from the URL.
+   * @return a CompletableFuture<Void> representing the asynchronous operation of fetching the
+   *     metadata from the URL.
    */
   private CompletableFuture<Void> fetchPoolOffLineMetaData(PoolHashUrlProjection poolHash) {
     try {
@@ -137,10 +143,11 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
           .doOnError(Exception.class, throwable -> fetchFail(throwable.getMessage(), poolHash))
           .toFuture()
           .thenAccept(responseEntity -> handleResponse(responseEntity, poolHash))
-          .exceptionally(throwable -> {
-            fetchFail(throwable.getMessage(), poolHash);
-            return null;
-          });
+          .exceptionally(
+              throwable -> {
+                fetchFail(throwable.getMessage(), poolHash);
+                return null;
+              });
     } catch (Exception e) {
       fetchFail(e.getMessage(), poolHash);
       return CompletableFuture.completedFuture(null);
@@ -148,9 +155,10 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
   }
 
   /**
-   * Checks the status code, content type, and content length of the response.
-   * It calls the appropriate methods (fetchFail or fetchSuccess)
-   * based on the analysis of the response, indicating success or failure.
+   * Checks the status code, content type, and content length of the response. It calls the
+   * appropriate methods (fetchFail or fetchSuccess) based on the analysis of the response,
+   * indicating success or failure.
+   *
    * @param response the response from the WebClient
    * @param poolHash the poolHash object
    */
@@ -164,16 +172,18 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
     }
 
     // if content type is not supported, then send to fail queue
-    if (Objects.requireNonNull(response.getHeaders().get(HttpHeaders.CONTENT_TYPE))
-        .stream()
-        .noneMatch(contentType -> contentType.contains(MediaType.APPLICATION_JSON_VALUE)
-            || contentType.contains(MediaType.TEXT_PLAIN_VALUE)
-            || contentType.contains("binary/octet-stream")
-            || contentType.contains("text/json")
-            || contentType.contains("application/binary")
-            || contentType.contains(MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
-      fetchFail("Content type not supported " + response.getHeaders().get(HttpHeaders.CONTENT_TYPE),
-                poolHash);
+    if (Objects.requireNonNull(response.getHeaders().get(HttpHeaders.CONTENT_TYPE)).stream()
+        .noneMatch(
+            contentType ->
+                contentType.contains(MediaType.APPLICATION_JSON_VALUE)
+                    || contentType.contains(MediaType.TEXT_PLAIN_VALUE)
+                    || contentType.contains("binary/octet-stream")
+                    || contentType.contains("text/json")
+                    || contentType.contains("application/binary")
+                    || contentType.contains(MediaType.APPLICATION_OCTET_STREAM_VALUE))) {
+      fetchFail(
+          "Content type not supported " + response.getHeaders().get(HttpHeaders.CONTENT_TYPE),
+          poolHash);
       return;
     }
 
@@ -189,19 +199,19 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
     }
   }
 
-
   /**
-   * Fetches offline data and logo for a given extended url asynchronously using a WebClient.
-   * It checks for the presence of extended data, fetches it, processes it,
-   * and handles any exceptions that may occur during the execution.
+   * Fetches offline data and logo for a given extended url asynchronously using a WebClient. It
+   * checks for the presence of extended data, fetches it, processes it, and handles any exceptions
+   * that may occur during the execution.
+   *
    * @param poolData the poolData object
-   * @return a CompletableFuture<Void> representing the asynchronous operation of
-   * fetching pool offline data and logo from the URL.
+   * @return a CompletableFuture<Void> representing the asynchronous operation of fetching pool
+   *     offline data and logo from the URL.
    */
   private CompletableFuture<Void> fetchPoolOfflineDataLogo(PoolData poolData) {
     try {
-      final Map<String, Object> map = objectMapper.readValue(new String(poolData.getJson()),
-                                                             new TypeReference<>() {});
+      final Map<String, Object> map =
+          objectMapper.readValue(new String(poolData.getJson()), new TypeReference<>() {});
       // if pool metadata have no extended field then skip
       if (map.containsKey(EXTENDED)) {
         String poolExtendedUrl = String.valueOf(map.get(EXTENDED));
@@ -217,19 +227,19 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
             .retrieve()
             .toEntity(String.class)
             .timeout(Duration.ofMillis(TIMEOUT))
-            .doOnError(Exception.class,
-                       throwable -> fetchFail(throwable.getMessage(), poolData))
+            .doOnError(Exception.class, throwable -> fetchFail(throwable.getMessage(), poolData))
             .toFuture()
-            .thenAccept(responsePoolExtended -> {
-              try {
-                String extendBody = responsePoolExtended.getBody();
-                // make another try catch for catching extendMap only and not affect pool
-                final Map<String, Object> extendMap = objectMapper.readValue(extendBody,
-                                                                             new TypeReference<>() {});
-                findExtendedLogoWithLoop(extendMap, poolData);
-              } catch (JsonProcessingException ignored) {
-              }
-            })
+            .thenAccept(
+                responsePoolExtended -> {
+                  try {
+                    String extendBody = responsePoolExtended.getBody();
+                    // make another try catch for catching extendMap only and not affect pool
+                    final Map<String, Object> extendMap =
+                        objectMapper.readValue(extendBody, new TypeReference<>() {});
+                    findExtendedLogoWithLoop(extendMap, poolData);
+                  } catch (JsonProcessingException ignored) {
+                  }
+                })
             .exceptionally(throwable -> null);
       }
     } catch (Exception ignored) {
@@ -238,8 +248,8 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
   }
 
   /**
-   * Recursively searches for specific keys in a map and extracts corresponding values as extended logos,
-   * updating the PoolData object with the URLs if they meet certain conditions.
+   * Recursively searches for specific keys in a map and extracts corresponding values as extended
+   * logos, updating the PoolData object with the URLs if they meet certain conditions.
    *
    * @param map the map to be searched
    * @param poolData the poolData object
@@ -319,21 +329,22 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
    * @param responseBody
    */
   private void fetchSuccess(PoolHashUrlProjection poolHash, String responseBody) {
-    PoolData data = PoolData.builder()
-        .valid(Boolean.TRUE)
-        .status(OK.value())
-        .json(responseBody.getBytes(StandardCharsets.UTF_8))
-        .poolId(poolHash.getPoolId())
-        .metadataRefId(poolHash.getMetadataId())
-        .hash(HexUtil.encodeHexString(Blake2bUtil.blake2bHash256(responseBody.getBytes())))
-        .build();
+    PoolData data =
+        PoolData.builder()
+            .valid(Boolean.TRUE)
+            .status(OK.value())
+            .json(responseBody.getBytes(StandardCharsets.UTF_8))
+            .poolId(poolHash.getPoolId())
+            .metadataRefId(poolHash.getMetadataId())
+            .hash(HexUtil.encodeHexString(Blake2bUtil.blake2bHash256(responseBody.getBytes())))
+            .build();
 
     poolDataList.add(data);
   }
 
   /**
-   * Handles a failed fetch operation by creating a PoolHashUrlProjection object with the appropriate failure
-   * information and adding it to a list for further use.
+   * Handles a failed fetch operation by creating a PoolHashUrlProjection object with the
+   * appropriate failure information and adding it to a list for further use.
    *
    * @param error the error message
    * @param poolHash the PoolHashUrlProjection object
@@ -351,8 +362,8 @@ public class PoolOfflineDataFetchingServiceImpl implements PoolOfflineDataFetchi
   }
 
   /**
-   * Handles a failed fetch operation by creating a PoolHashUrlProjection object with the appropriate failure
-   * information and adding it to a list for further use.
+   * Handles a failed fetch operation by creating a PoolHashUrlProjection object with the
+   * appropriate failure information and adding it to a list for further use.
    *
    * @param error the error message
    * @param poolHash the poolHash object

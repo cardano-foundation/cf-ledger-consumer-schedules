@@ -3,10 +3,10 @@ package org.cardanofoundation.job.mapper;
 import com.bloxbean.cardano.client.util.AssetUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 import org.cardanofoundation.explorer.consumercommon.entity.AssetMetadata;
 import org.cardanofoundation.job.dto.AssetMetadataDTO;
-import org.mapstruct.Named;
 
 @Mapper(componentModel = "spring")
 public abstract class AssetMedataMapper {

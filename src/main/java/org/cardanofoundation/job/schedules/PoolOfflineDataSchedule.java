@@ -34,6 +34,7 @@ public class PoolOfflineDataSchedule {
     this.poolOfflineDataStoringService = poolOfflineDataStoringService;
     this.poolOfflineDataFetchingService = poolOfflineDataFetchingService;
   }
+
   @Transactional
   @Scheduled(fixedDelayString = "${jobs.pool-offline-data.fetch.delay}")
   public void fetchPoolOffline() {
@@ -41,7 +42,8 @@ public class PoolOfflineDataSchedule {
     final var startTime = System.currentTimeMillis();
     List<PoolData> poolDataList = poolOfflineDataFetchingService.fetchPoolOfflineData();
     List<PoolData> successPools = poolDataList.stream().filter(PoolData::isValid).toList();
-    List<PoolData> failPools = new ArrayList<>(poolDataList.stream().filter(poolData -> !poolData.isValid()).toList());
+    List<PoolData> failPools =
+        new ArrayList<>(poolDataList.stream().filter(poolData -> !poolData.isValid()).toList());
     poolOfflineDataFetchingService.fetchPoolOfflineDataLogo(successPools);
     poolOfflineDataStoringService.saveSuccessPoolOfflineData(successPools);
     poolOfflineDataStoringService.saveFailOfflineData(failPools);

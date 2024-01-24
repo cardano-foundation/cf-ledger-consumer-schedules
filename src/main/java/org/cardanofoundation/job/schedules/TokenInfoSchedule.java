@@ -38,5 +38,4 @@ public class TokenInfoSchedule {
       log.error("Error occurred during Token Info update: {}", e.getMessage(), e);
     }
   }
-
 }

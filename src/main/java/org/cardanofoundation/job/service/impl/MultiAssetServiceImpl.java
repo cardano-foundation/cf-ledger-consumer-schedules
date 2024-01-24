@@ -58,7 +58,6 @@ public class MultiAssetServiceImpl implements MultiAssetService {
                         + numberHoldersAddressNotHaveStakeKeyMap.getOrDefault(ident, 0L)));
   }
 
-
   /**
    * Build a mapping of multiAsset IDs to the total number of holders for each multi-asset. The
    * method calculates the number of holders for each multi-asset by combining two counts: 1. The
@@ -66,15 +65,16 @@ public class MultiAssetServiceImpl implements MultiAssetService {
    * without stake address associated with the multi-asset
    *
    * @param startIdent The starting multi-asset ID.
-   * @param endIdent   The ending multi-asset ID.
+   * @param endIdent The ending multi-asset ID.
    * @return A map containing multi-asset IDs as keys and the total number of holders as values.
    */
   @Override
   public Map<Long, Long> getMapNumberHolder(Long startIdent, Long endIdent) {
     var numberOfHoldersWithStakeKey =
-        jooqAddressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetBetween(startIdent, endIdent);
-    var numberOfHoldersWithAddressNotHaveStakeKey = jooqAddressTokenBalanceRepository
-        .countByMultiAssetBetween(startIdent, endIdent);
+        jooqAddressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetBetween(
+            startIdent, endIdent);
+    var numberOfHoldersWithAddressNotHaveStakeKey =
+        jooqAddressTokenBalanceRepository.countByMultiAssetBetween(startIdent, endIdent);
 
     var numberHoldersStakeKeyMap =
         StreamUtil.toMap(

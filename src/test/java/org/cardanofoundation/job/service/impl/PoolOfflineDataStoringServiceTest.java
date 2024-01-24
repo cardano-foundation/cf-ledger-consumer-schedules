@@ -160,10 +160,7 @@ class PoolOfflineDataStoringServiceTest {
     when(poolHashRepository.findByIdIn(anyList())).thenReturn(List.of(poolHash));
     when(poolMetadataRefRepository.findByIdIn(anyList())).thenReturn(List.of(poolMetadataRef));
     when(poolOfflineFetchErrorRepository.findByPoolHashAndPoolMetadataRef(any(), any()))
-        .thenReturn(PoolOfflineFetchError.builder()
-                        .id(1L)
-                        .retryCount(1)
-                        .build());
+        .thenReturn(PoolOfflineFetchError.builder().id(1L).retryCount(1).build());
 
     poolOfflineDataStoringService.saveFailOfflineData(
         List.of(

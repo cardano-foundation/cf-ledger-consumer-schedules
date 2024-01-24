@@ -1,20 +1,21 @@
 package org.cardanofoundation.job.repository.ledgersync;
 
-import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-
-import org.cardanofoundation.explorer.consumercommon.entity.Epoch;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import org.cardanofoundation.explorer.consumercommon.entity.Epoch;
+import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
 
 public interface EpochRepository extends JpaRepository<Epoch, Long> {
 
   @Query("SELECT MAX(epoch.no) FROM Epoch epoch")
   Integer findMaxEpochNo();
 
-  @Query("""
+  @Query(
+      """
       SELECT
           (CASE
               WHEN a.stakeAddress IS NULL THEN a.address
