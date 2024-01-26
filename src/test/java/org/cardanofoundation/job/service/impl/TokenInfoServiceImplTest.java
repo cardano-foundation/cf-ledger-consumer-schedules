@@ -22,7 +22,6 @@ import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointReposito
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenRepository;
-import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQMultiAssetRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
@@ -70,8 +69,6 @@ class TokenInfoServiceImplTest {
   private TxRepository txRepository;
   @Mock
   private JOOQTokenInfoRepository jooqTokenInfoRepository;
-  @Mock
-  private JOOQMultiAssetRepository jooqMultiAssetRepository;
   @Mock
   private JOOQAddressTokenRepository jooqAddressTokenRepository;
   @Mock
