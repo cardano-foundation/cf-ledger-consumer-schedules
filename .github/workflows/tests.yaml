@@ -36,6 +36,10 @@ jobs:
         run: |
           mvn --batch-mode --update-snapshots clean package -DskipTests
 
+      - name: Check Formatting
+        run: |
+          mvn spotless:check
+
       - name: Test
         run: |
           mvn --batch-mode --update-snapshots test
