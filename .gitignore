@@ -48,3 +48,4 @@ build/
 !.m2/settings.default.xml
 !mvnw
 !Makefile
+.DS_Store
