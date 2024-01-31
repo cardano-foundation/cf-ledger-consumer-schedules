@@ -151,18 +151,8 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
                 epochNos.add(projection.getRetiringEpoch());
               });
 
-      if (!fetchRewardDataService.fetchReward(poolView)) {
-        throw new RuntimeException("Fetch reward failed");
-      }
-
-      List<EpochRewardProjection> epochRewardProjections =
-          rewardRepository.getRewardRefundByEpoch(poolView, epochNos);
-      Map<Integer, BigInteger> refundAmountMap = new HashMap<>();
-      epochRewardProjections.forEach(
-          refund -> refundAmountMap.put(refund.getEpochNo(), refund.getAmount()));
       deRegistrations.forEach(
           deRegistration -> {
-            deRegistration.setPoolHold(refundAmountMap.get(deRegistration.getRetiringEpoch()));
             BigInteger totalFee = BigInteger.ZERO;
             if (Objects.nonNull(deRegistration.getPoolHold())) {
               totalFee = totalFee.add(deRegistration.getPoolHold());

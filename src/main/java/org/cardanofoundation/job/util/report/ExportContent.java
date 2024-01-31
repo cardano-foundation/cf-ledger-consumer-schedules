@@ -14,4 +14,5 @@ public class ExportContent {
   List<?> lstData;
   List<ExportColumn> lstColumn;
   String headerTitle;
+  String simpleMessage; // in case lstData is empty and want to display a simple message
 }
