@@ -110,8 +110,6 @@ jobs:
     enabled: ${POOL_OFFLINE_DATA_JOB_ENABLED:false}
     fetch:
       delay: ${CRAWL_POOL_DATA_DELAY:172800000}
-  top-delegators:
-    fixed-delay: ${TOP_DELEGATORS_FIXED_DELAY:300000}
   pool-status:
     fixed-delay: ${POOL_STATUS_FIXED_DELAY:300000}
   number-delegator:
@@ -127,6 +125,10 @@ jobs:
   token-info:
     enabled: ${TOKEN_INFO_JOB_ENABLED:false}
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
+  smart-contract-info:
+    fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:30000}
+  native-script-info:
+    fixed-delay: ${NATIVE_SCRIPT_INFO_FIXED_DELAY:30000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 

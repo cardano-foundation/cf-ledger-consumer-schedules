@@ -1,15 +1,17 @@
-# Iris Scheduled Jobs
+# Explorer Scheduled Jobs
 
 <p align="left">
 <img alt="Tests" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/tests.yaml/badge.svg" />
+<img alt="Coverage" src="https://cardano-foundation.github.io/cf-ledger-consumer-schedules/badges/jacoco.svg" />
 <img alt="Release" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/release.yaml/badge.svg?branch=main" />
 <img alt="Publish" src="https://github.com/cardano-foundation/cf-ledger-consumer-schedules/actions/workflows/publish.yaml/badge.svg?branch=main" />
 <a href="https://conventionalcommits.org"><img alt="conventionalcommits" src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits" /></a>
+<a href="https://app.fossa.com/reports/07917f95-b55f-4246-8504-1e232cfb28af"><img alt="FOSSA Status" src="https://app.fossa.com/api/projects/custom%2B41588%2Fgit%40github.com%3Acardano-foundation%2Fcf-ledger-consumer-schedules.git.svg?type=small&issueType=license" /></a>
 </p>
 
 This repository executes tasks in a periodic sequence to precompute computationally intensive jobs.
 
-👉 Check the [Iris repository](https://github.com/cardano-foundation/cf-explorer) to understand how the microservices work together
+👉 Check the [Explorer repository](https://github.com/cardano-foundation/cf-explorer) to understand how the microservices work together
 
 ## 🧪 Test Reports
 
@@ -17,7 +19,7 @@ To ensure the stability and reliability of this project, unit and mutation tests
 
 📊 [Mutation report](https://cardano-foundation.github.io/cf-ledger-consumer-schedules/mutation-report/)
 
-## Environment value
+## 🌱 Environment Variables
 - LEDGER_SYNC_HOST: Ledger-sync database host.
 - LEDGER_SYNC_PORT: Ledger-sync database port
 - LEDGER_SYNC_USER: Ledger-sync database username
@@ -68,7 +70,6 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - REDIS_SENTINEL_HOST : Redis sentinel host. Default is  cardano.redis.sentinel.
 - REDIS_SENTINEL_PORT : Redis sentinel port. Default is 26379.
 - REDIS_SENTINEL_MASTER_NAME : Redis master name. Default is mymaster.
-- TOP_DELEGATORS_FIXED_DELAY: top delegator fixed delay when run cron job
 - POOL_STATUS_FIXED_DELAY: delay time between each time get pool status
 - NUMBER_DELEGATOR_FIXED_DELAY: delay time between each time get number delegator
 - UNIQUE_ACCOUNT_FIXED_DELAY: fixed delay for job build cache unique account
@@ -78,3 +79,5 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - TOKEN_INFO_JOB_ENABLED: enable token info job
 - TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
 - AGGREGATE_POOL_INFO_FIXED_DELAY: fixed delay for job aggregate pool info
+- SMART_CONTRACT_INFO_FIXED_DELAY: fixed delay for job smart contract info
+- NATIVE_SCRIPT_INFO_FIXED_DELAY: fixed delay for job native script info

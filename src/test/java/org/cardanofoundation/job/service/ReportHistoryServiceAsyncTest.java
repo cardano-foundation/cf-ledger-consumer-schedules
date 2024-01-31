@@ -38,15 +38,18 @@ class ReportHistoryServiceAsyncTest {
   private static final String WITHDRAWAL_HISTORY_TITLE = "Withdrawal History";
   private static final String WALLET_ACTIVITY_TITLE = "ADA Transfer";
   private static final String POOL_SIZE_TITLE = "Pool Size";
-  private static final String REGISTRATIONS_TITLE = "Registrations";
+  private static final String REGISTRATIONS_TITLE = "Registration";
   private static final String POOL_UPDATE_TITLE = "Pool Update";
   private static final String REWARD_DISTRIBUTION_TITLE = "Reward Distribution";
+  private static final String OPERATOR_REWARDS_TITLE = "Operator Rewards";
   private static final String DEREGISTRATION_TITLE = "Deregistration";
 
   @Mock
   StakeKeyLifeCycleService stakeKeyLifeCycleService;
   @Mock
   PoolLifecycleService poolLifecycleService;
+  @Mock
+  FetchRewardDataService fetchRewardDataService;
   ReportHistoryServiceAsync reportHistoryServiceAsync;
 
   private Pageable defPageableStake;
@@ -59,7 +62,8 @@ class ReportHistoryServiceAsyncTest {
   @BeforeEach
   void setUp() {
     reportHistoryServiceAsync = new ReportHistoryServiceAsync(stakeKeyLifeCycleService,
-                                                              poolLifecycleService);
+                                                              poolLifecycleService,
+                                                              fetchRewardDataService);
     defPageableStake = PageRequest.of(0, 1000, Sort.by("time").descending());
     defPageablePool = PageRequest.of(0, 1000, Sort.by("id").descending());
     ReflectionTestUtils.setField(reportHistoryServiceAsync, "limitSize", 1000);
@@ -135,7 +139,7 @@ class ReportHistoryServiceAsyncTest {
         .fromDate(fromDate)
         .toDate(toDate)
         .build();
-
+    when(fetchRewardDataService.isKoiOs()).thenReturn(true);
     when(stakeKeyLifeCycleService.getStakeRewards(stakeKey, defPageablePool, condition))
         .thenReturn(Collections.emptyList());
     var response = reportHistoryServiceAsync.exportStakeRewards(stakeKey, condition).join();
@@ -184,6 +188,7 @@ class ReportHistoryServiceAsyncTest {
   void exportEpochSizeTest() {
     final PoolReportHistory poolReportHistory = PoolReportHistory.builder()
         .build();
+    when(fetchRewardDataService.isKoiOs()).thenReturn(true);
     when(poolLifecycleService.getPoolSizes(any(PoolReportHistory.class), any(Pageable.class)))
         .thenReturn(Collections.emptyList());
     var response = reportHistoryServiceAsync.exportEpochSize(poolReportHistory).join();
@@ -223,10 +228,11 @@ class ReportHistoryServiceAsyncTest {
     final PoolReportHistory poolReportHistory = PoolReportHistory.builder()
         .poolView("poolView")
         .build();
+    when(fetchRewardDataService.isKoiOs()).thenReturn(true);
     when(poolLifecycleService.listReward(poolReportHistory, defPageablePool))
         .thenReturn(Collections.emptyList());
     var response = reportHistoryServiceAsync.exportRewardsDistribution(poolReportHistory).join();
-    Assertions.assertEquals(REWARD_DISTRIBUTION_TITLE, response.getHeaderTitle());
+    Assertions.assertEquals(OPERATOR_REWARDS_TITLE, response.getHeaderTitle());
     Assertions.assertEquals(0, response.getLstData().size());
     Assertions.assertEquals(RewardDistribution.class, response.getClazz());
   }

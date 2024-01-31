@@ -1,8 +1,12 @@
 package org.cardanofoundation.job.repository.ledgersync;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import org.cardanofoundation.explorer.consumercommon.enumeration.ScriptType;
+import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -36,4 +40,20 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
 
   @Query("SELECT max(multiAsset.id) FROM MultiAsset multiAsset")
   Long getCurrentMaxIdent();
+
+  @Query("SELECT count(multiAsset) as numberOfTokens, multiAsset.policy as scriptHash"
+      + " FROM MultiAsset multiAsset"
+      + " WHERE multiAsset.policy IN :policyIds"
+      + " GROUP BY multiAsset.policy")
+  List<ScriptNumberTokenProjection> countByPolicyIn(
+      @Param("policyIds") Collection<String> policyIds);
+
+  @Query("SELECT multiAsset.policy as scriptHash"
+      + " FROM MultiAsset multiAsset"
+      + " INNER JOIN Script script ON script.hash = multiAsset.policy AND script.type IN :types"
+      + " INNER JOIN AddressToken addressToken ON addressToken.multiAssetId = multiAsset.id"
+      + " WHERE addressToken.txId BETWEEN :fromTxId AND :toTxId")
+  Set<String> findPolicyByTxIn(@Param("fromTxId") Long fromTxId,
+                               @Param("toTxId") Long toTxId,
+                               @Param("types") Collection<ScriptType> types);
 }
