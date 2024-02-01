@@ -1,5 +1,8 @@
 package org.cardanofoundation.job.service;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import java.sql.Timestamp;
 import java.util.Collections;
 
@@ -7,6 +10,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
 import org.cardanofoundation.job.dto.report.pool.EpochSize;
@@ -20,16 +31,6 @@ import org.cardanofoundation.job.dto.report.stake.StakeRegistrationLifeCycle;
 import org.cardanofoundation.job.dto.report.stake.StakeRewardResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWalletActivityResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWithdrawalFilterResponse;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(MockitoExtension.class)
 class ReportHistoryServiceAsyncTest {
@@ -44,12 +45,9 @@ class ReportHistoryServiceAsyncTest {
   private static final String OPERATOR_REWARDS_TITLE = "Operator Rewards";
   private static final String DEREGISTRATION_TITLE = "Deregistration";
 
-  @Mock
-  StakeKeyLifeCycleService stakeKeyLifeCycleService;
-  @Mock
-  PoolLifecycleService poolLifecycleService;
-  @Mock
-  FetchRewardDataService fetchRewardDataService;
+  @Mock StakeKeyLifeCycleService stakeKeyLifeCycleService;
+  @Mock PoolLifecycleService poolLifecycleService;
+  @Mock FetchRewardDataService fetchRewardDataService;
   ReportHistoryServiceAsync reportHistoryServiceAsync;
 
   private Pageable defPageableStake;
@@ -61,9 +59,9 @@ class ReportHistoryServiceAsyncTest {
    */
   @BeforeEach
   void setUp() {
-    reportHistoryServiceAsync = new ReportHistoryServiceAsync(stakeKeyLifeCycleService,
-                                                              poolLifecycleService,
-                                                              fetchRewardDataService);
+    reportHistoryServiceAsync =
+        new ReportHistoryServiceAsync(
+            stakeKeyLifeCycleService, poolLifecycleService, fetchRewardDataService);
     defPageableStake = PageRequest.of(0, 1000, Sort.by("time").descending());
     defPageablePool = PageRequest.of(0, 1000, Sort.by("id").descending());
     ReflectionTestUtils.setField(reportHistoryServiceAsync, "limitSize", 1000);
@@ -78,16 +76,16 @@ class ReportHistoryServiceAsyncTest {
     final Timestamp toDate = Timestamp.valueOf("2022-01-01 00:00:00");
     final Pageable pageable = Pageable.unpaged();
     final String subTitle = "sub-title";
-    final StakeLifeCycleFilterRequest condition = StakeLifeCycleFilterRequest.builder()
-        .fromDate(fromDate)
-        .toDate(toDate)
-        .build();
+    final StakeLifeCycleFilterRequest condition =
+        StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
 
     when(stakeKeyLifeCycleService.getStakeWalletActivities(stakeKey, pageable, condition))
         .thenReturn(Collections.emptyList());
 
-    var response = reportHistoryServiceAsync.exportStakeWalletActivitys(
-        stakeKey, condition, pageable, subTitle).join();
+    var response =
+        reportHistoryServiceAsync
+            .exportStakeWalletActivitys(stakeKey, condition, pageable, subTitle)
+            .join();
     Assertions.assertEquals(WALLET_ACTIVITY_TITLE + subTitle, response.getHeaderTitle());
     Assertions.assertEquals(0, response.getLstData().size());
     Assertions.assertEquals(StakeWalletActivityResponse.class, response.getClazz());
@@ -98,10 +96,8 @@ class ReportHistoryServiceAsyncTest {
     final String stakeKey = "stakeKey";
     final Timestamp fromDate = Timestamp.valueOf("2021-01-01 00:00:00");
     final Timestamp toDate = Timestamp.valueOf("2022-01-01 00:00:00");
-    final StakeLifeCycleFilterRequest condition = StakeLifeCycleFilterRequest.builder()
-        .fromDate(fromDate)
-        .toDate(toDate)
-        .build();
+    final StakeLifeCycleFilterRequest condition =
+        StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
 
     when(stakeKeyLifeCycleService.getStakeRegistrations(stakeKey, defPageableStake, condition))
         .thenReturn(Collections.emptyList());
@@ -117,10 +113,8 @@ class ReportHistoryServiceAsyncTest {
     final String stakeKey = "stakeKey";
     final Timestamp fromDate = Timestamp.valueOf("2021-01-01 00:00:00");
     final Timestamp toDate = Timestamp.valueOf("2022-01-01 00:00:00");
-    final StakeLifeCycleFilterRequest condition = StakeLifeCycleFilterRequest.builder()
-        .fromDate(fromDate)
-        .toDate(toDate)
-        .build();
+    final StakeLifeCycleFilterRequest condition =
+        StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
 
     when(stakeKeyLifeCycleService.getStakeDelegations(stakeKey, defPageableStake, condition))
         .thenReturn(Collections.emptyList());
@@ -135,10 +129,8 @@ class ReportHistoryServiceAsyncTest {
     final String stakeKey = "stakeKey";
     final Timestamp fromDate = Timestamp.valueOf("2021-01-01 00:00:00");
     final Timestamp toDate = Timestamp.valueOf("2022-01-01 00:00:00");
-    final StakeLifeCycleFilterRequest condition = StakeLifeCycleFilterRequest.builder()
-        .fromDate(fromDate)
-        .toDate(toDate)
-        .build();
+    final StakeLifeCycleFilterRequest condition =
+        StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
     when(fetchRewardDataService.isKoiOs()).thenReturn(true);
     when(stakeKeyLifeCycleService.getStakeRewards(stakeKey, defPageablePool, condition))
         .thenReturn(Collections.emptyList());
@@ -153,10 +145,8 @@ class ReportHistoryServiceAsyncTest {
     final String stakeKey = "stakeKey";
     final Timestamp fromDate = Timestamp.valueOf("2021-01-01 00:00:00");
     final Timestamp toDate = Timestamp.valueOf("2022-01-01 00:00:00");
-    final StakeLifeCycleFilterRequest condition = StakeLifeCycleFilterRequest.builder()
-        .fromDate(fromDate)
-        .toDate(toDate)
-        .build();
+    final StakeLifeCycleFilterRequest condition =
+        StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
 
     when(stakeKeyLifeCycleService.getStakeWithdrawals(stakeKey, defPageableStake, condition))
         .thenReturn(Collections.emptyList());
@@ -171,10 +161,8 @@ class ReportHistoryServiceAsyncTest {
     final String stakeKey = "stakeKey";
     final Timestamp fromDate = Timestamp.valueOf("2021-01-01 00:00:00");
     final Timestamp toDate = Timestamp.valueOf("2022-01-01 00:00:00");
-    final StakeLifeCycleFilterRequest condition = StakeLifeCycleFilterRequest.builder()
-        .fromDate(fromDate)
-        .toDate(toDate)
-        .build();
+    final StakeLifeCycleFilterRequest condition =
+        StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
 
     when(stakeKeyLifeCycleService.getStakeDeRegistrations(stakeKey, defPageableStake, condition))
         .thenReturn(Collections.emptyList());
@@ -186,8 +174,7 @@ class ReportHistoryServiceAsyncTest {
 
   @Test
   void exportEpochSizeTest() {
-    final PoolReportHistory poolReportHistory = PoolReportHistory.builder()
-        .build();
+    final PoolReportHistory poolReportHistory = PoolReportHistory.builder().build();
     when(fetchRewardDataService.isKoiOs()).thenReturn(true);
     when(poolLifecycleService.getPoolSizes(any(PoolReportHistory.class), any(Pageable.class)))
         .thenReturn(Collections.emptyList());
@@ -199,9 +186,8 @@ class ReportHistoryServiceAsyncTest {
 
   @Test
   void exportPoolRegistrationTest() {
-    final PoolReportHistory poolReportHistory = PoolReportHistory.builder()
-        .poolView("poolView")
-        .build();
+    final PoolReportHistory poolReportHistory =
+        PoolReportHistory.builder().poolView("poolView").build();
     when(poolLifecycleService.registrationList(poolReportHistory.getPoolView(), defPageablePool))
         .thenReturn(Collections.emptyList());
     var response = reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory).join();
@@ -212,9 +198,8 @@ class ReportHistoryServiceAsyncTest {
 
   @Test
   void exportPoolUpdateTest() {
-    final PoolReportHistory poolReportHistory = PoolReportHistory.builder()
-        .poolView("poolView")
-        .build();
+    final PoolReportHistory poolReportHistory =
+        PoolReportHistory.builder().poolView("poolView").build();
     when(poolLifecycleService.poolUpdateList(poolReportHistory.getPoolView(), defPageablePool))
         .thenReturn(Collections.emptyList());
     var response = reportHistoryServiceAsync.exportPoolUpdate(poolReportHistory).join();
@@ -225,9 +210,8 @@ class ReportHistoryServiceAsyncTest {
 
   @Test
   void exportRewardsDistributionTest() {
-    final PoolReportHistory poolReportHistory = PoolReportHistory.builder()
-        .poolView("poolView")
-        .build();
+    final PoolReportHistory poolReportHistory =
+        PoolReportHistory.builder().poolView("poolView").build();
     when(fetchRewardDataService.isKoiOs()).thenReturn(true);
     when(poolLifecycleService.listReward(poolReportHistory, defPageablePool))
         .thenReturn(Collections.emptyList());
@@ -239,9 +223,8 @@ class ReportHistoryServiceAsyncTest {
 
   @Test
   void exportPoolDeregistration() {
-    final PoolReportHistory poolReportHistory = PoolReportHistory.builder()
-        .poolView("poolView")
-        .build();
+    final PoolReportHistory poolReportHistory =
+        PoolReportHistory.builder().poolView("poolView").build();
     when(poolLifecycleService.deRegistration(poolReportHistory.getPoolView(), defPageablePool))
         .thenReturn(Collections.emptyList());
     var response = reportHistoryServiceAsync.exportPoolDeregistration(poolReportHistory).join();

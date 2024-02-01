@@ -15,8 +15,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
 import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
 import org.cardanofoundation.job.common.enumeration.ExportType;
 import org.cardanofoundation.job.repository.explorer.PoolReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
@@ -106,7 +106,9 @@ public class PoolReportServiceImpl implements PoolReportService {
    * @return storage key
    */
   private String generateStorageKey(PoolReportHistory poolReport) {
-    return folderPrefix + "/" + poolReport.getReportHistory().getId()
+    return folderPrefix
+        + "/"
+        + poolReport.getReportHistory().getId()
         + "_"
         + poolReport.getReportHistory().getReportName();
   }

@@ -8,16 +8,11 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
-import org.cardanofoundation.job.common.enumeration.PoolActionType;
-import org.cardanofoundation.job.dto.PoolCertificateHistory;
-import org.cardanofoundation.job.service.PoolCertificateService;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -28,7 +23,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
-import org.cardanofoundation.job.projection.EpochRewardProjection;
+import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
+import org.cardanofoundation.job.common.enumeration.PoolActionType;
+import org.cardanofoundation.job.dto.PoolCertificateHistory;
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
@@ -39,6 +36,7 @@ import org.cardanofoundation.job.repository.ledgersync.PoolRetireRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolUpdateRepository;
 import org.cardanofoundation.job.repository.ledgersync.RewardRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
+import org.cardanofoundation.job.service.PoolCertificateService;
 
 @ExtendWith(MockitoExtension.class)
 class PoolLifecycleServiceImplTest {
@@ -61,12 +59,11 @@ class PoolLifecycleServiceImplTest {
   void registrationList_shouldReturnRegistrationList() {
     Pageable pageable = PageRequest.of(0, 10);
     List<PoolCertificateHistory> poolCertificateHistoryList =
-        List.of(PoolCertificateHistory
-                    .builder()
-                    .poolUpdateId(69L)
-                    .txHash(
-                        "d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda")
-                    .build());
+        List.of(
+            PoolCertificateHistory.builder()
+                .poolUpdateId(69L)
+                .txHash("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda")
+                .build());
     PoolRegistrationProjection registrationProjection =
         Mockito.mock(PoolRegistrationProjection.class);
     when(registrationProjection.getPoolUpdateId()).thenReturn(69L);
@@ -75,12 +72,11 @@ class PoolLifecycleServiceImplTest {
     when(registrationProjection.getFee()).thenReturn(BigInteger.TEN);
     when(registrationProjection.getDeposit()).thenReturn(BigInteger.valueOf(500));
     when(poolCertificateService.getPoolCertificateByAction(
-        "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s",
-        PoolActionType.POOL_REGISTRATION))
+            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s",
+            PoolActionType.POOL_REGISTRATION))
         .thenReturn(poolCertificateHistoryList);
 
-    when(poolHashRepository.getPoolRegistrationByPool(
-        anySet(), any(Pageable.class)))
+    when(poolHashRepository.getPoolRegistrationByPool(anySet(), any(Pageable.class)))
         .thenReturn(new PageImpl<>(List.of(registrationProjection)));
 
     var response =
@@ -110,20 +106,17 @@ class PoolLifecycleServiceImplTest {
         .thenReturn("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda");
     when(projection.getPoolUpdateId()).thenReturn(69L);
     List<PoolCertificateHistory> poolCertificateHistoryList =
-        List.of(PoolCertificateHistory
-                    .builder()
-                    .poolUpdateId(69L)
-                    .txHash(
-                        "d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda")
-                    .build());
+        List.of(
+            PoolCertificateHistory.builder()
+                .poolUpdateId(69L)
+                .txHash("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda")
+                .build());
 
     when(poolCertificateService.getPoolCertificateByAction(
-        "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s",
-        PoolActionType.POOL_UPDATE))
+            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", PoolActionType.POOL_UPDATE))
         .thenReturn(poolCertificateHistoryList);
 
-    when(poolUpdateRepository.findPoolUpdateByPool(
-        anySet(), any(Pageable.class)))
+    when(poolUpdateRepository.findPoolUpdateByPool(anySet(), any(Pageable.class)))
         .thenReturn(new PageImpl<>(List.of(projection)));
 
     when(poolUpdateRepository.findOwnerAccountByPoolUpdate(69L))
@@ -147,25 +140,26 @@ class PoolLifecycleServiceImplTest {
     Timestamp time = Timestamp.valueOf("2023-01-01 00:00:00");
     Pageable pageable = PageRequest.of(0, 10);
     LifeCycleRewardProjection projection = Mockito.mock(LifeCycleRewardProjection.class);
-    PoolReportHistory poolReportHistory = PoolReportHistory.builder()
-        .beginEpoch(1)
-        .endEpoch(100)
-        .poolView("pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s")
-        .build();
+    PoolReportHistory poolReportHistory =
+        PoolReportHistory.builder()
+            .beginEpoch(1)
+            .endEpoch(100)
+            .poolView("pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s")
+            .build();
     when(projection.getAddress())
         .thenReturn("stake1u80n7nvm3qlss9ls0krp5xh7sqxlazp8kz6n3fp5sgnul5cnxyg4p");
     when(projection.getAmount()).thenReturn(BigInteger.TWO);
     when(projection.getEpochNo()).thenReturn(69);
     when(projection.getTime()).thenReturn(time);
     when(rewardRepository.getRewardInfoByPool(
-        poolReportHistory.getPoolView(), poolReportHistory.getBeginEpoch(),
-        poolReportHistory.getEndEpoch(), pageable))
+            poolReportHistory.getPoolView(),
+            poolReportHistory.getBeginEpoch(),
+            poolReportHistory.getEndEpoch(),
+            pageable))
         .thenReturn(new PageImpl<>(List.of(projection)));
 
     when(fetchRewardDataService.fetchReward(anyString())).thenReturn(Boolean.TRUE);
-    var response =
-        poolLifecycleService.listReward(
-            poolReportHistory, pageable);
+    var response = poolLifecycleService.listReward(poolReportHistory, pageable);
 
     Assertions.assertEquals(69, response.get(0).getEpochNo());
     Assertions.assertEquals(time, response.get(0).getTime());
@@ -183,20 +177,18 @@ class PoolLifecycleServiceImplTest {
     when(retireProjection.getFee()).thenReturn(BigInteger.TEN);
 
     List<PoolCertificateHistory> poolCertificateHistoryList =
-        List.of(PoolCertificateHistory
-                    .builder()
-                    .poolUpdateId(69L)
-                    .txHash(
-                        "d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda")
-                    .build());
+        List.of(
+            PoolCertificateHistory.builder()
+                .poolUpdateId(69L)
+                .txHash("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda")
+                .build());
 
     when(poolCertificateService.getPoolCertificateByAction(
-        "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s",
-        PoolActionType.POOL_DEREGISTRATION))
+            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s",
+            PoolActionType.POOL_DEREGISTRATION))
         .thenReturn(poolCertificateHistoryList);
 
-    when(poolRetireRepository.getPoolDeRegistration(
-        anySet(), any(Pageable.class)))
+    when(poolRetireRepository.getPoolDeRegistration(anySet(), any(Pageable.class)))
         .thenReturn(new PageImpl<>(List.of(retireProjection)));
 
     PoolInfoProjection projection = Mockito.mock(PoolInfoProjection.class);

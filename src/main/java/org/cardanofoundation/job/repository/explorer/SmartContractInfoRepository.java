@@ -10,5 +10,6 @@ import org.cardanofoundation.explorer.consumercommon.explorer.entity.SmartContra
 
 public interface SmartContractInfoRepository extends JpaRepository<SmartContractInfo, Long> {
 
-  List<SmartContractInfo> findAllByScriptHashIn(@Param("scriptHashes") Collection<String> scriptHashes);
+  List<SmartContractInfo> findAllByScriptHashIn(
+      @Param("scriptHashes") Collection<String> scriptHashes);
 }

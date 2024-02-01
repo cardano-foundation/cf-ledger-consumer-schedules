@@ -2,26 +2,24 @@ package org.cardanofoundation.job.service.impl;
 
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(MockitoExtension.class)
 class StorageServiceImplTest {
   private final String bucketName = "test-bucket";
   private StorageReportServiceImpl storageService;
-  
-  @Mock
-  private AmazonS3 s3Client;
+
+  @Mock private AmazonS3 s3Client;
 
   @BeforeEach
   void setUp() {

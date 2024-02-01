@@ -10,8 +10,8 @@ import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfoCh
 
 @Repository
 public interface TokenInfoCheckpointRepository extends JpaRepository<TokenInfoCheckpoint, Long> {
-  @Query("select t from TokenInfoCheckpoint t where t.id = "
-      + "(select max(id) from TokenInfoCheckpoint)")
+  @Query(
+      "select t from TokenInfoCheckpoint t where t.id = "
+          + "(select max(id) from TokenInfoCheckpoint)")
   Optional<TokenInfoCheckpoint> findLatestTokenInfoCheckpoint();
-
 }

@@ -34,15 +34,18 @@ public class RedisStandaloneConfig {
 
   @Bean
   RedisStandaloneConfiguration redisStandaloneConfiguration() {
-    RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(hostname, port);
+    RedisStandaloneConfiguration redisStandaloneConfiguration =
+        new RedisStandaloneConfiguration(hostname, port);
     redisStandaloneConfiguration.setPassword(password);
     return redisStandaloneConfiguration;
   }
 
   @Bean(name = "lettuceConnectionFactory")
-  LettuceConnectionFactory lettuceConnectionFactory(RedisStandaloneConfiguration redisStandaloneConfiguration) {
-    if(useSsl) {
-      return new LettuceConnectionFactory(redisStandaloneConfiguration, LettuceClientConfiguration.builder().useSsl().build());
+  LettuceConnectionFactory lettuceConnectionFactory(
+      RedisStandaloneConfiguration redisStandaloneConfiguration) {
+    if (useSsl) {
+      return new LettuceConnectionFactory(
+          redisStandaloneConfiguration, LettuceClientConfiguration.builder().useSsl().build());
     } else {
       return new LettuceConnectionFactory(redisStandaloneConfiguration);
     }
@@ -51,7 +54,7 @@ public class RedisStandaloneConfig {
   @Bean
   @Autowired
   RedisTemplate<String, ?> redisTemplate( // NOSONAR
-                                          final LettuceConnectionFactory lettuceConnectionFactory) {
+      final LettuceConnectionFactory lettuceConnectionFactory) {
     var redisTemplate = new RedisTemplate<String, Object>();
     redisTemplate.setConnectionFactory(lettuceConnectionFactory);
     redisTemplate.setKeySerializer(new StringRedisSerializer());

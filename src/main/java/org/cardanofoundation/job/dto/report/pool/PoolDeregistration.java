@@ -9,7 +9,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import org.cardanofoundation.job.util.DataUtil;
 import org.cardanofoundation.job.util.report.ColumnFieldEnum;
 import org.cardanofoundation.job.util.report.ColumnTitleEnum;
 import org.cardanofoundation.job.util.report.ExportColumn;

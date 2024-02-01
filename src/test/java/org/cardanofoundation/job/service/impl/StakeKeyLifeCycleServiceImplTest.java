@@ -17,8 +17,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import org.cardanofoundation.explorer.consumercommon.entity.EpochParam;
-import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -28,6 +26,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.cardanofoundation.explorer.consumercommon.entity.EpochParam;
 import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
 import org.cardanofoundation.explorer.consumercommon.entity.Tx;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
@@ -38,6 +37,7 @@ import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.projection.StakeWithdrawalProjection;
 import org.cardanofoundation.job.repository.ledgersync.AddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationRepository;
+import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.cardanofoundation.job.repository.ledgersync.RewardRepository;
 import org.cardanofoundation.job.repository.ledgersync.StakeAddressRepository;
 import org.cardanofoundation.job.repository.ledgersync.StakeDeRegistrationRepository;
@@ -92,10 +92,9 @@ class StakeKeyLifeCycleServiceImplTest {
         .thenReturn(page);
 
     when(epochParamRepository.findByEpochNoIn(List.of(333)))
-        .thenReturn(List.of(EpochParam.builder()
-                                .epochNo(333)
-                                .keyDeposit(BigInteger.valueOf(2000000))
-                                .build()));
+        .thenReturn(
+            List.of(
+                EpochParam.builder().epochNo(333).keyDeposit(BigInteger.valueOf(2000000)).build()));
 
     var response =
         stakeKeyLifeCycleService.getStakeRegistrations(
@@ -250,10 +249,9 @@ class StakeKeyLifeCycleServiceImplTest {
         .thenReturn(page);
 
     when(epochParamRepository.findByEpochNoIn(List.of(333)))
-        .thenReturn(List.of(EpochParam.builder()
-                                .epochNo(333)
-                                .keyDeposit(BigInteger.valueOf(2000000))
-                                .build()));
+        .thenReturn(
+            List.of(
+                EpochParam.builder().epochNo(333).keyDeposit(BigInteger.valueOf(2000000)).build()));
 
     var response =
         stakeKeyLifeCycleService.getStakeRegistrations(
@@ -371,13 +369,10 @@ class StakeKeyLifeCycleServiceImplTest {
             stakeAddress, null, fromDate, toDate, pageable))
         .thenReturn(page);
 
-
     when(epochParamRepository.findByEpochNoIn(List.of(333)))
-        .thenReturn(List.of(EpochParam.builder()
-                                .epochNo(333)
-                                .keyDeposit(BigInteger.valueOf(2000000))
-                                .build()));
-
+        .thenReturn(
+            List.of(
+                EpochParam.builder().epochNo(333).keyDeposit(BigInteger.valueOf(2000000)).build()));
 
     var response =
         stakeKeyLifeCycleService.getStakeDeRegistrations(

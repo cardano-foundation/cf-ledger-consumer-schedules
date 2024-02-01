@@ -8,9 +8,9 @@ import org.cardanofoundation.explorer.consumercommon.entity.PoolMetadataRef;
 import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineFetchError;
 
 @Repository
-public interface PoolOfflineFetchErrorRepository extends
-    JpaRepository<PoolOfflineFetchError, Long> {
+public interface PoolOfflineFetchErrorRepository
+    extends JpaRepository<PoolOfflineFetchError, Long> {
 
-  PoolOfflineFetchError findByPoolHashAndPoolMetadataRef(PoolHash poolHash,
-                                                         PoolMetadataRef poolMetadataRef);
+  PoolOfflineFetchError findByPoolHashAndPoolMetadataRef(
+      PoolHash poolHash, PoolMetadataRef poolMetadataRef);
 }
