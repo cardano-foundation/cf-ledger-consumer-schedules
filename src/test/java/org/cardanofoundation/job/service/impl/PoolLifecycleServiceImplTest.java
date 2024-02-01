@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +26,6 @@ import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
 import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
 import org.cardanofoundation.job.common.enumeration.PoolActionType;
 import org.cardanofoundation.job.dto.PoolCertificateHistory;
-import org.cardanofoundation.job.projection.EpochRewardProjection;
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
@@ -201,13 +199,6 @@ class PoolLifecycleServiceImplTest {
         .thenReturn("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda");
     when(poolHashRepository.getPoolInfo("pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s"))
         .thenReturn(projection);
-    EpochRewardProjection rewardProjection = Mockito.mock(EpochRewardProjection.class);
-    when(rewardProjection.getEpochNo()).thenReturn(69);
-    when(rewardProjection.getAmount()).thenReturn(BigInteger.valueOf(1001));
-    when(rewardRepository.getRewardRefundByEpoch(
-            "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", Set.of(69)))
-        .thenReturn(List.of(rewardProjection));
-    when(fetchRewardDataService.fetchReward(anyString())).thenReturn(Boolean.TRUE);
     var response =
         poolLifecycleService.deRegistration(
             "pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s", pageable);

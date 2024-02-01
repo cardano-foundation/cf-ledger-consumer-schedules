@@ -47,6 +47,7 @@ class ReportHistoryServiceAsyncTest {
 
   @Mock StakeKeyLifeCycleService stakeKeyLifeCycleService;
   @Mock PoolLifecycleService poolLifecycleService;
+  @Mock FetchRewardDataService fetchRewardDataService;
   ReportHistoryServiceAsync reportHistoryServiceAsync;
 
   private Pageable defPageableStake;
@@ -59,7 +60,8 @@ class ReportHistoryServiceAsyncTest {
   @BeforeEach
   void setUp() {
     reportHistoryServiceAsync =
-        new ReportHistoryServiceAsync(stakeKeyLifeCycleService, poolLifecycleService);
+        new ReportHistoryServiceAsync(
+            stakeKeyLifeCycleService, poolLifecycleService, fetchRewardDataService);
     defPageableStake = PageRequest.of(0, 1000, Sort.by("time").descending());
     defPageablePool = PageRequest.of(0, 1000, Sort.by("id").descending());
     ReflectionTestUtils.setField(reportHistoryServiceAsync, "limitSize", 1000);
@@ -129,7 +131,7 @@ class ReportHistoryServiceAsyncTest {
     final Timestamp toDate = Timestamp.valueOf("2022-01-01 00:00:00");
     final StakeLifeCycleFilterRequest condition =
         StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
-
+    when(fetchRewardDataService.isKoiOs()).thenReturn(true);
     when(stakeKeyLifeCycleService.getStakeRewards(stakeKey, defPageablePool, condition))
         .thenReturn(Collections.emptyList());
     var response = reportHistoryServiceAsync.exportStakeRewards(stakeKey, condition).join();
@@ -173,6 +175,7 @@ class ReportHistoryServiceAsyncTest {
   @Test
   void exportEpochSizeTest() {
     final PoolReportHistory poolReportHistory = PoolReportHistory.builder().build();
+    when(fetchRewardDataService.isKoiOs()).thenReturn(true);
     when(poolLifecycleService.getPoolSizes(any(PoolReportHistory.class), any(Pageable.class)))
         .thenReturn(Collections.emptyList());
     var response = reportHistoryServiceAsync.exportEpochSize(poolReportHistory).join();
@@ -209,6 +212,7 @@ class ReportHistoryServiceAsyncTest {
   void exportRewardsDistributionTest() {
     final PoolReportHistory poolReportHistory =
         PoolReportHistory.builder().poolView("poolView").build();
+    when(fetchRewardDataService.isKoiOs()).thenReturn(true);
     when(poolLifecycleService.listReward(poolReportHistory, defPageablePool))
         .thenReturn(Collections.emptyList());
     var response = reportHistoryServiceAsync.exportRewardsDistribution(poolReportHistory).join();

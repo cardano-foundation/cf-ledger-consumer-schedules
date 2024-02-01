@@ -2,10 +2,8 @@ package org.cardanofoundation.job.service.impl;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,7 +24,6 @@ import org.cardanofoundation.job.dto.report.pool.EpochSize;
 import org.cardanofoundation.job.dto.report.pool.PoolUpdateDetailResponse;
 import org.cardanofoundation.job.dto.report.pool.RewardResponse;
 import org.cardanofoundation.job.dto.report.pool.TabularRegisResponse;
-import org.cardanofoundation.job.projection.EpochRewardProjection;
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolHistoryKoiOsProjection;
@@ -165,18 +162,8 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
                 epochNos.add(projection.getRetiringEpoch());
               });
 
-      if (!fetchRewardDataService.fetchReward(poolView)) {
-        throw new RuntimeException("Fetch reward failed");
-      }
-
-      List<EpochRewardProjection> epochRewardProjections =
-          rewardRepository.getRewardRefundByEpoch(poolView, epochNos);
-      Map<Integer, BigInteger> refundAmountMap = new HashMap<>();
-      epochRewardProjections.forEach(
-          refund -> refundAmountMap.put(refund.getEpochNo(), refund.getAmount()));
       deRegistrations.forEach(
           deRegistration -> {
-            deRegistration.setPoolHold(refundAmountMap.get(deRegistration.getRetiringEpoch()));
             BigInteger totalFee = BigInteger.ZERO;
             if (Objects.nonNull(deRegistration.getPoolHold())) {
               totalFee = totalFee.add(deRegistration.getPoolHold());

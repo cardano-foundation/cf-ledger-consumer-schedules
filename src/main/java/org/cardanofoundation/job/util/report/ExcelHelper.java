@@ -97,7 +97,11 @@ public class ExcelHelper {
                     .forEach(f -> mapField.put(exportColumn.getColumnField().getValue(), f)));
 
     if (DataUtil.isNullOrEmpty(lstData)) {
-      writeNoRecordContents(workbook, sheet, lstColumn);
+      String message =
+          exportContent.getSimpleMessage() == null
+              ? "No records"
+              : exportContent.getSimpleMessage();
+      writeNoRecordContents(workbook, sheet, lstColumn, message);
       return;
     }
 
@@ -179,7 +183,7 @@ public class ExcelHelper {
   }
 
   private void writeNoRecordContents(
-      SXSSFWorkbook workbook, SXSSFSheet sheet, List<ExportColumn> lstColumn) {
+      SXSSFWorkbook workbook, SXSSFSheet sheet, List<ExportColumn> lstColumn, String message) {
     Row row = sheet.createRow(1);
     Cell cell = row.createCell(0);
     CellStyle cellStyle = workbook.getXSSFWorkbook().createCellStyle();
@@ -189,7 +193,7 @@ public class ExcelHelper {
     font.setFontHeightInPoints((short) 11);
     cellStyle.setFont(font);
     cell.setCellStyle(cellStyle);
-    cell.setCellValue(richTextString("No records"));
+    cell.setCellValue(richTextString(message));
     sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, lstColumn.size() - 1));
   }
 
