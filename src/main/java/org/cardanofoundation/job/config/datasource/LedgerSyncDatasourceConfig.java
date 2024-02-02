@@ -35,8 +35,9 @@ public class LedgerSyncDatasourceConfig {
 
   private final MultiDataSourceProperties multiDataSourceProperties;
 
-  public LedgerSyncDatasourceConfig(
-      MultiDataSourceProperties multiDataSourceProperties) {this.multiDataSourceProperties = multiDataSourceProperties;}
+  public LedgerSyncDatasourceConfig(MultiDataSourceProperties multiDataSourceProperties) {
+    this.multiDataSourceProperties = multiDataSourceProperties;
+  }
 
   @Primary
   @Bean(name = "ledgerSyncDataSource")
@@ -47,29 +48,32 @@ public class LedgerSyncDatasourceConfig {
 
   @Primary
   @Bean(name = "ledgerSyncEntityManagerFactory")
-  public LocalContainerEntityManagerFactoryBean entityManagerFactoryBean
-      (EntityManagerFactoryBuilder builder,
-       @Qualifier("ledgerSyncDataSource") DataSource dataSource) {
+  public LocalContainerEntityManagerFactoryBean entityManagerFactoryBean(
+      EntityManagerFactoryBuilder builder,
+      @Qualifier("ledgerSyncDataSource") DataSource dataSource) {
     return builder
         .dataSource(dataSource)
-        .packages("org.cardanofoundation.explorer.consumercommon.entity",
-                  "org.cardanofoundation.explorer.consumercommon.enumeration",
-                  "org.cardanofoundation.explorer.consumercommon.validation")
+        .packages(
+            "org.cardanofoundation.explorer.consumercommon.entity",
+            "org.cardanofoundation.explorer.consumercommon.enumeration",
+            "org.cardanofoundation.explorer.consumercommon.validation")
         .build();
   }
 
   @Primary
   @Bean(name = "ledgerSyncTransactionManager")
   public PlatformTransactionManager ledgerSyncTransactionManager(
-      @Qualifier("ledgerSyncEntityManagerFactory") LocalContainerEntityManagerFactoryBean ledgerSyncEntityManagerFactory) {
+      @Qualifier("ledgerSyncEntityManagerFactory")
+          LocalContainerEntityManagerFactoryBean ledgerSyncEntityManagerFactory) {
     return new JpaTransactionManager(
         Objects.requireNonNull(ledgerSyncEntityManagerFactory.getObject()));
   }
 
   @Bean(name = "ledgerSyncDSLContext")
-  public DSLContext ledgerSyncDSLContext(@Qualifier("ledgerSyncDataSource") DataSource dataSource,
-                                         @Qualifier("ledgerSyncTransactionManager") PlatformTransactionManager txManager,
-                                         JooqProperties properties) {
+  public DSLContext ledgerSyncDSLContext(
+      @Qualifier("ledgerSyncDataSource") DataSource dataSource,
+      @Qualifier("ledgerSyncTransactionManager") PlatformTransactionManager txManager,
+      JooqProperties properties) {
     DefaultConfiguration configuration = new DefaultConfiguration();
     configuration.set(properties.determineSqlDialect(dataSource));
     configuration.set(

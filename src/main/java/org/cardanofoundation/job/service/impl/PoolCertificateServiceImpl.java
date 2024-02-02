@@ -27,19 +27,22 @@ public class PoolCertificateServiceImpl implements PoolCertificateService {
   private final PoolCertificateMapper poolCertificateMapper;
 
   @Override
-  public List<PoolCertificateHistory> getPoolCertificateByAction(String poolViewOrHash, PoolActionType action) {
+  public List<PoolCertificateHistory> getPoolCertificateByAction(
+      String poolViewOrHash, PoolActionType action) {
     return getAllPoolCertificateHistories(poolViewOrHash).stream()
         .filter(poolCertificate -> poolCertificate.getActionType().equals(action))
-        .sorted(Comparator.comparing(PoolCertificateHistory::getTxId)).toList();
+        .sorted(Comparator.comparing(PoolCertificateHistory::getTxId))
+        .toList();
   }
 
   private List<PoolCertificateHistory> getAllPoolCertificateHistories(String poolViewOrHash) {
     List<PoolCertificateHistory> certificateHistories =
-        Stream.concat(poolUpdateRepository.getPoolUpdateByPoolViewOrHash(poolViewOrHash).stream(),
-                      poolRetireRepository.getPoolRetireByPoolViewOrHash(poolViewOrHash).stream())
-            .sorted(Comparator
-                        .comparing(PoolCertificateProjection::getTxId)
-                        .thenComparing(PoolCertificateProjection::getCertIndex))
+        Stream.concat(
+                poolUpdateRepository.getPoolUpdateByPoolViewOrHash(poolViewOrHash).stream(),
+                poolRetireRepository.getPoolRetireByPoolViewOrHash(poolViewOrHash).stream())
+            .sorted(
+                Comparator.comparing(PoolCertificateProjection::getTxId)
+                    .thenComparing(PoolCertificateProjection::getCertIndex))
             .map(poolCertificateMapper::fromPoolCertificateProjection)
             .toList();
 
@@ -53,8 +56,8 @@ public class PoolCertificateServiceImpl implements PoolCertificateService {
         certificateHistory.setActionType(PoolActionType.POOL_DEREGISTRATION);
       } else if (!Objects.isNull(certificateHistory.getPoolUpdateId())) {
         PoolCertificateHistory previousCertificateHistory = certificateHistories.get(i - 1);
-        if (previousCertificateHistory.getActionType().equals(PoolActionType.POOL_DEREGISTRATION) &&
-            certificateHistory.getTxEpochNo() >= previousCertificateHistory.getCertEpochNo()) {
+        if (previousCertificateHistory.getActionType().equals(PoolActionType.POOL_DEREGISTRATION)
+            && certificateHistory.getTxEpochNo() >= previousCertificateHistory.getCertEpochNo()) {
           certificateHistory.setActionType(PoolActionType.POOL_REGISTRATION);
         } else {
           certificateHistory.setActionType(PoolActionType.POOL_UPDATE);

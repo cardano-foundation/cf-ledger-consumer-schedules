@@ -16,4 +16,4 @@ CREATE SEQUENCE IF NOT EXISTS verified_script_id_seq
 
 ALTER SEQUENCE verified_script_id_seq OWNED BY verified_script.id;
 
-CREATE UNIQUE INDEX verified_script_hash_uindex ON verified_script USING btree (hash);
+CREATE UNIQUE INDEX IF NOT EXISTS verified_script_hash_uindex ON verified_script USING btree (hash);

@@ -2,8 +2,6 @@ name: Run Tests
 
 on:
   push:
-    branches-ignore:
-      - main
   workflow_dispatch:
 
 env:
@@ -34,6 +32,10 @@ jobs:
         run: | 
           envsubst < ./.m2/settings.default.xml.tpl > ./.m2/settings.xml
 
+      - name: Check Formatting
+        run: |
+          mvn spotless:check
+
       - name: Build
         run: |
           mvn --batch-mode --update-snapshots clean package -DskipTests
@@ -41,6 +43,25 @@ jobs:
       - name: Test
         run: |
           mvn --batch-mode --update-snapshots test
+
+      - name: Generate JaCoCo Badge
+        uses: cicirello/jacoco-badge-generator@v2
+        with:
+          generate-branches-badge: true
+          generate-summary: true
+          badges-directory: build/reports/jacoco/test/html/badges
+
+      - name: Log coverage percentage
+        run: |
+          echo "coverage = ${{ steps.jacoco.outputs.coverage }}"
+          echo "branch coverage = ${{ steps.jacoco.outputs.branches }}"
+
+      - name: Publish coverage report to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          BRANCH: gh-pages
+          folder: build/reports/jacoco/test/html
 
   mutation-test:
     needs: test
@@ -73,7 +94,7 @@ jobs:
 
       - name: Publish mutation test report to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
-        if: always()
+        if: github.ref == 'refs/heads/main'
         with:
           BRANCH: gh-pages
           folder: target/pit-reports/

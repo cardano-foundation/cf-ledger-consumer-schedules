@@ -34,7 +34,7 @@ public class EntityUtil {
   public String getColumnField(String fieldName) {
     Field field = getFieldByName(fieldName);
     if (field != null) {
-      var columnAnnotation =  field.getAnnotation(Column.class);
+      var columnAnnotation = field.getAnnotation(Column.class);
       if (columnAnnotation == null) {
         return field.getAnnotation(JoinColumn.class).name();
       }

@@ -13,7 +13,6 @@ import org.cardanofoundation.job.projection.SContractTxCntProjection;
 
 public interface RedeemerRepository extends JpaRepository<Redeemer, Long> {
 
-
   @Query(
       value =
           "SELECT r.scriptHash as scriptHash, COUNT(DISTINCT(r.tx.id)) as txCount"
