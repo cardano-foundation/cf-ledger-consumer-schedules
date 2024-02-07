@@ -15,11 +15,11 @@ import org.springframework.stereotype.Repository;
 
 import org.jooq.DSLContext;
 
-import org.cardanofoundation.explorer.consumercommon.entity.AddressToken;
-import org.cardanofoundation.explorer.consumercommon.entity.AddressTokenBalance_;
-import org.cardanofoundation.explorer.consumercommon.entity.AddressToken_;
+import org.cardanofoundation.explorer.common.entity.ledgersync.AddressToken;
+import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTokenBalance_;
+import org.cardanofoundation.explorer.common.entity.ledgersync.AddressToken_;
+import org.cardanofoundation.explorer.common.utils.EntityUtil;
 import org.cardanofoundation.job.model.TokenVolume;
-import org.cardanofoundation.job.util.EntityUtil;
 
 @Repository
 public class JOOQAddressTokenRepository {

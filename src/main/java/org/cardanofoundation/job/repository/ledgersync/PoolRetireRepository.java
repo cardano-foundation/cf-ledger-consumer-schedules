@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import org.cardanofoundation.explorer.consumercommon.entity.PoolRetire;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolRetire;
 import org.cardanofoundation.job.projection.PoolCertificateProjection;
 import org.cardanofoundation.job.projection.PoolDeRegistrationProjection;
 import org.cardanofoundation.job.projection.PoolUpdateTxProjection;

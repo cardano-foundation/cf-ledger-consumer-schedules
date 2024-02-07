@@ -24,17 +24,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
-import org.cardanofoundation.explorer.consumercommon.entity.PoolMetadataRef;
-import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineData;
-import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineFetchError;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolMetadataRef;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolOfflineData;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolOfflineFetchError;
+import org.cardanofoundation.explorer.common.utils.JsonUtil;
 import org.cardanofoundation.job.dto.PoolData;
 import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolMetadataRefRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolOfflineDataRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolOfflineFetchErrorRepository;
 import org.cardanofoundation.job.service.PoolOfflineDataStoringService;
-import org.cardanofoundation.ledgersync.common.util.JsonUtil;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)

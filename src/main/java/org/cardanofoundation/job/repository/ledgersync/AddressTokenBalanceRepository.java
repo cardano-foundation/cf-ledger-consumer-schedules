@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import org.cardanofoundation.explorer.consumercommon.entity.AddressTokenBalance;
+import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTokenBalance;
 import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
 
 public interface AddressTokenBalanceRepository extends JpaRepository<AddressTokenBalance, Long> {

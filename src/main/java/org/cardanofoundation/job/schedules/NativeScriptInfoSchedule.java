@@ -21,10 +21,18 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.explorer.consumercommon.entity.BaseEntity_;
-import org.cardanofoundation.explorer.consumercommon.entity.Script;
-import org.cardanofoundation.explorer.consumercommon.enumeration.ScriptType;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.NativeScriptInfo;
+import com.bloxbean.cardano.client.transaction.spec.script.NativeScript;
+import com.bloxbean.cardano.client.transaction.spec.script.RequireTimeAfter;
+import com.bloxbean.cardano.client.transaction.spec.script.RequireTimeBefore;
+import com.bloxbean.cardano.client.transaction.spec.script.ScriptAll;
+import com.bloxbean.cardano.client.transaction.spec.script.ScriptAny;
+import com.bloxbean.cardano.client.transaction.spec.script.ScriptAtLeast;
+import com.bloxbean.cardano.client.transaction.spec.script.ScriptPubkey;
+
+import org.cardanofoundation.explorer.common.entity.enumeration.ScriptType;
+import org.cardanofoundation.explorer.common.entity.explorer.NativeScriptInfo;
+import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Script;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
 import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
@@ -33,13 +41,6 @@ import org.cardanofoundation.job.repository.ledgersync.AddressTokenBalanceReposi
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
-import org.cardanofoundation.ledgersync.common.common.nativescript.NativeScript;
-import org.cardanofoundation.ledgersync.common.common.nativescript.RequireTimeAfter;
-import org.cardanofoundation.ledgersync.common.common.nativescript.RequireTimeBefore;
-import org.cardanofoundation.ledgersync.common.common.nativescript.ScriptAll;
-import org.cardanofoundation.ledgersync.common.common.nativescript.ScriptAny;
-import org.cardanofoundation.ledgersync.common.common.nativescript.ScriptAtLeast;
-import org.cardanofoundation.ledgersync.common.common.nativescript.ScriptPubkey;
 
 @Component
 @RequiredArgsConstructor
@@ -197,10 +198,10 @@ public class NativeScriptInfoSchedule {
       }
     } else if (nativeScript.getClass().equals(RequireTimeAfter.class)) {
       RequireTimeAfter requireTimeAfter = (RequireTimeAfter) nativeScript;
-      nativeScriptInfo.setAfterSlot(requireTimeAfter.getSlot().longValue());
+      nativeScriptInfo.setAfterSlot(requireTimeAfter.getSlot());
     } else if (nativeScript.getClass().equals(RequireTimeBefore.class)) {
       RequireTimeBefore requireTimeBefore = (RequireTimeBefore) nativeScript;
-      nativeScriptInfo.setBeforeSlot(requireTimeBefore.getSlot().longValue());
+      nativeScriptInfo.setBeforeSlot(requireTimeBefore.getSlot());
     }
   }
 

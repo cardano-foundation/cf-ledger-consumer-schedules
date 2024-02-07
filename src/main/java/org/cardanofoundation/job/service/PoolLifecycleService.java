@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
+import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
 import org.cardanofoundation.job.dto.report.pool.DeRegistrationResponse;
 import org.cardanofoundation.job.dto.report.pool.EpochSize;
 import org.cardanofoundation.job.dto.report.pool.PoolUpdateDetailResponse;

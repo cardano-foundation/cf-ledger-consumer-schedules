@@ -20,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfo;
+import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenRepository;
 

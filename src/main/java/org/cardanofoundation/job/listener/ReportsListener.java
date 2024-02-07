@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.ReportHistory;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.StakeKeyReportHistory;
+import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
+import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
+import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
 import org.cardanofoundation.job.repository.explorer.PoolReportHistoryRepository;
 import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
