@@ -1,2 +1,0 @@
-ALTER TABLE pool_offline_fetch_error
-DROP CONSTRAINT IF EXISTS unique_pool_offline_fetch_error;
