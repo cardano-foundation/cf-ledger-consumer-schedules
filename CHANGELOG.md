@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.7.0...v0.8.0) (2024-02-09)
+
+
+### Features
+
+* add migration file to drop unused table in ledger-sync db ([eaaf0cc](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/eaaf0cc69aa27f3e8cc5fd9d9cbd49d16f7a5be1))
+
+
+### Bug Fixes
+
+* remove unused migration in ledger-sync-v2 ([600fb4d](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/commit/600fb4d4f39fae74e3b5a8273a3f0067c8e13eec))
+
 ## [0.7.0](https://github.com/cardano-foundation/cf-ledger-consumer-schedules/compare/v0.2.18...v0.7.0) (2024-01-23)
 
 
