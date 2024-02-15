@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
+import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolUpdate;
 import org.cardanofoundation.job.common.enumeration.PoolActionType;
 import org.cardanofoundation.job.dto.PoolCertificateHistory;
 import org.cardanofoundation.job.projection.LifeCycleRewardProjection;

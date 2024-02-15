@@ -13,9 +13,9 @@ import org.springframework.stereotype.Repository;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfo;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfo_;
-import org.cardanofoundation.job.util.EntityUtil;
+import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
+import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo_;
+import org.cardanofoundation.explorer.common.utils.EntityUtil;
 
 @Repository
 public class JOOQTokenInfoRepository {

@@ -18,8 +18,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.AggregatePoolInfo;
+import org.cardanofoundation.explorer.common.entity.explorer.AggregatePoolInfo;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
 import org.cardanofoundation.job.projection.PoolCountProjectionImpl;
 import org.cardanofoundation.job.repository.explorer.AggregatePoolInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;

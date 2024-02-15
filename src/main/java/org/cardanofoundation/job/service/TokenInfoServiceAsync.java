@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.TokenInfo;
+import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenRepository;
 import org.cardanofoundation.job.util.StreamUtil;

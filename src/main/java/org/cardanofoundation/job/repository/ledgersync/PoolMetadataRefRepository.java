@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.explorer.consumercommon.entity.PoolMetadataRef;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolMetadataRef;
 
 @Repository
 public interface PoolMetadataRefRepository extends JpaRepository<PoolMetadataRef, Long> {

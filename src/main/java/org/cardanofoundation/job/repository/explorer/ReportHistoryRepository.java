@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.ReportHistory;
+import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
 
 public interface ReportHistoryRepository extends JpaRepository<ReportHistory, Long> {
 

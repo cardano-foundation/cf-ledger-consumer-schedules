@@ -15,8 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import org.cardanofoundation.explorer.consumercommon.entity.PoolUpdate;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
+import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolUpdate;
 import org.cardanofoundation.job.common.enumeration.PoolActionType;
 import org.cardanofoundation.job.dto.PoolCertificateHistory;
 import org.cardanofoundation.job.dto.report.pool.DeRegistrationResponse;

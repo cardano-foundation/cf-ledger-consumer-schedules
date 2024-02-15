@@ -7,7 +7,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import org.cardanofoundation.explorer.consumercommon.entity.Block;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.job.projection.PoolCountProjection;
 
 public interface BlockRepository extends JpaRepository<Block, Long> {
