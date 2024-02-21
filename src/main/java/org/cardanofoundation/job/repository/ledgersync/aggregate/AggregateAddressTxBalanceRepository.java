@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.explorer.consumercommon.entity.aggregation.AggregateAddressTxBalance;
+import org.cardanofoundation.explorer.common.entity.ledgersync.aggregation.AggregateAddressTxBalance;
 
 public interface AggregateAddressTxBalanceRepository
     extends JpaRepository<AggregateAddressTxBalance, Long> {

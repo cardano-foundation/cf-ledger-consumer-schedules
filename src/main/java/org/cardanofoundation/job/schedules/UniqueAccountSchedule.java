@@ -1,6 +1,5 @@
 package org.cardanofoundation.job.schedules;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,7 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import org.cardanofoundation.explorer.consumercommon.entity.Epoch;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Epoch;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
 import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
 
@@ -46,15 +45,9 @@ public class UniqueAccountSchedule {
   public void buildUniqueAccountEpoch() {
 
     List<Epoch> epochs = epochRepository.findAll();
-    Integer currentEpoch = Collections.max(epochs.stream().map(Epoch::getNo).toList());
-
     for (Epoch epoch : epochs) {
       final String redisKey =
           String.join(UNDERSCORE, getRedisKey(UNIQUE_ACCOUNTS_KEY), epoch.getNo().toString());
-      var uniqueAccount = redisTemplate.hasKey(redisKey);
-      if (epoch.getNo().equals(currentEpoch) || Boolean.TRUE.equals(uniqueAccount)) {
-        continue;
-      }
       log.info("Building unique account for epoch: {}", epoch.getNo());
       Map<String, Integer> uniqueAccounts =
           epochRepository.findUniqueAccountsInEpoch(epoch.getNo()).stream()

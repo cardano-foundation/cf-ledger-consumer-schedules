@@ -46,12 +46,12 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import reactor.netty.http.client.HttpClient;
 
+import org.cardanofoundation.explorer.common.utils.UrlUtil;
 import org.cardanofoundation.job.constant.JobConstants;
 import org.cardanofoundation.job.dto.PoolData;
 import org.cardanofoundation.job.projection.PoolHashUrlProjection;
 import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
 import org.cardanofoundation.job.service.PoolOfflineDataFetchingService;
-import org.cardanofoundation.ledgersync.common.util.UrlUtil;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE)

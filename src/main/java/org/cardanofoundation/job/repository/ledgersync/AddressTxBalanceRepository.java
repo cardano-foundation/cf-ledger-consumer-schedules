@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import org.cardanofoundation.explorer.consumercommon.entity.AddressTxBalance;
+import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxBalance;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 
 public interface AddressTxBalanceRepository extends JpaRepository<AddressTxBalance, Long> {

@@ -1,6 +1,6 @@
 package org.cardanofoundation.job.service;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
+import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
 
 public interface PoolReportService {
 

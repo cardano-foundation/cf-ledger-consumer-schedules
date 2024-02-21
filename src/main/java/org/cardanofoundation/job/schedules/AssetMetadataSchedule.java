@@ -37,7 +37,7 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
-import org.cardanofoundation.explorer.consumercommon.entity.AssetMetadata;
+import org.cardanofoundation.explorer.common.entity.ledgersync.AssetMetadata;
 import org.cardanofoundation.job.dto.AssetMetadataDTO;
 import org.cardanofoundation.job.mapper.AssetMedataMapper;
 import org.cardanofoundation.job.repository.ledgersync.AssetMetadataRepository;

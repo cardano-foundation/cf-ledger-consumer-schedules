@@ -17,9 +17,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
-import org.cardanofoundation.explorer.consumercommon.enumeration.ReportType;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.ReportHistory;
+import org.cardanofoundation.explorer.common.entity.enumeration.ReportStatus;
+import org.cardanofoundation.explorer.common.entity.enumeration.ReportType;
+import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
 import org.cardanofoundation.job.repository.explorer.ReportHistoryRepository;
 import org.cardanofoundation.job.schedules.ReportHistorySchedule;
 import org.cardanofoundation.job.service.impl.StorageReportServiceImpl;

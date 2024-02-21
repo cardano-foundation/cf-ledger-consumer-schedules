@@ -23,11 +23,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.explorer.consumercommon.entity.Script;
-import org.cardanofoundation.explorer.consumercommon.entity.Script_;
-import org.cardanofoundation.explorer.consumercommon.enumeration.ScriptPurposeType;
-import org.cardanofoundation.explorer.consumercommon.enumeration.ScriptType;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.SmartContractInfo;
+import org.cardanofoundation.explorer.common.entity.enumeration.ScriptPurposeType;
+import org.cardanofoundation.explorer.common.entity.enumeration.ScriptType;
+import org.cardanofoundation.explorer.common.entity.explorer.SmartContractInfo;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Script;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Script_;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.SContractPurposeProjection;
 import org.cardanofoundation.job.projection.SContractTxCntProjection;

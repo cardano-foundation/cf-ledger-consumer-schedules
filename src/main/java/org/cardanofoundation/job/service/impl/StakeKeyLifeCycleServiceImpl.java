@@ -22,9 +22,9 @@ import org.springframework.stereotype.Service;
 
 import io.micrometer.common.util.StringUtils;
 
-import org.cardanofoundation.explorer.consumercommon.entity.EpochParam;
-import org.cardanofoundation.explorer.consumercommon.entity.StakeAddress;
-import org.cardanofoundation.explorer.consumercommon.entity.Tx;
+import org.cardanofoundation.explorer.common.entity.ledgersync.EpochParam;
+import org.cardanofoundation.explorer.common.entity.ledgersync.StakeAddress;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Tx;
 import org.cardanofoundation.job.common.enumeration.TxStatus;
 import org.cardanofoundation.job.dto.report.stake.StakeDelegationFilterResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;

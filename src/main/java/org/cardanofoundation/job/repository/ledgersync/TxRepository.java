@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import org.cardanofoundation.explorer.consumercommon.entity.Tx;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Tx;
 import org.cardanofoundation.job.projection.TxInfoProjection;
 
 public interface TxRepository extends JpaRepository<Tx, Long>, JpaSpecificationExecutor<Tx> {
