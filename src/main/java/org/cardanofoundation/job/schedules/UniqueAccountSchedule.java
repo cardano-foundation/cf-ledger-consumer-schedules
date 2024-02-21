@@ -1,5 +1,6 @@
 package org.cardanofoundation.job.schedules;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,20 +46,24 @@ public class UniqueAccountSchedule {
   public void buildUniqueAccountEpoch() {
 
     List<Epoch> epochs = epochRepository.findAll();
+    Integer currentEpoch = Collections.max(epochs.stream().map(Epoch::getNo).toList());
     for (Epoch epoch : epochs) {
       final String redisKey =
           String.join(UNDERSCORE, getRedisKey(UNIQUE_ACCOUNTS_KEY), epoch.getNo().toString());
-      log.info("Building unique account for epoch: {}", epoch.getNo());
-      Map<String, Integer> uniqueAccounts =
-          epochRepository.findUniqueAccountsInEpoch(epoch.getNo()).stream()
-              .collect(
-                  Collectors.toMap(
-                      UniqueAccountTxCountProjection::getAccount,
-                      UniqueAccountTxCountProjection::getTxCount));
-      if (!CollectionUtils.isEmpty(uniqueAccounts)) {
-        redisTemplate.opsForHash().putAll(redisKey, uniqueAccounts);
+      if (Boolean.FALSE.equals(redisTemplate.hasKey(redisKey))
+          || epoch.getNo() > currentEpoch - 5) {
+        log.info("Building unique account for epoch: {}", epoch.getNo());
+        Map<String, Integer> uniqueAccounts =
+            epochRepository.findUniqueAccountsInEpoch(epoch.getNo()).stream()
+                .collect(
+                    Collectors.toMap(
+                        UniqueAccountTxCountProjection::getAccount,
+                        UniqueAccountTxCountProjection::getTxCount));
+        if (!CollectionUtils.isEmpty(uniqueAccounts)) {
+          redisTemplate.opsForHash().putAll(redisKey, uniqueAccounts);
+        }
+        log.info("Building unique account for epoch: {} done", epoch.getNo());
       }
-      log.info("Building unique account for epoch: {} done", epoch.getNo());
     }
     log.info("Building unique account for all epoch done");
   }
