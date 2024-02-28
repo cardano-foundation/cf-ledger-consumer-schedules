@@ -1,5 +1,7 @@
 package org.cardanofoundation.job.schedule;
 
+import static org.mockito.Mockito.when;
+
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,36 +22,37 @@ import org.junit.jupiter.api.Test;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.config.RedisTestConfig;
 import org.cardanofoundation.job.config.redis.standalone.RedisStandaloneConfig;
+import org.cardanofoundation.job.provider.RedisProvider;
 import org.cardanofoundation.job.schedules.DelegationSchedule;
 import org.cardanofoundation.job.service.DelegationService;
 
 @ActiveProfiles({"test", "standalone"})
 @EnableAutoConfiguration(exclude = RedisAutoConfiguration.class)
-@SpringBootTest(classes = {RedisStandaloneConfig.class, RedisTestConfig.class})
+@SpringBootTest(classes = {RedisStandaloneConfig.class, RedisTestConfig.class, RedisProvider.class})
 public class DelegationScheduleTest {
 
   DelegationSchedule delegationSchedule;
 
   @MockBean DelegationService delegationService;
-
+  @Autowired RedisProvider<String, Integer> redisProvider;
   @Autowired RedisTemplate<String, Integer> redisTemplate;
 
   @BeforeEach
   void init() {
-    delegationSchedule = new DelegationSchedule(delegationService, redisTemplate);
-    Set<String> keys = redisTemplate.keys("*");
+    delegationSchedule = new DelegationSchedule(delegationService, redisProvider);
+    Set<String> keys = redisProvider.keys("*");
     if (!CollectionUtils.isEmpty(keys)) {
-      redisTemplate.delete(keys);
+      redisProvider.del(keys);
     }
   }
 
   @Test
   void test_updateNumberDelegator() {
-    Mockito.when(delegationService.countCurrentDelegator()).thenReturn(100);
+    when(delegationService.countCurrentDelegator()).thenReturn(100);
     delegationSchedule.updateNumberDelegator();
     Mockito.verify(delegationService, Mockito.times(1)).countCurrentDelegator();
-    int numberDelegator =
-        redisTemplate.opsForValue().get(RedisKey.TOTAL_DELEGATOR.name() + "_null");
+    Integer numberDelegator =
+        redisTemplate.opsForValue().get(redisProvider.getRedisKey(RedisKey.TOTAL_DELEGATOR.name()));
     Assertions.assertEquals(100, numberDelegator);
   }
 }

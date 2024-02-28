@@ -18,7 +18,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +30,7 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.Script_;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.SContractPurposeProjection;
 import org.cardanofoundation.job.projection.SContractTxCntProjection;
+import org.cardanofoundation.job.provider.RedisProvider;
 import org.cardanofoundation.job.repository.explorer.SmartContractInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.RedeemerRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
@@ -41,7 +41,7 @@ import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 @Log4j2
 public class SmartContractInfoSchedule {
   private static final int DEFAULT_PAGE_SIZE = 500;
-  final RedisTemplate<String, Integer> redisTemplate;
+  final RedisProvider<String, Integer> redisProvider;
 
   private final SmartContractInfoRepository smartContractInfoRepository;
   private final ScriptRepository scriptRepository;
@@ -53,7 +53,7 @@ public class SmartContractInfoSchedule {
 
   @PostConstruct
   public void setup() {
-    redisTemplate.delete(getRedisKey(RedisKey.SC_TX_CHECKPOINT.name()));
+    redisProvider.del(redisProvider.getRedisKey(RedisKey.SC_TX_CHECKPOINT.name()));
   }
 
   @Scheduled(fixedRateString = "${jobs.smart-contract-info.fixed-delay}")
@@ -64,20 +64,20 @@ public class SmartContractInfoSchedule {
 
     final Pageable deaultPageable =
         PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Script_.ID).ascending());
-    final String scTxCheckpointKey = getRedisKey(RedisKey.SC_TX_CHECKPOINT.name());
+    final String scTxCheckpointKey = redisProvider.getRedisKey(RedisKey.SC_TX_CHECKPOINT.name());
     final Long currentTxId = txRepository.findCurrentTxInfo().getTxId();
 
     long scTxCheckpoint = 0;
     Slice<Script> scriptSlice;
     boolean flagInit = false;
-    if (redisTemplate.opsForValue().get(scTxCheckpointKey) == null
+    if (redisProvider.getValueByKey(scTxCheckpointKey) == null
         || smartContractInfoRepository.count() == 0) {
       scriptSlice =
           scriptRepository.findAllByTypeIn(
               Arrays.asList(ScriptType.PLUTUSV1, ScriptType.PLUTUSV2), deaultPageable);
       flagInit = true;
     } else {
-      scTxCheckpoint = Long.valueOf(redisTemplate.opsForValue().get(scTxCheckpointKey));
+      scTxCheckpoint = Long.valueOf(redisProvider.getValueByKey(scTxCheckpointKey));
       scriptSlice = scriptRepository.findAllByTxIn(scTxCheckpoint, currentTxId, deaultPageable);
     }
 
@@ -96,7 +96,7 @@ public class SmartContractInfoSchedule {
 
       saveSmartContractInfo(scriptSlice.getContent());
     }
-    redisTemplate.opsForValue().set(scTxCheckpointKey, currentTxId.intValue());
+    redisProvider.setValueByKey(scTxCheckpointKey, currentTxId.intValue());
     log.info(
         "End Job syncSmartContractInfo, Time taken {}ms", System.currentTimeMillis() - startTime);
   }
@@ -170,9 +170,5 @@ public class SmartContractInfoSchedule {
 
     smartContractInfoRepository.saveAll(smartContractInfoNeedSave);
     log.info("End saveSmartContractInfo, Time taken {} ms", System.currentTimeMillis() - startTime);
-  }
-
-  private String getRedisKey(String prefix) {
-    return prefix + "_" + network;
   }
 }

@@ -26,12 +26,13 @@ import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.config.RedisTestConfig;
 import org.cardanofoundation.job.config.redis.standalone.RedisStandaloneConfig;
 import org.cardanofoundation.job.dto.PoolStatus;
+import org.cardanofoundation.job.provider.RedisProvider;
 import org.cardanofoundation.job.schedules.PoolStatusSchedule;
 import org.cardanofoundation.job.service.PoolService;
 
 @ActiveProfiles({"test", "standalone"})
 @EnableAutoConfiguration(exclude = RedisAutoConfiguration.class)
-@SpringBootTest(classes = {RedisStandaloneConfig.class, RedisTestConfig.class})
+@SpringBootTest(classes = {RedisStandaloneConfig.class, RedisTestConfig.class, RedisProvider.class})
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class PoolStatusScheduleTest {
 
@@ -39,14 +40,15 @@ public class PoolStatusScheduleTest {
 
   @MockBean PoolService poolService;
 
+  @Autowired RedisProvider<String, Integer> redisProvider;
   @Autowired RedisTemplate<String, Integer> redisTemplate;
 
   @BeforeEach
   void init() {
-    poolStatusSchedule = new PoolStatusSchedule(redisTemplate, poolService);
-    Set<String> keys = redisTemplate.keys("*");
+    poolStatusSchedule = new PoolStatusSchedule(redisProvider, poolService);
+    Set<String> keys = redisProvider.keys("*");
     if (!CollectionUtils.isEmpty(keys)) {
-      redisTemplate.delete(keys);
+      redisProvider.del(keys);
     }
   }
 
@@ -60,8 +62,10 @@ public class PoolStatusScheduleTest {
                 .build());
     poolStatusSchedule.updatePoolStatus();
     Mockito.verify(poolService, Mockito.times(1)).getCurrentPoolStatus();
-    int poolActivate = redisTemplate.opsForValue().get(RedisKey.POOL_ACTIVATE.name() + "_null");
-    int poolInActivate = redisTemplate.opsForValue().get(RedisKey.POOL_INACTIVATE.name() + "_null");
+    int poolActivate =
+        redisTemplate.opsForValue().get(redisProvider.getRedisKey(RedisKey.POOL_ACTIVATE.name()));
+    int poolInActivate =
+        redisTemplate.opsForValue().get(redisProvider.getRedisKey(RedisKey.POOL_INACTIVATE.name()));
     Assertions.assertEquals(2, poolActivate);
     Assertions.assertEquals(1, poolInActivate);
   }

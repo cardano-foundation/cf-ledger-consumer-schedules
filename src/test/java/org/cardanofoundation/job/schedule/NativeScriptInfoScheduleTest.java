@@ -11,9 +11,8 @@ import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.CollectionUtils;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -33,6 +32,7 @@ import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
 import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
 import org.cardanofoundation.job.projection.TxInfoProjection;
+import org.cardanofoundation.job.provider.RedisProvider;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.AddressTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
@@ -42,9 +42,7 @@ import org.cardanofoundation.job.schedules.NativeScriptInfoSchedule;
 
 @ExtendWith(MockitoExtension.class)
 public class NativeScriptInfoScheduleTest {
-
-  @Mock RedisTemplate<String, Integer> redisTemplate;
-  @Mock ValueOperations valueOperations;
+  @Mock RedisProvider<String, Integer> redisProvider;
   @Mock NativeScriptInfoRepository nativeScriptInfoRepository;
   @Mock ScriptRepository scriptRepository;
   @Mock AddressTokenBalanceRepository addressTokenBalanceRepository;
@@ -57,6 +55,10 @@ public class NativeScriptInfoScheduleTest {
 
   @BeforeEach
   void setUp() {
+    Set<String> keys = redisProvider.keys("*");
+    if (!CollectionUtils.isEmpty(keys)) {
+      redisProvider.del(keys);
+    }
     nativeScriptInfoSchedule =
         new NativeScriptInfoSchedule(
             nativeScriptInfoRepository,
@@ -64,8 +66,7 @@ public class NativeScriptInfoScheduleTest {
             multiAssetRepository,
             addressTokenBalanceRepository,
             txRepository,
-            redisTemplate);
-    when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+            redisProvider);
     ReflectionTestUtils.setField(nativeScriptInfoSchedule, "network", "mainnet");
   }
 
@@ -74,8 +75,6 @@ public class NativeScriptInfoScheduleTest {
     TxInfoProjection txInfoProjection = Mockito.mock(TxInfoProjection.class);
     when(txInfoProjection.getTxId()).thenReturn(10L);
     when(txRepository.findCurrentTxInfo()).thenReturn(txInfoProjection);
-    when(redisTemplate.opsForValue().get(getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name())))
-        .thenReturn(null);
     String scriptHash = "3a9241cd79895e3a8d65261b40077d4437ce71e9d7c8c6c00e3f658e";
     Script script =
         Script.builder()
@@ -121,11 +120,12 @@ public class NativeScriptInfoScheduleTest {
 
   @Test
   void syncSmartContractInfo_shouldUpdateDataWhenSyncDataNotFirstTime() {
+    final String nativeScriptTxCheckPoint =
+        redisProvider.getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());
+    when(redisProvider.getValueByKey(nativeScriptTxCheckPoint)).thenReturn(3);
     TxInfoProjection txInfoProjection = Mockito.mock(TxInfoProjection.class);
     when(txInfoProjection.getTxId()).thenReturn(10L);
     when(txRepository.findCurrentTxInfo()).thenReturn(txInfoProjection);
-    when(redisTemplate.opsForValue().get(getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name())))
-        .thenReturn(3);
     when(nativeScriptInfoRepository.count()).thenReturn(1L);
     String scriptHash = "02f68378e37af4545d027d0a9fa5581ac682897a3fc1f6d8f936ed2b";
     Script script =

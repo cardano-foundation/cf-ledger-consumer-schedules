@@ -6,12 +6,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.CollectionUtils;
 
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -32,6 +32,7 @@ import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.SContractPurposeProjection;
 import org.cardanofoundation.job.projection.SContractTxCntProjection;
 import org.cardanofoundation.job.projection.TxInfoProjection;
+import org.cardanofoundation.job.provider.RedisProvider;
 import org.cardanofoundation.job.repository.explorer.SmartContractInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.RedeemerRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
@@ -41,8 +42,7 @@ import org.cardanofoundation.job.schedules.SmartContractInfoSchedule;
 @ExtendWith(MockitoExtension.class)
 public class SmartContractInfoScheduleTest {
 
-  @Mock RedisTemplate<String, Integer> redisTemplate;
-  @Mock ValueOperations valueOperations;
+  @Mock RedisProvider<String, Integer> redisProvider;
   @Mock SmartContractInfoRepository smartContractInfoRepository;
   @Mock ScriptRepository scriptRepository;
   @Mock RedeemerRepository redeemerRepository;
@@ -54,14 +54,17 @@ public class SmartContractInfoScheduleTest {
 
   @BeforeEach
   void setUp() {
+    Set<String> keys = redisProvider.keys("*");
+    if (!CollectionUtils.isEmpty(keys)) {
+      redisProvider.del(keys);
+    }
     smartContractInfoSchedule =
         new SmartContractInfoSchedule(
-            redisTemplate,
+            redisProvider,
             smartContractInfoRepository,
             scriptRepository,
             redeemerRepository,
             txRepository);
-    when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     ReflectionTestUtils.setField(smartContractInfoSchedule, "network", "mainnet");
   }
 
@@ -70,8 +73,6 @@ public class SmartContractInfoScheduleTest {
     TxInfoProjection txInfoProjection = Mockito.mock(TxInfoProjection.class);
     when(txInfoProjection.getTxId()).thenReturn(10L);
     when(txRepository.findCurrentTxInfo()).thenReturn(txInfoProjection);
-    when(redisTemplate.opsForValue().get(getRedisKey(RedisKey.SC_TX_CHECKPOINT.name())))
-        .thenReturn(null);
 
     Script script =
         Script.builder()
@@ -117,10 +118,10 @@ public class SmartContractInfoScheduleTest {
     TxInfoProjection txInfoProjection = Mockito.mock(TxInfoProjection.class);
     when(txInfoProjection.getTxId()).thenReturn(10L);
     when(txRepository.findCurrentTxInfo()).thenReturn(txInfoProjection);
-    when(redisTemplate.opsForValue().get(getRedisKey(RedisKey.SC_TX_CHECKPOINT.name())))
-        .thenReturn(3);
     when(smartContractInfoRepository.count()).thenReturn(1L);
 
+    when(redisProvider.getValueByKey(redisProvider.getRedisKey(RedisKey.SC_TX_CHECKPOINT.name())))
+        .thenReturn(3);
     Script script =
         Script.builder()
             .id(1L)

@@ -16,7 +16,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +35,7 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.Script;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
 import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
+import org.cardanofoundation.job.provider.RedisProvider;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.AddressTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
@@ -52,7 +52,7 @@ public class NativeScriptInfoSchedule {
   private final AddressTokenBalanceRepository addressTokenBalanceRepository;
   private final TxRepository txRepository;
 
-  private final RedisTemplate<String, Integer> redisTemplate;
+  private final RedisProvider<String, Integer> redisProvider;
 
   @Value("${application.network}")
   private String network;
@@ -64,15 +64,16 @@ public class NativeScriptInfoSchedule {
   @Scheduled(fixedRateString = "${jobs.native-script-info.fixed-delay}")
   @Transactional(value = "explorerTransactionManager")
   public void syncNativeScriptInfo() {
-    final String nativeScriptTxCheckPoint = getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());
+    final String nativeScriptTxCheckPoint =
+        redisProvider.getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());
     final Long currentTxId = txRepository.findCurrentTxInfo().getTxId();
-    final Integer checkpoint = redisTemplate.opsForValue().get(nativeScriptTxCheckPoint);
+    final Integer checkpoint = redisProvider.getValueByKey(nativeScriptTxCheckPoint);
     if (Objects.isNull(checkpoint) || nativeScriptInfoRepository.count() == 0L) {
       init();
     } else if (currentTxId > checkpoint.longValue()) {
       update(checkpoint, currentTxId);
     }
-    redisTemplate.opsForValue().set(nativeScriptTxCheckPoint, currentTxId.intValue());
+    redisProvider.setValueByKey(nativeScriptTxCheckPoint, currentTxId.intValue());
   }
 
   private void update(Integer checkpoint, Long currentTxId) {
@@ -203,9 +204,5 @@ public class NativeScriptInfoSchedule {
       RequireTimeBefore requireTimeBefore = (RequireTimeBefore) nativeScript;
       nativeScriptInfo.setBeforeSlot(requireTimeBefore.getSlot());
     }
-  }
-
-  private String getRedisKey(String prefix) {
-    return prefix + "_" + network;
   }
 }

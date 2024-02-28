@@ -6,11 +6,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.job.common.enumeration.RedisKey;
+import org.cardanofoundation.job.provider.RedisProvider;
 import org.cardanofoundation.job.service.DelegationService;
 
 @Slf4j
@@ -23,18 +23,14 @@ public class DelegationSchedule {
 
   final DelegationService delegatorService;
 
-  final RedisTemplate<String, Integer> redisTemplate;
+  final RedisProvider<String, Integer> redisProvider;
 
   @Scheduled(fixedRateString = "${jobs.number-delegator.fixed-delay}")
   public void updateNumberDelegator() {
     log.info("Update number of delegator!");
     int numberDelegator = delegatorService.countCurrentDelegator();
-    String delegatorKey = getRedisKey(RedisKey.TOTAL_DELEGATOR.name());
-    redisTemplate.opsForValue().set(delegatorKey, numberDelegator);
+    String delegatorKey = redisProvider.getRedisKey(RedisKey.TOTAL_DELEGATOR.name());
+    redisProvider.setValueByKey(delegatorKey, numberDelegator);
     log.info("Update number of delegator {} successfully", numberDelegator);
-  }
-
-  private String getRedisKey(String prefix) {
-    return prefix + "_" + network;
   }
 }
