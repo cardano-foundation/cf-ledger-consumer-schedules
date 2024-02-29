@@ -1,7 +1,7 @@
 package org.cardanofoundation.job.service.impl;
 
-import static org.cardanofoundation.job.common.enumeration.RedisKey.AGGREGATED_CACHE_KEY;
-import static org.cardanofoundation.job.common.enumeration.RedisKey.TOKEN_COUNT_HASH_KEY;
+import static org.cardanofoundation.job.common.enumeration.RedisKey.AGGREGATED_CACHE;
+import static org.cardanofoundation.job.common.enumeration.RedisKey.TOTAL_TOKEN_COUNT;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
@@ -245,9 +245,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
   /** Save total token count into redis cache. */
   void saveTotalTokenCount() {
-    String redisKey = getRedisKey(AGGREGATED_CACHE_KEY.name());
+    String redisKey = getRedisKey(AGGREGATED_CACHE.name());
     long totalTokenCount = multiAssetRepository.count();
-    redisTemplate.opsForHash().put(redisKey, TOKEN_COUNT_HASH_KEY, String.valueOf(totalTokenCount));
+    redisTemplate.opsForHash().put(redisKey, TOTAL_TOKEN_COUNT, String.valueOf(totalTokenCount));
     log.info("Total token count: {}", totalTokenCount);
   }
 
