@@ -26,10 +26,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.LongStream;
 
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.test.util.ReflectionTestUtils;
-
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -37,7 +33,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -46,6 +41,7 @@ import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.MultiAsset;
 import org.cardanofoundation.job.model.TokenVolume;
+import org.cardanofoundation.job.provider.RedisProvider;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
@@ -68,18 +64,12 @@ class TokenInfoServiceImplTest {
   @Mock private JOOQTokenInfoRepository jooqTokenInfoRepository;
   @Mock private JOOQAddressTokenRepository jooqAddressTokenRepository;
   @Mock private MultiAssetService multiAssetService;
-  @Mock private RedisTemplate<String, String> redisTemplate;
-  @Mock private HashOperations hashOperations;
+  @Mock private RedisProvider<String, String> redisProvider;
 
   @Captor private ArgumentCaptor<List<TokenInfo>> tokenInfosCaptor;
   @Captor private ArgumentCaptor<TokenInfoCheckpoint> tokenInfoCheckpointCaptor;
 
   @InjectMocks private TokenInfoServiceImpl tokenInfoService;
-
-  @BeforeEach
-  void setUp() {
-    ReflectionTestUtils.setField(tokenInfoService, "network", "mainnet");
-  }
 
   @Test
   void testUpdateTokenInfoListForFirstTime() {
@@ -107,7 +97,6 @@ class TokenInfoServiceImplTest {
             });
 
     when(multiAssetRepository.count()).thenReturn(multiAssetCount);
-    when(redisTemplate.opsForHash()).thenReturn(hashOperations);
 
     tokenInfoService.updateTokenInfoList();
 
@@ -193,7 +182,6 @@ class TokenInfoServiceImplTest {
     when(tokenInfo3.getMultiAssetId()).thenReturn(3L);
     when(tokenInfoRepository.findByMultiAssetIdIn(anyCollection()))
         .thenReturn(List.of(tokenInfo1, tokenInfo2, tokenInfo3));
-    when(redisTemplate.opsForHash()).thenReturn(hashOperations);
     tokenInfoService.updateTokenInfoList();
 
     verify(tokenInfoRepository).saveAll(tokenInfosCaptor.capture());
@@ -230,7 +218,6 @@ class TokenInfoServiceImplTest {
     when(tokenInfoCheckpoint.getBlockNo()).thenReturn(9999L);
     when(tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint())
         .thenReturn(Optional.of(tokenInfoCheckpoint));
-    when(redisTemplate.opsForHash()).thenReturn(hashOperations);
     tokenInfoService.updateTokenInfoList();
 
     verifyNoInteractions(tokenInfoRepository);

@@ -20,8 +20,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +28,7 @@ import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.MultiAsset;
 import org.cardanofoundation.job.model.TokenVolume;
+import org.cardanofoundation.job.provider.RedisProvider;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
@@ -58,10 +57,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final JOOQAddressTokenRepository jooqAddressTokenRepository;
   private final MultiAssetService multiAssetService;
 
-  private final RedisTemplate<String, String> redisTemplate;
-
-  @Value("${application.network}")
-  private String network;
+  private final RedisProvider<String, String> redisProvider;
 
   @Override
   @Transactional(value = "explorerTransactionManager")
@@ -245,13 +241,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
   /** Save total token count into redis cache. */
   void saveTotalTokenCount() {
-    String redisKey = getRedisKey(AGGREGATED_CACHE.name());
+    String redisKey = redisProvider.getRedisKey(AGGREGATED_CACHE.name());
     long totalTokenCount = multiAssetRepository.count();
-    redisTemplate.opsForHash().put(redisKey, TOTAL_TOKEN_COUNT, String.valueOf(totalTokenCount));
+    redisProvider.putHashValueByKey(redisKey, TOTAL_TOKEN_COUNT, String.valueOf(totalTokenCount));
     log.info("Total token count: {}", totalTokenCount);
-  }
-
-  private String getRedisKey(String key) {
-    return String.join("_", network.toUpperCase(), key);
   }
 }

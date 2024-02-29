@@ -160,8 +160,4 @@ public class SmartContractInfoScheduleTest {
     Assertions.assertEquals(1, smartContractInfoList.get(0).getTxCount());
     Assertions.assertEquals(true, smartContractInfoList.get(0).getIsScriptCert());
   }
-
-  private String getRedisKey(String prefix) {
-    return prefix + "_" + "mainnet";
-  }
 }

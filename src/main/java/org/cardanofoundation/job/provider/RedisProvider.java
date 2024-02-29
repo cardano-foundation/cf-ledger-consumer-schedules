@@ -30,6 +30,10 @@ public class RedisProvider<K, V> {
     redisTemplate.opsForHash().putAll(key, values);
   }
 
+  public <HK, HV> void putHashValueByKey(@NonNull K key, @NonNull HK hashValue, @NonNull HV value) {
+    redisTemplate.opsForHash().put(key, hashValue, value);
+  }
+
   public Set<K> keys(@NonNull K keys) {
     return redisTemplate.keys(keys);
   }
@@ -47,6 +51,6 @@ public class RedisProvider<K, V> {
   }
 
   public String getRedisKey(String prefix) {
-    return prefix + "_" + network;
+    return (prefix + "_" + network).toUpperCase();
   }
 }

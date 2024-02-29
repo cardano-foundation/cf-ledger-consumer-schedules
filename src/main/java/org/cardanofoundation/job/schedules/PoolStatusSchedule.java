@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -25,9 +24,6 @@ public class PoolStatusSchedule {
   final RedisProvider<String, Integer> redisProvider;
 
   final PoolService poolService;
-
-  @Value("${application.network}")
-  String network;
 
   @Scheduled(fixedRateString = "${jobs.pool-status.fixed-delay}")
   public void updatePoolStatus() {
