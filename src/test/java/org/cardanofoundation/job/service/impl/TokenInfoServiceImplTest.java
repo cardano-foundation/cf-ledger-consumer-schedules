@@ -26,6 +26,10 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.LongStream;
 
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -33,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -63,10 +68,18 @@ class TokenInfoServiceImplTest {
   @Mock private JOOQTokenInfoRepository jooqTokenInfoRepository;
   @Mock private JOOQAddressTokenRepository jooqAddressTokenRepository;
   @Mock private MultiAssetService multiAssetService;
+  @Mock private RedisTemplate<String, String> redisTemplate;
+  @Mock private HashOperations hashOperations;
+
   @Captor private ArgumentCaptor<List<TokenInfo>> tokenInfosCaptor;
   @Captor private ArgumentCaptor<TokenInfoCheckpoint> tokenInfoCheckpointCaptor;
 
   @InjectMocks private TokenInfoServiceImpl tokenInfoService;
+
+  @BeforeEach
+  void setUp() {
+    ReflectionTestUtils.setField(tokenInfoService, "network", "mainnet");
+  }
 
   @Test
   void testUpdateTokenInfoListForFirstTime() {
@@ -92,6 +105,9 @@ class TokenInfoServiceImplTest {
                   .forEach(i -> mockTokenInfoList.add(new TokenInfo()));
               return CompletableFuture.completedFuture(mockTokenInfoList);
             });
+
+    when(multiAssetRepository.count()).thenReturn(multiAssetCount);
+    when(redisTemplate.opsForHash()).thenReturn(hashOperations);
 
     tokenInfoService.updateTokenInfoList();
 
@@ -177,7 +193,7 @@ class TokenInfoServiceImplTest {
     when(tokenInfo3.getMultiAssetId()).thenReturn(3L);
     when(tokenInfoRepository.findByMultiAssetIdIn(anyCollection()))
         .thenReturn(List.of(tokenInfo1, tokenInfo2, tokenInfo3));
-
+    when(redisTemplate.opsForHash()).thenReturn(hashOperations);
     tokenInfoService.updateTokenInfoList();
 
     verify(tokenInfoRepository).saveAll(tokenInfosCaptor.capture());
@@ -214,10 +230,10 @@ class TokenInfoServiceImplTest {
     when(tokenInfoCheckpoint.getBlockNo()).thenReturn(9999L);
     when(tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint())
         .thenReturn(Optional.of(tokenInfoCheckpoint));
+    when(redisTemplate.opsForHash()).thenReturn(hashOperations);
     tokenInfoService.updateTokenInfoList();
 
     verifyNoInteractions(tokenInfoRepository);
-    verifyNoInteractions(multiAssetRepository);
     verifyNoInteractions(jooqAddressTokenRepository);
     verifyNoInteractions(multiAssetService);
   }
