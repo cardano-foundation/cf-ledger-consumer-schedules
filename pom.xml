@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.cardanofoundation.ledgersync</groupId>
   <artifactId>explorer-consumer-schedules</artifactId>
-  <version>0.8.0</version>
+  <version>0.8.1-SNAPSHOT</version>
   <packaging>jar</packaging>
   <description>Explorer Schedule.</description>
 
