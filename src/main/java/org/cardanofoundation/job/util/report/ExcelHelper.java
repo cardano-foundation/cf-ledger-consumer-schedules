@@ -97,7 +97,10 @@ public class ExcelHelper {
                     .forEach(f -> mapField.put(exportColumn.getColumnField().getValue(), f)));
 
     if (DataUtil.isNullOrEmpty(lstData)) {
-      String message = exportContent.getSimpleMessage() == null ? "No records" : exportContent.getSimpleMessage();
+      String message =
+          exportContent.getSimpleMessage() == null
+              ? "No records"
+              : exportContent.getSimpleMessage();
       writeNoRecordContents(workbook, sheet, lstColumn, message);
       return;
     }

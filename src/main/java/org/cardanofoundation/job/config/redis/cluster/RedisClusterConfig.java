@@ -41,7 +41,7 @@ public class RedisClusterConfig {
   @Bean
   @Autowired
   RedisTemplate<String, ?> redisTemplate( // NOSONAR
-                                          final LettuceConnectionFactory lettuceConnectionFactory) {
+      final LettuceConnectionFactory lettuceConnectionFactory) {
     var redisTemplate = new RedisTemplate<String, Object>();
     redisTemplate.setConnectionFactory(lettuceConnectionFactory);
     redisTemplate.setKeySerializer(new StringRedisSerializer());

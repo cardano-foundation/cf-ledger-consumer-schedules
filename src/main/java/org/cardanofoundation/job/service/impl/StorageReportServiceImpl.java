@@ -24,7 +24,9 @@ public class StorageReportServiceImpl implements StorageService {
   @Value("${clouds.s3Configs[0].bucket}")
   private String bucketName;
 
-  public StorageReportServiceImpl(@Lazy AmazonS3 reportS3) {this.reportS3 = reportS3;}
+  public StorageReportServiceImpl(@Lazy AmazonS3 reportS3) {
+    this.reportS3 = reportS3;
+  }
 
   @Override
   public void uploadFile(byte[] bytes, String fileName) {

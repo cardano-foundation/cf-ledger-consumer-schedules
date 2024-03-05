@@ -7,6 +7,6 @@ import org.cardanofoundation.job.dto.PoolCertificateHistory;
 
 public interface PoolCertificateService {
 
-  List<PoolCertificateHistory> getPoolCertificateByAction(String poolViewOrHash,
-                                                          PoolActionType action);
+  List<PoolCertificateHistory> getPoolCertificateByAction(
+      String poolViewOrHash, PoolActionType action);
 }

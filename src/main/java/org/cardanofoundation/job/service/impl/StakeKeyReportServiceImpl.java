@@ -18,12 +18,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.StakeKeyReportHistory;
-import org.cardanofoundation.explorer.consumercommon.enumeration.ReportStatus;
+import org.cardanofoundation.explorer.common.entity.enumeration.ReportStatus;
+import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
 import org.cardanofoundation.job.common.enumeration.ExportType;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxBalanceRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.service.StakeKeyReportService;
 import org.cardanofoundation.job.util.report.ExcelHelper;
@@ -172,7 +172,9 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
    * @return storage_key
    */
   private String generateStorageKey(StakeKeyReportHistory stakeKeyReportHistory) {
-    return folderPrefix + "/" + stakeKeyReportHistory.getReportHistory().getId()
+    return folderPrefix
+        + "/"
+        + stakeKeyReportHistory.getReportHistory().getId()
         + "_"
         + stakeKeyReportHistory.getReportHistory().getReportName();
   }

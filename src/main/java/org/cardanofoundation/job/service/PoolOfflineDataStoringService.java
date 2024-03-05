@@ -13,7 +13,6 @@ public interface PoolOfflineDataStoringService {
    */
   void saveSuccessPoolOfflineData(List<PoolData> successPools);
 
-
   /**
    * Saving the fetched fail offline data
    *

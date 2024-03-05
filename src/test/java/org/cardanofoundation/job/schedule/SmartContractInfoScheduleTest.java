@@ -1,5 +1,10 @@
 package org.cardanofoundation.job.schedule;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -8,10 +13,21 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.cardanofoundation.explorer.consumercommon.entity.Script;
-import org.cardanofoundation.explorer.consumercommon.enumeration.ScriptPurposeType;
-import org.cardanofoundation.explorer.consumercommon.enumeration.ScriptType;
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.SmartContractInfo;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import org.cardanofoundation.explorer.common.entity.enumeration.ScriptPurposeType;
+import org.cardanofoundation.explorer.common.entity.enumeration.ScriptType;
+import org.cardanofoundation.explorer.common.entity.explorer.SmartContractInfo;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Script;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.SContractPurposeProjection;
 import org.cardanofoundation.job.projection.SContractTxCntProjection;
@@ -21,46 +37,30 @@ import org.cardanofoundation.job.repository.ledgersync.RedeemerRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 import org.cardanofoundation.job.schedules.SmartContractInfoSchedule;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(MockitoExtension.class)
 public class SmartContractInfoScheduleTest {
 
-  @Mock
-  RedisTemplate<String, Integer> redisTemplate;
-  @Mock
-  ValueOperations valueOperations;
-  @Mock
-  SmartContractInfoRepository smartContractInfoRepository;
-  @Mock
-  ScriptRepository scriptRepository;
-  @Mock
-  RedeemerRepository redeemerRepository;
-  @Mock
-  TxRepository txRepository;
+  @Mock RedisTemplate<String, Integer> redisTemplate;
+  @Mock ValueOperations valueOperations;
+  @Mock SmartContractInfoRepository smartContractInfoRepository;
+  @Mock ScriptRepository scriptRepository;
+  @Mock RedeemerRepository redeemerRepository;
+  @Mock TxRepository txRepository;
 
-  @Captor
-  ArgumentCaptor<List<SmartContractInfo>> argumentCaptorSmartContractInfo;
+  @Captor ArgumentCaptor<List<SmartContractInfo>> argumentCaptorSmartContractInfo;
 
   SmartContractInfoSchedule smartContractInfoSchedule;
 
   @BeforeEach
   void setUp() {
-    smartContractInfoSchedule = new SmartContractInfoSchedule(redisTemplate, smartContractInfoRepository, scriptRepository, redeemerRepository, txRepository);
+    smartContractInfoSchedule =
+        new SmartContractInfoSchedule(
+            redisTemplate,
+            smartContractInfoRepository,
+            scriptRepository,
+            redeemerRepository,
+            txRepository);
     when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     ReflectionTestUtils.setField(smartContractInfoSchedule, "network", "mainnet");
   }
@@ -73,23 +73,25 @@ public class SmartContractInfoScheduleTest {
     when(redisTemplate.opsForValue().get(getRedisKey(RedisKey.SC_TX_CHECKPOINT.name())))
         .thenReturn(null);
 
-    Script script = Script.builder()
-        .id(1L)
-        .type(ScriptType.PLUTUSV1)
-        .hash("e4d2fb0b8d275852103fd75801e2c7dcf6ed3e276c74cabadbe5b8b6")
-        .build();
+    Script script =
+        Script.builder()
+            .id(1L)
+            .type(ScriptType.PLUTUSV1)
+            .hash("e4d2fb0b8d275852103fd75801e2c7dcf6ed3e276c74cabadbe5b8b6")
+            .build();
 
     when(scriptRepository.findAllByTypeIn(anyList(), any(Pageable.class)))
         .thenReturn(new SliceImpl<>(List.of(script)));
 
-    SContractTxCntProjection sContractTxCntProjection = Mockito.mock(SContractTxCntProjection.class);
+    SContractTxCntProjection sContractTxCntProjection =
+        Mockito.mock(SContractTxCntProjection.class);
     when(sContractTxCntProjection.getTxCount()).thenReturn(1L);
     when(sContractTxCntProjection.getScriptHash()).thenReturn(script.getHash());
     when(redeemerRepository.getSContractTxCountByHashIn(List.of(script.getHash())))
         .thenReturn(List.of(sContractTxCntProjection));
 
-
-    SContractPurposeProjection sContractPurposeProjection = Mockito.mock(SContractPurposeProjection.class);
+    SContractPurposeProjection sContractPurposeProjection =
+        Mockito.mock(SContractPurposeProjection.class);
     when(sContractPurposeProjection.getScriptHash()).thenReturn(script.getHash());
     when(sContractPurposeProjection.getScriptPurposeType()).thenReturn(ScriptPurposeType.CERT);
     when(redeemerRepository.getScriptPurposeTypeByScriptHashIn(List.of(script.getHash())))
@@ -99,7 +101,8 @@ public class SmartContractInfoScheduleTest {
         .thenReturn(List.of());
 
     smartContractInfoSchedule.syncSmartContractInfo();
-    verify(smartContractInfoRepository, Mockito.times(1)).saveAll(argumentCaptorSmartContractInfo.capture());
+    verify(smartContractInfoRepository, Mockito.times(1))
+        .saveAll(argumentCaptorSmartContractInfo.capture());
 
     List<SmartContractInfo> smartContractInfoList = argumentCaptorSmartContractInfo.getValue();
     Assertions.assertEquals(1, smartContractInfoList.size());
@@ -118,23 +121,25 @@ public class SmartContractInfoScheduleTest {
         .thenReturn(3);
     when(smartContractInfoRepository.count()).thenReturn(1L);
 
-    Script script = Script.builder()
-        .id(1L)
-        .type(ScriptType.PLUTUSV1)
-        .hash("e4d2fb0b8d275852103fd75801e2c7dcf6ed3e276c74cabadbe5b8b6")
-        .build();
+    Script script =
+        Script.builder()
+            .id(1L)
+            .type(ScriptType.PLUTUSV1)
+            .hash("e4d2fb0b8d275852103fd75801e2c7dcf6ed3e276c74cabadbe5b8b6")
+            .build();
 
     when(scriptRepository.findAllByTxIn(any(Long.class), any(Long.class), any(Pageable.class)))
         .thenReturn(new SliceImpl<>(List.of(script)));
 
-    SContractTxCntProjection sContractTxCntProjection = Mockito.mock(SContractTxCntProjection.class);
+    SContractTxCntProjection sContractTxCntProjection =
+        Mockito.mock(SContractTxCntProjection.class);
     when(sContractTxCntProjection.getTxCount()).thenReturn(1L);
     when(sContractTxCntProjection.getScriptHash()).thenReturn(script.getHash());
     when(redeemerRepository.getSContractTxCountByHashIn(List.of(script.getHash())))
         .thenReturn(List.of(sContractTxCntProjection));
 
-
-    SContractPurposeProjection sContractPurposeProjection = Mockito.mock(SContractPurposeProjection.class);
+    SContractPurposeProjection sContractPurposeProjection =
+        Mockito.mock(SContractPurposeProjection.class);
     when(sContractPurposeProjection.getScriptHash()).thenReturn(script.getHash());
     when(sContractPurposeProjection.getScriptPurposeType()).thenReturn(ScriptPurposeType.CERT);
     when(redeemerRepository.getScriptPurposeTypeByScriptHashIn(List.of(script.getHash())))
@@ -144,7 +149,8 @@ public class SmartContractInfoScheduleTest {
         .thenReturn(List.of());
 
     smartContractInfoSchedule.syncSmartContractInfo();
-    verify(smartContractInfoRepository, Mockito.times(1)).saveAll(argumentCaptorSmartContractInfo.capture());
+    verify(smartContractInfoRepository, Mockito.times(1))
+        .saveAll(argumentCaptorSmartContractInfo.capture());
 
     List<SmartContractInfo> smartContractInfoList = argumentCaptorSmartContractInfo.getValue();
     Assertions.assertEquals(1, smartContractInfoList.size());

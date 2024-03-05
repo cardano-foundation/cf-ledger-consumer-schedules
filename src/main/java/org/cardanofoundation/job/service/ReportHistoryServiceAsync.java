@@ -17,7 +17,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import org.cardanofoundation.explorer.consumercommon.explorer.entity.PoolReportHistory;
+import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
 import org.cardanofoundation.job.dto.report.pool.EpochSize;
 import org.cardanofoundation.job.dto.report.pool.PoolDeregistration;
 import org.cardanofoundation.job.dto.report.pool.PoolRegistration;
@@ -46,7 +46,6 @@ public class ReportHistoryServiceAsync {
   private static final String OPERATOR_REWARDS_TITLE = "Operator Rewards";
   private static final String DEREGISTRATION_TITLE = "Deregistration";
   private static final String NOT_AVAILABLE = "Not available";
-
 
   private final StakeKeyLifeCycleService stakeKeyLifeCycleService;
 
@@ -144,15 +143,16 @@ public class ReportHistoryServiceAsync {
   @Async
   public CompletableFuture<ExportContent> exportStakeRewards(
       String stakeKey, StakeLifeCycleFilterRequest condition) {
-    ExportContent exportContent = ExportContent.builder()
-        .clazz(StakeRewardResponse.class)
-        .headerTitle(REWARD_DISTRIBUTION_TITLE)
-        .lstColumn(StakeRewardResponse.buildExportColumn())
-        .build();
+    ExportContent exportContent =
+        ExportContent.builder()
+            .clazz(StakeRewardResponse.class)
+            .headerTitle(REWARD_DISTRIBUTION_TITLE)
+            .lstColumn(StakeRewardResponse.buildExportColumn())
+            .build();
 
-    if(Boolean.TRUE.equals(fetchRewardDataService.isKoiOs())) {
-      exportContent.setLstData(stakeKeyLifeCycleService
-                                   .getStakeRewards(stakeKey, defPageablePool, condition));
+    if (Boolean.TRUE.equals(fetchRewardDataService.isKoiOs())) {
+      exportContent.setLstData(
+          stakeKeyLifeCycleService.getStakeRewards(stakeKey, defPageablePool, condition));
     } else {
       exportContent.setLstData(Collections.emptyList());
       exportContent.setSimpleMessage(NOT_AVAILABLE);
@@ -214,13 +214,14 @@ public class ReportHistoryServiceAsync {
    */
   @Async
   public CompletableFuture<ExportContent> exportEpochSize(PoolReportHistory poolReport) {
-    ExportContent exportContent = ExportContent.builder()
-        .clazz(EpochSize.class)
-        .headerTitle(POOL_SIZE_TITLE)
-        .lstColumn(EpochSize.buildExportColumn())
-        .build();
+    ExportContent exportContent =
+        ExportContent.builder()
+            .clazz(EpochSize.class)
+            .headerTitle(POOL_SIZE_TITLE)
+            .lstColumn(EpochSize.buildExportColumn())
+            .build();
 
-    if(Boolean.TRUE.equals(fetchRewardDataService.isKoiOs())) {
+    if (Boolean.TRUE.equals(fetchRewardDataService.isKoiOs())) {
       Pageable epochSizePage = PageRequest.of(0, limitSize, Sort.by("epochNo").descending());
       exportContent.setLstData(poolLifecycleService.getPoolSizes(poolReport, epochSizePage));
     } else {
@@ -283,17 +284,18 @@ public class ReportHistoryServiceAsync {
    */
   @Async
   public CompletableFuture<ExportContent> exportRewardsDistribution(PoolReportHistory poolReport) {
-    ExportContent exportContent = ExportContent.builder()
-        .clazz(RewardDistribution.class)
-        .headerTitle(OPERATOR_REWARDS_TITLE)
-        .lstColumn(RewardDistribution.buildExportColumn())
-        .build();
+    ExportContent exportContent =
+        ExportContent.builder()
+            .clazz(RewardDistribution.class)
+            .headerTitle(OPERATOR_REWARDS_TITLE)
+            .lstColumn(RewardDistribution.buildExportColumn())
+            .build();
 
-    if(Boolean.TRUE.equals(fetchRewardDataService.isKoiOs())) {
-      exportContent.setLstData(poolLifecycleService
-                                   .listReward(poolReport, defPageablePool).stream()
-                                   .map(RewardDistribution::toDomain)
-                                   .collect(Collectors.toList()));
+    if (Boolean.TRUE.equals(fetchRewardDataService.isKoiOs())) {
+      exportContent.setLstData(
+          poolLifecycleService.listReward(poolReport, defPageablePool).stream()
+              .map(RewardDistribution::toDomain)
+              .collect(Collectors.toList()));
     } else {
       exportContent.setLstData(Collections.emptyList());
       exportContent.setSimpleMessage(NOT_AVAILABLE);

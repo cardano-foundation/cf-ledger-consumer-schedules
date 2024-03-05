@@ -10,18 +10,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BatchUtils {
 
-  /**
-   * Consume collection data per batch size
-   */
-  public static <T> void doBatching(int batchSize,
-                                    List<T> collection,
-                                    Consumer<List<T>> consumer) {
+  /** Consume collection data per batch size */
+  public static <T> void doBatching(int batchSize, List<T> collection, Consumer<List<T>> consumer) {
     if (collection == null || collection.isEmpty()) {
       return;
     }
 
-    log.info("Start batch processing with collection size: [{}], batchSize: [{}]",
-        collection.size(), batchSize);
+    log.info(
+        "Start batch processing with collection size: [{}], batchSize: [{}]",
+        collection.size(),
+        batchSize);
 
     final int COLLECTION_SIZE = collection.size();
     long start = System.currentTimeMillis();
@@ -33,6 +31,4 @@ public class BatchUtils {
     }
     log.info("Completed batch processing in: {} ms", (System.currentTimeMillis() - start));
   }
-
-
 }

@@ -33,21 +33,24 @@ import com.bloxbean.cardano.client.crypto.Blake2bUtil;
 import com.bloxbean.cardano.client.util.HexUtil;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.cardanofoundation.job.service.impl.StorageTokenServiceImpl;
-import org.cardanofoundation.job.util.DataUtil;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.PullResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
-import org.cardanofoundation.explorer.consumercommon.entity.AssetMetadata;
+import org.cardanofoundation.explorer.common.entity.ledgersync.AssetMetadata;
 import org.cardanofoundation.job.dto.AssetMetadataDTO;
 import org.cardanofoundation.job.mapper.AssetMedataMapper;
 import org.cardanofoundation.job.repository.ledgersync.AssetMetadataRepository;
+import org.cardanofoundation.job.service.impl.StorageTokenServiceImpl;
+import org.cardanofoundation.job.util.DataUtil;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
-@ConditionalOnProperty(value = "jobs.meta-data.enabled", matchIfMissing = true, havingValue = "true")
+@ConditionalOnProperty(
+    value = "jobs.meta-data.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class AssetMetadataSchedule {
 
   private final AssetMetadataRepository assetMetadataRepository;
@@ -56,8 +59,10 @@ public class AssetMetadataSchedule {
 
   @Value("${token.metadata.url}")
   private String url;
+
   @Value("${token.metadata.folder}")
   private String metadataFolder;
+
   @Value("${application.network}")
   private String network;
 
@@ -81,65 +86,73 @@ public class AssetMetadataSchedule {
     Map<String, AssetMetadataDTO> assetMetadataMapUpload = new HashMap<>();
 
     // Map AssetMetadata source from database
-    Map<String, AssetMetadata> assetMetadataMapSource = assetMetadataRepository.findAll().stream()
-        .collect(Collectors.toMap(AssetMetadata::getSubject, Function.identity()));
+    Map<String, AssetMetadata> assetMetadataMapSource =
+        assetMetadataRepository.findAll().stream()
+            .collect(Collectors.toMap(AssetMetadata::getSubject, Function.identity()));
 
     // List AssetMetadata need to save to database
     List<AssetMetadata> assetMetadataList = new ArrayList<>();
 
-    assetMetadataDTOList.forEach(assetMetadataDTO -> {
-      // Check if token metadata exist then update
-      boolean flagUpload = false;
-      var assetMetadataTarget = assetMedataMapper.fromDTO(assetMetadataDTO);
-      // Generate logo hash
-      var logoHash = generateLogoHash(assetMetadataDTO);
-      assetMetadataTarget.setLogoHash(logoHash);
-      if (assetMetadataMapSource.containsKey(assetMetadataDTO.getSubject())) {
-        var assetMetadataSource = assetMetadataMapSource.get(assetMetadataDTO.getSubject());
-        // Check if logo hash changed then mark flagUpload = true
-        flagUpload = !Objects.equals(assetMetadataSource.getLogoHash(),
-                                     assetMetadataTarget.getLogoHash());
-        assetMetadataTarget.setId(assetMetadataSource.getId());
-        assetMetadataTarget.setLogo(assetMetadataSource.getLogo());
-        assetMetadataTarget.setLogoHash(assetMetadataSource.getLogoHash());
-      } else {
-        // Check if logo hash not null then mark flagUpload = true
-        flagUpload = !Objects.equals(assetMetadataTarget.getLogoHash(), null);
-      }
-      // if flagUpload = true then add to assetMetadataMapUpload and set logo url
-      if (Boolean.TRUE.equals(flagUpload)) {
-        assetMetadataMapUpload.put(assetMetadataDTO.getSubject(), assetMetadataDTO);
-        String logo = DataUtil.isNullOrEmpty(assetMetadataDTO.getSubject())
-            ? null : network + "/" + assetMetadataDTO.getSubject();
-        assetMetadataTarget.setLogo(logo);
-        assetMetadataTarget.setLogoHash(logoHash);
-      }
-      assetMetadataList.add(assetMetadataTarget);
-    });
-    log.info("Processing raw data done!! Time taken: {} ms",
-             System.currentTimeMillis() - currentTime);
+    assetMetadataDTOList.forEach(
+        assetMetadataDTO -> {
+          // Check if token metadata exist then update
+          boolean flagUpload = false;
+          var assetMetadataTarget = assetMedataMapper.fromDTO(assetMetadataDTO);
+          // Generate logo hash
+          var logoHash = generateLogoHash(assetMetadataDTO);
+          assetMetadataTarget.setLogoHash(logoHash);
+          if (assetMetadataMapSource.containsKey(assetMetadataDTO.getSubject())) {
+            var assetMetadataSource = assetMetadataMapSource.get(assetMetadataDTO.getSubject());
+            // Check if logo hash changed then mark flagUpload = true
+            flagUpload =
+                !Objects.equals(
+                    assetMetadataSource.getLogoHash(), assetMetadataTarget.getLogoHash());
+            assetMetadataTarget.setId(assetMetadataSource.getId());
+            assetMetadataTarget.setLogo(assetMetadataSource.getLogo());
+            assetMetadataTarget.setLogoHash(assetMetadataSource.getLogoHash());
+          } else {
+            // Check if logo hash not null then mark flagUpload = true
+            flagUpload = !Objects.equals(assetMetadataTarget.getLogoHash(), null);
+          }
+          // if flagUpload = true then add to assetMetadataMapUpload and set logo url
+          if (Boolean.TRUE.equals(flagUpload)) {
+            assetMetadataMapUpload.put(assetMetadataDTO.getSubject(), assetMetadataDTO);
+            String logo =
+                DataUtil.isNullOrEmpty(assetMetadataDTO.getSubject())
+                    ? null
+                    : network + "/" + assetMetadataDTO.getSubject();
+            assetMetadataTarget.setLogo(logo);
+            assetMetadataTarget.setLogoHash(logoHash);
+          }
+          assetMetadataList.add(assetMetadataTarget);
+        });
+    log.info(
+        "Processing raw data done!! Time taken: {} ms", System.currentTimeMillis() - currentTime);
     currentTime = System.currentTimeMillis();
 
     log.info("Uploading {} token logo to s3", assetMetadataMapUpload.size());
     List<CompletableFuture<Void>> completableFutures = new ArrayList<>();
     assetMetadataMapUpload.forEach(
-        (key, value) -> completableFutures.add(CompletableFuture.runAsync(() -> {
-          try {
-            String logoFileName = network + "/" + value.getSubject();
-            if (DataUtil.isNullOrEmpty(value.getLogo())
-                || DataUtil.isNullOrEmpty(value.getLogo().getValue())) {
-              storageService.deleteFile(logoFileName);
-            } else {
-              InputStream inputStream = base64ToInputStream(value.getLogo().getValue());
-              storageService.uploadFile(inputStream.readAllBytes(), logoFileName);
-            }
-          } catch (Exception e) {
-            log.info("Upload token {} logo error: {}", key, e.getMessage());
-          }
-        })));
+        (key, value) ->
+            completableFutures.add(
+                CompletableFuture.runAsync(
+                    () -> {
+                      try {
+                        String logoFileName = network + "/" + value.getSubject();
+                        if (DataUtil.isNullOrEmpty(value.getLogo())
+                            || DataUtil.isNullOrEmpty(value.getLogo().getValue())) {
+                          storageService.deleteFile(logoFileName);
+                        } else {
+                          InputStream inputStream = base64ToInputStream(value.getLogo().getValue());
+                          storageService.uploadFile(inputStream.readAllBytes(), logoFileName);
+                        }
+                      } catch (Exception e) {
+                        log.info("Upload token {} logo error: {}", key, e.getMessage());
+                      }
+                    })));
     completableFutures.forEach(CompletableFuture::join);
-    log.info("Upload token logo done!! Time taken: {} ms",
-             System.currentTimeMillis() - currentTime);
+    log.info(
+        "Upload token logo done!! Time taken: {} ms", System.currentTimeMillis() - currentTime);
 
     assetMetadataRepository.saveAll(assetMetadataList);
     log.info("Done save {} token metadata to database", assetMetadataList.size());
@@ -155,23 +168,29 @@ public class AssetMetadataSchedule {
   private List<AssetMetadataDTO> readTokenMetadata(String pathFolder) throws IOException {
     List<AssetMetadataDTO> assetMetadataList = new ArrayList<>();
     try (Stream<Path> paths = Files.walk(Paths.get(pathFolder + metadataFolder))) {
-      paths.filter(Files::isRegularFile).forEach(file -> {
-        try {
-          ObjectMapper mapper = new ObjectMapper();
-          Reader reader = Files.newBufferedReader(file);
-          mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-          AssetMetadataDTO assetMetadataDTO = mapper.readValue(reader, AssetMetadataDTO.class);
-          log.info("Crawl token: {}", assetMetadataDTO.getName().getValue());
-          log.info(file.getFileName().toString());
-          if (file.getFileName().toString().equals(assetMetadataDTO.getSubject().concat(".json"))
-              && assetMetadataDTO.getSubject().length() >= 56) {
-            assetMetadataList.add(assetMetadataDTO);
-          }
-          reader.close();
-        } catch (Exception ex) {
-          ex.printStackTrace();
-        }
-      });
+      paths
+          .filter(Files::isRegularFile)
+          .forEach(
+              file -> {
+                try {
+                  ObjectMapper mapper = new ObjectMapper();
+                  Reader reader = Files.newBufferedReader(file);
+                  mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                  AssetMetadataDTO assetMetadataDTO =
+                      mapper.readValue(reader, AssetMetadataDTO.class);
+                  log.info("Crawl token: {}", assetMetadataDTO.getName().getValue());
+                  log.info(file.getFileName().toString());
+                  if (file.getFileName()
+                          .toString()
+                          .equals(assetMetadataDTO.getSubject().concat(".json"))
+                      && assetMetadataDTO.getSubject().length() >= 56) {
+                    assetMetadataList.add(assetMetadataDTO);
+                  }
+                  reader.close();
+                } catch (Exception ex) {
+                  ex.printStackTrace();
+                }
+              });
     }
     return assetMetadataList;
   }

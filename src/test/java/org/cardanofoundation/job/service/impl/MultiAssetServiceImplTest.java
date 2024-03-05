@@ -1,11 +1,11 @@
 package org.cardanofoundation.job.service.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.cardanofoundation.job.model.TokenNumberHolders;
-import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenBalanceRepository;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -14,31 +14,25 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.cardanofoundation.job.model.TokenNumberHolders;
+import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenBalanceRepository;
 
 @ExtendWith(MockitoExtension.class)
 class MultiAssetServiceImplTest {
 
-  @Mock
-  private JOOQAddressTokenBalanceRepository jooqAddressTokenBalanceRepository;
+  @Mock private JOOQAddressTokenBalanceRepository jooqAddressTokenBalanceRepository;
 
-  @InjectMocks
-  private MultiAssetServiceImpl multiAssetService;
+  @InjectMocks private MultiAssetServiceImpl multiAssetService;
 
   @Test
   void testGetMapNumberHolder_1() {
     List<Long> multiAssetIds = Arrays.asList(6L, 7L);
     Mockito.when(jooqAddressTokenBalanceRepository.countByMultiAssetIn(multiAssetIds))
-        .thenReturn(Arrays.asList(
-            new TokenNumberHolders(6L, 20L),
-            new TokenNumberHolders(7L, 25L)
-        ));
+        .thenReturn(
+            Arrays.asList(new TokenNumberHolders(6L, 20L), new TokenNumberHolders(7L, 25L)));
     Mockito.when(
             jooqAddressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetIn(multiAssetIds))
-        .thenReturn(Arrays.asList(
-            new TokenNumberHolders(6L, 5L),
-            new TokenNumberHolders(7L, 10L)
-        ));
+        .thenReturn(Arrays.asList(new TokenNumberHolders(6L, 5L), new TokenNumberHolders(7L, 10L)));
 
     Map<Long, Long> result = multiAssetService.getMapNumberHolder(multiAssetIds);
 
@@ -50,15 +44,11 @@ class MultiAssetServiceImplTest {
   void testGetMapNumberHolder_2() {
     List<Long> multiAssetIds = Arrays.asList(6L, 7L);
     Mockito.when(jooqAddressTokenBalanceRepository.countByMultiAssetIn(multiAssetIds))
-        .thenReturn(Arrays.asList(
-            new TokenNumberHolders(6L, 20L),
-            new TokenNumberHolders(7L, 25L)
-        ));
+        .thenReturn(
+            Arrays.asList(new TokenNumberHolders(6L, 20L), new TokenNumberHolders(7L, 25L)));
     Mockito.when(
             jooqAddressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetIn(multiAssetIds))
-        .thenReturn(Arrays.asList(
-            new TokenNumberHolders(6L, 5L)
-        ));
+        .thenReturn(Arrays.asList(new TokenNumberHolders(6L, 5L)));
 
     Map<Long, Long> result = multiAssetService.getMapNumberHolder(multiAssetIds);
 
@@ -70,15 +60,10 @@ class MultiAssetServiceImplTest {
   void testGetMapNumberHolder_3() {
     List<Long> multiAssetIds = Arrays.asList(6L, 7L);
     Mockito.when(jooqAddressTokenBalanceRepository.countByMultiAssetIn(multiAssetIds))
-        .thenReturn(Arrays.asList(
-            new TokenNumberHolders(6L, 20L)
-        ));
+        .thenReturn(Arrays.asList(new TokenNumberHolders(6L, 20L)));
     Mockito.when(
             jooqAddressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetIn(multiAssetIds))
-        .thenReturn(Arrays.asList(
-            new TokenNumberHolders(6L, 5L),
-            new TokenNumberHolders(7L, 10L)
-        ));
+        .thenReturn(Arrays.asList(new TokenNumberHolders(6L, 5L), new TokenNumberHolders(7L, 10L)));
 
     Map<Long, Long> result = multiAssetService.getMapNumberHolder(multiAssetIds);
 

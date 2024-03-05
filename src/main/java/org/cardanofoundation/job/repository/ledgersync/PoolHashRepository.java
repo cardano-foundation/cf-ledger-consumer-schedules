@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
 import org.cardanofoundation.job.projection.PoolHashUrlProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
@@ -29,20 +29,20 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
               + "LEFT JOIN PoolOfflineFetchError pofe ON (pofe.poolMetadataRef = pmr AND pofe.poolHash = ph) "
               + "WHERE (pofe.retryCount < 5 OR pofe.retryCount IS NULL)"
               + "AND NOT EXISTS(SELECT pod.id FROM PoolOfflineData pod WHERE pod.pool = ph AND pod.poolMetadataRef = pmr) "
-              + "ORDER BY ph.id ASC"
-  )
+              + "ORDER BY ph.id ASC")
   List<PoolHashUrlProjection> findPoolHashAndUrl(Pageable pageable);
 
-  @Query(value =
-      "SELECT pu.id AS poolUpdateId, pu.pledge AS pledge, pu.margin AS margin, pu.vrfKeyHash AS vrfKey, pu.fixedCost AS cost, tx.hash AS txHash, bk.time AS time, ep.poolDeposit AS deposit, tx.fee AS fee, sa.view AS rewardAccount "
-          + "FROM PoolUpdate pu "
-          + "JOIN Tx tx ON pu.registeredTx.id = tx.id "
-          + "JOIN Block bk ON tx.block.id  = bk.id "
-          + "JOIN EpochParam ep ON ep.epochNo = bk.epochNo "
-          + "JOIN StakeAddress sa ON pu.rewardAddr.id = sa.id "
-          + "WHERE pu.id IN :poolCertificateIds ")
-  Page<PoolRegistrationProjection> getPoolRegistrationByPool(@Param("poolCertificateIds") Set<Long> poolCertificateIds,
-                                                             Pageable pageable);
+  @Query(
+      value =
+          "SELECT pu.id AS poolUpdateId, pu.pledge AS pledge, pu.margin AS margin, pu.vrfKeyHash AS vrfKey, pu.fixedCost AS cost, tx.hash AS txHash, bk.time AS time, ep.poolDeposit AS deposit, tx.fee AS fee, sa.view AS rewardAccount "
+              + "FROM PoolUpdate pu "
+              + "JOIN Tx tx ON pu.registeredTx.id = tx.id "
+              + "JOIN Block bk ON tx.block.id  = bk.id "
+              + "JOIN EpochParam ep ON ep.epochNo = bk.epochNo "
+              + "JOIN StakeAddress sa ON pu.rewardAddr.id = sa.id "
+              + "WHERE pu.id IN :poolCertificateIds ")
+  Page<PoolRegistrationProjection> getPoolRegistrationByPool(
+      @Param("poolCertificateIds") Set<Long> poolCertificateIds, Pageable pageable);
 
   Optional<PoolHash> findById(Long id);
 

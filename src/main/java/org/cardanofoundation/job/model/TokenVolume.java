@@ -1,6 +1,5 @@
 package org.cardanofoundation.job.model;
 
-
 import java.math.BigInteger;
 
 import lombok.AllArgsConstructor;

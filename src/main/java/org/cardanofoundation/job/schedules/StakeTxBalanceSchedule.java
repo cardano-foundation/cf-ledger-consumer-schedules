@@ -2,16 +2,19 @@ package org.cardanofoundation.job.schedules;
 
 import java.sql.Timestamp;
 import java.util.Objects;
+
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.log4j.Log4j2;
-import org.cardanofoundation.job.projection.TxInfoProjection;
-import org.cardanofoundation.job.repository.ledgersync.StakeTxBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersync.TxRepository;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import org.cardanofoundation.job.projection.TxInfoProjection;
+import org.cardanofoundation.job.repository.ledgersync.StakeTxBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 
 @Component
 @RequiredArgsConstructor

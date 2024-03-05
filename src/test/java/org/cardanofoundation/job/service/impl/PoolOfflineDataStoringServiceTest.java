@@ -26,10 +26,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.cardanofoundation.explorer.consumercommon.entity.PoolHash;
-import org.cardanofoundation.explorer.consumercommon.entity.PoolMetadataRef;
-import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineData;
-import org.cardanofoundation.explorer.consumercommon.entity.PoolOfflineFetchError;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolMetadataRef;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolOfflineData;
+import org.cardanofoundation.explorer.common.entity.ledgersync.PoolOfflineFetchError;
 import org.cardanofoundation.job.dto.PoolData;
 import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolMetadataRefRepository;
@@ -160,10 +160,7 @@ class PoolOfflineDataStoringServiceTest {
     when(poolHashRepository.findByIdIn(anyList())).thenReturn(List.of(poolHash));
     when(poolMetadataRefRepository.findByIdIn(anyList())).thenReturn(List.of(poolMetadataRef));
     when(poolOfflineFetchErrorRepository.findByPoolHashAndPoolMetadataRef(any(), any()))
-        .thenReturn(PoolOfflineFetchError.builder()
-                        .id(1L)
-                        .retryCount(1)
-                        .build());
+        .thenReturn(PoolOfflineFetchError.builder().id(1L).retryCount(1).build());
 
     poolOfflineDataStoringService.saveFailOfflineData(
         List.of(

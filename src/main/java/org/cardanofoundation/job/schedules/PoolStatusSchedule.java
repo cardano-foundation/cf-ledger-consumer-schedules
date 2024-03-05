@@ -45,9 +45,12 @@ public class PoolStatusSchedule {
 
     // Delete old pool ids inactivate
     redisTemplate.delete(poolIdsInactivate);
-    redisTemplate.opsForHash()
-        .putAll(poolIdsInactivate, poolStatus.getPoolInactivateIds().stream().collect(
-            Collectors.toMap(Function.identity(), Function.identity())));
+    redisTemplate
+        .opsForHash()
+        .putAll(
+            poolIdsInactivate,
+            poolStatus.getPoolInactivateIds().stream()
+                .collect(Collectors.toMap(Function.identity(), Function.identity())));
     log.info(
         "Update pool status done! total pool: {}, pool activate {}, pool inactivate {}",
         totalPoolSize,

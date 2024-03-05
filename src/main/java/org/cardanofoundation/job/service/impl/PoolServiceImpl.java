@@ -35,7 +35,7 @@ public class PoolServiceImpl implements PoolService {
   @Override
   public PoolStatus getCurrentPoolStatus() {
     var currentEpoch = epochRepository.findMaxEpochNo();
-    if(Objects.isNull(currentEpoch)){
+    if (Objects.isNull(currentEpoch)) {
       return PoolStatus.builder()
           .poolActivateIds(new HashSet<>())
           .poolInactivateIds(new HashSet<>())
