@@ -63,16 +63,4 @@ public class RedisStandaloneConfig {
     redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
     return redisTemplate;
   }
-
-  @Bean
-  RedisTemplate<String, String> redisTemplateString( // NOSONAR // TODO will remove in next version
-      final LettuceConnectionFactory lettuceConnectionFactory) {
-    var redisTemplate = new RedisTemplate<String, String>();
-    redisTemplate.setConnectionFactory(lettuceConnectionFactory);
-    redisTemplate.setValueSerializer(new GenericToStringSerializer<>(Object.class));
-    redisTemplate.setKeySerializer(new StringRedisSerializer());
-    redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
-    redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-    return redisTemplate;
-  }
 }
