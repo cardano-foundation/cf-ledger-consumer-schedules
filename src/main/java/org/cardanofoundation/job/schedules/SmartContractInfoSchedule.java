@@ -167,10 +167,10 @@ public class SmartContractInfoSchedule {
           if (sContractPurposeProjectionList.contains(ScriptPurposeType.REWARD)) {
             smartContractInfo.setIsScriptReward(true);
           }
-          if (sContractPurposeProjectionList.contains(ScriptPurposeType.VOTE)) {
+          if (sContractPurposeProjectionList.contains(ScriptPurposeType.VOTING)) {
             smartContractInfo.setIsScriptVote(true);
           }
-          if (sContractPurposeProjectionList.contains(ScriptPurposeType.PROPOSE)) {
+          if (sContractPurposeProjectionList.contains(ScriptPurposeType.PROPOSING)) {
             smartContractInfo.setIsScriptPropose(true);
           }
         });
