@@ -74,7 +74,8 @@ public class SmartContractInfoSchedule {
         || smartContractInfoRepository.count() == 0) {
       scriptSlice =
           scriptRepository.findAllByTypeIn(
-              Arrays.asList(ScriptType.PLUTUSV1, ScriptType.PLUTUSV2), deaultPageable);
+              Arrays.asList(ScriptType.PLUTUSV1, ScriptType.PLUTUSV2, ScriptType.PLUTUSV3),
+              deaultPageable);
       flagInit = true;
     } else {
       scTxCheckpoint = Long.valueOf(redisTemplate.opsForValue().get(scTxCheckpointKey));
@@ -87,7 +88,7 @@ public class SmartContractInfoSchedule {
       scriptSlice =
           flagInit
               ? scriptRepository.findAllByTypeIn(
-                  Arrays.asList(ScriptType.PLUTUSV1, ScriptType.PLUTUSV2),
+                  Arrays.asList(ScriptType.PLUTUSV1, ScriptType.PLUTUSV2, ScriptType.PLUTUSV3),
                   scriptSlice.nextPageable())
               : scriptRepository.findAllByTxIn(
                   scTxCheckpoint,
@@ -165,6 +166,12 @@ public class SmartContractInfoSchedule {
           }
           if (sContractPurposeProjectionList.contains(ScriptPurposeType.REWARD)) {
             smartContractInfo.setIsScriptReward(true);
+          }
+          if (sContractPurposeProjectionList.contains(ScriptPurposeType.VOTING)) {
+            smartContractInfo.setIsScriptVote(true);
+          }
+          if (sContractPurposeProjectionList.contains(ScriptPurposeType.PROPOSING)) {
+            smartContractInfo.setIsScriptPropose(true);
           }
         });
 
