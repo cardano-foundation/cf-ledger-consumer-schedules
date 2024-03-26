@@ -90,6 +90,7 @@ public class VotingProcedureSchedule {
               latestVotingProcedureMap.get(latestVotingProcedureId);
           if (latestVotingProcedure == null) {
             latestVotingProcedure = votingProcedureMapper.fromVotingProcedure(votingProcedure);
+            latestVotingProcedure.setRepeatVote(false);
           } else if (!latestVotingProcedure.getId().equals(votingProcedure.getId())) {
             votingProcedureMapper.updateByVotingProcedure(latestVotingProcedure, votingProcedure);
             latestVotingProcedure.setRepeatVote(true);
