@@ -83,3 +83,5 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - NATIVE_SCRIPT_INFO_FIXED_DELAY: fixed delay for job native script info
 - DREP_INFO_JOB_ENABLED: enable drep info job
 - DREP_INFO_FIXED_DELAY: fixed delay for job drep info
+- GOVERNANCE_INFO_JOB_ENABLED: enable governance info job
+- GOVERNANCE_INFO_FIXED_DELAY: fixed delay for job governance info

@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -28,6 +29,10 @@ import org.cardanofoundation.job.repository.ledgersync.VotingProcedureRepository
 @Service
 @RequiredArgsConstructor
 @Log4j2
+@ConditionalOnProperty(
+    value = "jobs.governance-info.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class VotingProcedureSchedule {
 
   private final VotingProcedureRepository votingProcedureRepository;
@@ -37,7 +42,7 @@ public class VotingProcedureSchedule {
 
   private static final int DEFAULT_PAGE_SIZE = 1000;
 
-  @Scheduled(fixedRateString = "3000")
+  @Scheduled(fixedRateString = "${jobs.governance-info.fixed-delay}")
   @Transactional
   void syncUpLatestVotingProcedure() {
     long startTime = System.currentTimeMillis();
@@ -85,6 +90,7 @@ public class VotingProcedureSchedule {
               latestVotingProcedureMap.get(latestVotingProcedureId);
           if (latestVotingProcedure == null) {
             latestVotingProcedure = votingProcedureMapper.fromVotingProcedure(votingProcedure);
+            latestVotingProcedure.setRepeatVote(false);
           } else if (!latestVotingProcedure.getId().equals(votingProcedure.getId())) {
             votingProcedureMapper.updateByVotingProcedure(latestVotingProcedure, votingProcedure);
             latestVotingProcedure.setRepeatVote(true);
