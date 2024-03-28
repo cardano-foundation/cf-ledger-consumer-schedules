@@ -10,6 +10,8 @@ import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.LatestVotingProcedure;
 import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.LatestVotingProcedureId;
+import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.VoterType;
+import org.cardanofoundation.job.projection.LatestVotingProcedureProjection;
 
 public interface LatestVotingProcedureRepository
     extends JpaRepository<LatestVotingProcedure, LatestVotingProcedureId> {
@@ -23,4 +25,13 @@ public interface LatestVotingProcedureRepository
               + "WHERE lvp.votingProcedureId IN :votingProcedureIds")
   List<LatestVotingProcedure> getAllByIdIn(
       @Param("votingProcedureIds") Collection<LatestVotingProcedureId> votingProcedureIds);
+
+  @Query(
+      value =
+          "SELECT lvp.voterHash as voterHash, lvp.govActionTxHash as govActionTxHash, lvp.govActionIndex as govActionIndex,"
+              + " lvp.vote as vote, ph.id as poolId "
+              + " FROM LatestVotingProcedure lvp"
+              + " join PoolHash ph on lvp.voterHash = ph.hashRaw"
+              + " WHERE lvp.voterType = :voterType")
+  List<LatestVotingProcedureProjection> findAllByVoterType(@Param("voterType") VoterType voterType);
 }

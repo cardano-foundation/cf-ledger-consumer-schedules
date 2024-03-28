@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal;
 import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.GovActionProposalId;
+import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.GovActionType;
 import org.cardanofoundation.job.projection.gov.GovActionVoteCountProjection;
 
 public interface GovActionProposalRepository
@@ -33,4 +34,9 @@ public interface GovActionProposalRepository
               + "GROUP BY govActionProposalId, ep.id")
   List<GovActionVoteCountProjection> findGovActionVoteCountByGovActionProposalIdIn(
       @Param("govActionProposalIds") Collection<GovActionProposalId> govActionProposalIds);
+
+  @Query(
+      value = "select gap.slot from GovActionProposal gap" + " where gap.type in (:govActionTypes)")
+  List<Long> getCountOfGovActionThatAllowedToVoteForSPO(
+      @Param("govActionTypes") Collection<GovActionType> govActionTypes);
 }
