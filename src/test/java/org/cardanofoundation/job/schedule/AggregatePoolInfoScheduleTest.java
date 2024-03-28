@@ -23,6 +23,8 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
 import org.cardanofoundation.job.projection.PoolCountProjectionImpl;
 import org.cardanofoundation.job.repository.explorer.AggregatePoolInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
+import org.cardanofoundation.job.repository.ledgersync.GovActionProposalRepository;
+import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
 import org.cardanofoundation.job.schedules.AggregatePoolInfoSchedule;
 import org.cardanofoundation.job.service.DelegationService;
@@ -33,6 +35,8 @@ class AggregatePoolInfoScheduleTest {
   @Mock DelegationService delegationService;
   @Mock BlockRepository blockRepository;
   @Mock AggregatePoolInfoRepository aggregatePoolInfoRepository;
+  @Mock GovActionProposalRepository govActionProposalRepository;
+  @Mock LatestVotingProcedureRepository latestVotingProcedureRepository;
   @Mock PoolHashRepository poolHashRepository;
 
   @Captor ArgumentCaptor<List<AggregatePoolInfo>> aggregatePoolInfoCaptor;
@@ -42,7 +46,12 @@ class AggregatePoolInfoScheduleTest {
   void setUp() {
     aggregatePoolInfoSchedule =
         new AggregatePoolInfoSchedule(
-            delegationService, blockRepository, aggregatePoolInfoRepository, poolHashRepository);
+            delegationService,
+            blockRepository,
+            aggregatePoolInfoRepository,
+            poolHashRepository,
+            govActionProposalRepository,
+            latestVotingProcedureRepository);
   }
 
   @Test

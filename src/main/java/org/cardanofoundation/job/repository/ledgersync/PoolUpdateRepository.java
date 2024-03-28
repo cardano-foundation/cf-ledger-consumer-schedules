@@ -78,4 +78,13 @@ public interface PoolUpdateRepository extends JpaRepository<PoolUpdate, Long> {
               + "OR pu.poolHash.hashRaw = :poolViewOrHash ")
   List<PoolCertificateProjection> getPoolUpdateByPoolViewOrHash(
       @Param("poolViewOrHash") String poolViewOrHash);
+
+  @Query(
+      value =
+          "SELECT bk.slotNo FROM PoolUpdate pu "
+              + "JOIN Tx t ON pu.registeredTx.id = t.id "
+              + "JOIN Block bk ON t.block.id = bk.id "
+              + "WHERE pu.id = (SELECT min(pu2.id) FROM PoolUpdate pu2 WHERE pu2.poolHash.id = :poolId) "
+              + "AND pu.poolHash.id = :poolId ")
+  Long getCreatedSlotOfPool(@Param("poolId") Long poolId);
 }
