@@ -35,8 +35,7 @@ public interface GovActionProposalRepository
   List<GovActionVoteCountProjection> findGovActionVoteCountByGovActionProposalIdIn(
       @Param("govActionProposalIds") Collection<GovActionProposalId> govActionProposalIds);
 
-  @Query(
-      value = "select gap.slot from GovActionProposal gap" + " where gap.type in (:govActionTypes)")
-  List<Long> getCountOfGovActionThatAllowedToVoteForSPO(
+  @Query(value = "select gap from GovActionProposal gap where gap.type in (:govActionTypes)")
+  List<GovActionProposal> getGovActionThatAllowedToVoteForSPO(
       @Param("govActionTypes") Collection<GovActionType> govActionTypes);
 }
