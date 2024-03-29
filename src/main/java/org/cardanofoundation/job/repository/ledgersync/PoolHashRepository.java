@@ -57,4 +57,11 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
 
   @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
   List<PoolHash> findByIdIn(List<Long> poolId);
+
+  @Query(
+      value =
+          "select min(d.slotNo) from PoolHash ph"
+              + " join Delegation d on d.poolHash.id = ph.id"
+              + " where ph.hashRaw =:poolHash")
+  Long getSlotNoWhenFirstDelegationByPoolHash(@Param("poolHash") String poolHash);
 }
