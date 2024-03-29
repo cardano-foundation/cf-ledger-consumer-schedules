@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,10 +30,12 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationE
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.DRepActionType;
 import org.cardanofoundation.job.mapper.DRepMapper;
+import org.cardanofoundation.job.projection.DelegationVoteProjection;
 import org.cardanofoundation.job.repository.explorer.DRepInfoRepository;
 import org.cardanofoundation.job.repository.explorer.DataCheckpointRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.DRepRegistrationRepository;
+import org.cardanofoundation.job.repository.ledgersync.DelegationVoteRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -47,6 +50,7 @@ public class DRepInfoSchedule {
   private final DRepRegistrationRepository dRepRegistrationRepository;
   private final DataCheckpointRepository dataCheckpointRepository;
   private final BlockRepository blockRepository;
+  private final DelegationVoteRepository delegationVoteRepository;
 
   private final DRepMapper dRepMapper;
   private static final int DEFAULT_PAGE_SIZE = 100;
@@ -74,7 +78,6 @@ public class DRepInfoSchedule {
     Slice<DRepRegistrationEntity> dRepRegistrationEntitySlice =
         dRepRegistrationRepository.findAllBySlotGreaterThan(
             currentDataCheckpoint.getSlotNo(), pageable);
-
     saveDRepInfo(dRepRegistrationEntitySlice.getContent());
 
     while (dRepRegistrationEntitySlice.hasNext()) {
@@ -102,6 +105,27 @@ public class DRepInfoSchedule {
             .map(DRepRegistrationEntity::getDrepHash)
             .collect(Collectors.toSet());
 
+    List<DelegationVoteProjection> delegationVoteProjectionList =
+        delegationVoteRepository.findAllByDRepHashIn(drepHashSet);
+
+    Map<String, List<DelegationVoteProjection>> delegationVoteMap =
+        delegationVoteProjectionList.stream()
+            .collect(Collectors.groupingBy(DelegationVoteProjection::getDrepHash));
+
+    Map<String, Long> countDelegation =
+        delegationVoteMap.entrySet().stream()
+            .collect(
+                Collectors.toMap(
+                    Entry::getKey,
+                    entry -> {
+                      List<DelegationVoteProjection> list = entry.getValue();
+                      Set<String> fieldNameSet =
+                          list.stream()
+                              .map(DelegationVoteProjection::getAddress)
+                              .collect(Collectors.toSet());
+                      return Long.valueOf(fieldNameSet.size());
+                    }));
+
     Map<String, DRepInfo> dRepInfoMap =
         dRepInfoRepository.findAllByDrepHashIn(drepHashSet).stream()
             .collect(Collectors.toMap(DRepInfo::getDrepHash, Function.identity()));
@@ -127,7 +151,8 @@ public class DRepInfoSchedule {
           } else {
             dRepMapper.updateByDRepRegistration(dRepInfo, dRepRegistrationEntity);
           }
-
+          dRepInfo.setDelegators(
+              countDelegation.getOrDefault(dRepInfo.getDrepHash(), 0L).intValue());
           dRepInfo.setStatus(
               dRepRegistrationEntity.getType().equals(DRepActionType.UNREG_DREP_CERT)
                   ? DRepStatus.INACTIVE
