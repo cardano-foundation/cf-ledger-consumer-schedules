@@ -16,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.explorer.AggregatePoolInfo;
@@ -32,7 +33,7 @@ import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
 import org.cardanofoundation.job.service.DelegationService;
 
 @Slf4j
-// @Component
+@Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class AggregatePoolInfoSchedule {

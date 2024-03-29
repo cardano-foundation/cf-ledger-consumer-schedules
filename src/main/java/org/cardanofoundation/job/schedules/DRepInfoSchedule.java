@@ -1,7 +1,6 @@
 package org.cardanofoundation.job.schedules;
 
 import java.math.BigInteger;
-import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -22,18 +21,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.enumeration.DRepStatus;
-import org.cardanofoundation.explorer.common.entity.enumeration.DataCheckpointType;
 import org.cardanofoundation.explorer.common.entity.explorer.DRepInfo;
-import org.cardanofoundation.explorer.common.entity.explorer.DataCheckpoint;
-import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.DRepActionType;
 import org.cardanofoundation.job.mapper.DRepMapper;
 import org.cardanofoundation.job.projection.DelegationVoteProjection;
 import org.cardanofoundation.job.repository.explorer.DRepInfoRepository;
-import org.cardanofoundation.job.repository.explorer.DataCheckpointRepository;
-import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.DRepRegistrationRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationVoteRepository;
 
@@ -48,8 +42,6 @@ public class DRepInfoSchedule {
 
   private final DRepInfoRepository dRepInfoRepository;
   private final DRepRegistrationRepository dRepRegistrationRepository;
-  private final DataCheckpointRepository dataCheckpointRepository;
-  private final BlockRepository blockRepository;
   private final DelegationVoteRepository delegationVoteRepository;
 
   private final DRepMapper dRepMapper;
@@ -60,39 +52,18 @@ public class DRepInfoSchedule {
   public void syncUpDRepInfo() {
     long startTime = System.currentTimeMillis();
     log.info("Scheduled Drep Info Job: -------Start------");
-
-    Block currentBlock = blockRepository.findLatestBlock().get();
-    DataCheckpoint currentDataCheckpoint =
-        dataCheckpointRepository
-            .findFirstByType(DataCheckpointType.DREP_INFO)
-            .orElse(
-                DataCheckpoint.builder()
-                    .type(DataCheckpointType.DREP_INFO)
-                    .blockNo(0L)
-                    .slotNo(0L)
-                    .build());
-
     Pageable pageable =
         PageRequest.of(
             0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, DRepRegistrationEntity_.SLOT));
     Slice<DRepRegistrationEntity> dRepRegistrationEntitySlice =
-        dRepRegistrationRepository.findAllBySlotGreaterThan(
-            currentDataCheckpoint.getSlotNo(), pageable);
+        dRepRegistrationRepository.findAll(pageable);
     saveDRepInfo(dRepRegistrationEntitySlice.getContent());
 
     while (dRepRegistrationEntitySlice.hasNext()) {
       pageable = dRepRegistrationEntitySlice.nextPageable();
-      dRepRegistrationEntitySlice =
-          dRepRegistrationRepository.findAllBySlotGreaterThan(
-              currentDataCheckpoint.getSlotNo(), pageable);
+      dRepRegistrationEntitySlice = dRepRegistrationRepository.findAll(pageable);
       saveDRepInfo(dRepRegistrationEntitySlice.getContent());
     }
-
-    currentDataCheckpoint.setBlockNo(currentBlock.getBlockNo());
-    currentDataCheckpoint.setSlotNo(currentBlock.getSlotNo());
-    currentDataCheckpoint.setUpdateTime(new Timestamp(System.currentTimeMillis()));
-    dataCheckpointRepository.save(currentDataCheckpoint);
-
     log.info(
         "Update DRep Info successfully, takes: [{} ms]", System.currentTimeMillis() - startTime);
     log.info("Scheduled Drep Info Job: -------End------");
