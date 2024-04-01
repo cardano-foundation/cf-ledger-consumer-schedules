@@ -1,6 +1,5 @@
 package org.cardanofoundation.job.schedules;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -110,8 +109,8 @@ public class DRepInfoSchedule {
               dRepInfo = dRepMapper.fromDRepRegistration(dRepRegistrationEntity);
               dRepInfo.setCreatedAt(dRepRegistrationEntity.getBlockTime());
               // TODO calculate live stake, active vote stake, delegators
-              dRepInfo.setLiveStake(BigInteger.ZERO);
-              dRepInfo.setActiveVoteStake(BigInteger.ZERO);
+              dRepInfo.setActiveVoteStake(null);
+              dRepInfo.setLiveStake(null);
               dRepInfo.setDelegators(0);
 
               dRepInfoMap.put(dRepInfo.getDrepHash(), dRepInfo);
@@ -122,6 +121,8 @@ public class DRepInfoSchedule {
           } else {
             dRepMapper.updateByDRepRegistration(dRepInfo, dRepRegistrationEntity);
           }
+          dRepInfo.setActiveVoteStake(null);
+          dRepInfo.setLiveStake(null);
           dRepInfo.setDelegators(
               countDelegation.getOrDefault(dRepInfo.getDrepHash(), 0L).intValue());
           dRepInfo.setStatus(
