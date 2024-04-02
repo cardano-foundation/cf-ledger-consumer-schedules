@@ -208,7 +208,7 @@ public class GovActionInfoSchedule {
 
       case NEW_CONSTITUTION -> {
         if (percentageDRepYesVotes >= epochParam.getDvtUpdateToConstitution()
-            && percentageCCRepYesVotes == 1) {
+            && percentageCCRepYesVotes >= 0) {
 
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
@@ -219,7 +219,7 @@ public class GovActionInfoSchedule {
       case HARD_FORK_INITIATION_ACTION -> {
         if (percentageDRepYesVotes >= epochParam.getDvtHardForkInitiation()
             && percentagePoolYesVotes >= epochParam.getDvtHardForkInitiation()
-            && percentageCCRepYesVotes == 1) {
+            && percentageCCRepYesVotes >= 0) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
           return GovActionStatus.EXPIRED;
@@ -228,7 +228,7 @@ public class GovActionInfoSchedule {
 
       case PARAMETER_CHANGE_ACTION -> {
         if (percentageDRepYesVotes >= epochParam.getDvtPPGovGroup()
-            && percentageCCRepYesVotes == 1) {
+            && percentageCCRepYesVotes >= 0) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
           return GovActionStatus.EXPIRED;
@@ -237,7 +237,7 @@ public class GovActionInfoSchedule {
 
       case TREASURY_WITHDRAWALS_ACTION -> {
         if (percentageDRepYesVotes >= epochParam.getDvtTreasuryWithdrawal()
-            && percentageCCRepYesVotes == 1) {
+            && percentageCCRepYesVotes >= 0) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
           return GovActionStatus.EXPIRED;
@@ -246,7 +246,7 @@ public class GovActionInfoSchedule {
       case INFO_ACTION -> {
         if (percentageDRepYesVotes == 1
             && percentagePoolYesVotes == 1
-            && percentageCCRepYesVotes == 1) {
+            && percentageCCRepYesVotes >= 0) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
           return GovActionStatus.EXPIRED;
