@@ -30,9 +30,9 @@ import org.cardanofoundation.job.projection.LatestEpochVotingProcedureProjection
 import org.cardanofoundation.job.repository.explorer.DRepInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.DRepRegistrationRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationVoteRepository;
+import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
-import org.cardanofoundation.job.repository.ledgersync.ParamProposalRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +46,7 @@ public class DRepInfoSchedule {
   private final DRepInfoRepository dRepInfoRepository;
   private final DRepRegistrationRepository dRepRegistrationRepository;
   private final DelegationVoteRepository delegationVoteRepository;
-  private final ParamProposalRepository paramProposalRepository;
+  private final EpochParamRepository epochParamRepository;
   private final LatestVotingProcedureRepository latestVotingProcedureRepository;
   private final EpochRepository epochRepository;
 
@@ -59,9 +59,7 @@ public class DRepInfoSchedule {
     long startTime = System.currentTimeMillis();
     log.info("Scheduled Drep Info Job: -------Start------");
     Long currentEpoch = epochRepository.findMaxEpochNo().longValue();
-    /*TODO
-     * currently, dRepActivity cannot determine by epochNo (null in db), so we use a fixed value 10 */
-    Long dRepActivity = paramProposalRepository.findDRepActivityByEpochNo(currentEpoch).orElse(10L);
+    Long dRepActivity = epochParamRepository.findDRepActivityByEpochNo(currentEpoch);
 
     Pageable pageable =
         PageRequest.of(

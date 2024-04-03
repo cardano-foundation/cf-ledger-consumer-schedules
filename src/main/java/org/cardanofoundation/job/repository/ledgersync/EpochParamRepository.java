@@ -18,4 +18,7 @@ public interface EpochParamRepository extends JpaRepository<EpochParam, Long> {
       value =
           "SELECT ep FROM EpochParam ep WHERE ep.epochNo = (SELECT MAX(ep2.epochNo) FROM EpochParam ep2)")
   EpochParam findCurrentEpochParam();
+
+  @Query(value = "select ep.drepActivity from EpochParam ep where ep.epochNo = :epochNo")
+  Long findDRepActivityByEpochNo(@Param("epochNo") Long epochNo);
 }
