@@ -2,7 +2,8 @@ CREATE INDEX IF NOT EXISTS idx_gov_action_proposal_composite ON gov_action_propo
 CREATE INDEX IF NOT EXISTS idx_gov_action_proposal_epoch ON gov_action_proposal (epoch);
 CREATE INDEX IF NOT EXISTS idx_gov_action_proposal_anchor_text ON gov_action_proposal (anchor_url, anchor_hash);
 CREATE INDEX IF NOT EXISTS idx_gov_action_proposal_block_time ON gov_action_proposal (block_time);
-CREATE INDEX IF NOT EXISTS hash_idx_gov_action_proposal_tx_hash_idx on gov_action_proposal using hash(tx_hash, idx);
+CREATE INDEX IF NOT EXISTS hash_idx_gov_action_proposal_tx_hash_idx on gov_action_proposal using hash(tx_hash);
+CREATE INDEX IF NOT EXISTS hash_idx_gov_action_proposal_idx on gov_action_proposal using hash(idx);
 
 CREATE INDEX IF NOT EXISTS idx_committee_registration_epoch ON committee_registration (epoch);
 CREATE INDEX IF NOT EXISTS idx_committee_registration_block_time ON committee_registration (block_time);
@@ -10,7 +11,7 @@ CREATE INDEX IF NOT EXISTS idx_committee_registration_tx_hash_cert_index ON comm
 CREATE INDEX IF NOT EXISTS idx_committee_registration_cold_key_hot_key ON committee_registration (cold_key, hot_key);
 CREATE INDEX IF NOT EXISTS idx_committee_registration_cred_type ON committee_registration (cred_type);
 
-CREATE INDEX IF NOT EXISTS idx_committee_deregistration_cred_type ON committee_deregistration using hash (tx_hash, cert_index);
+CREATE INDEX IF NOT EXISTS idx_committee_deregistration_cred_type ON committee_deregistration(tx_hash, cert_index);
 CREATE INDEX IF NOT EXISTS idx_committee_deregistration_anchor_text ON committee_deregistration (anchor_url, anchor_hash);
 CREATE INDEX IF NOT EXISTS idx_committee_deregistration_cold_key ON committee_deregistration using hash (cold_key);
 CREATE INDEX IF NOT EXISTS idx_committee_deregistration_cred_type ON committee_deregistration using hash (cred_type);
