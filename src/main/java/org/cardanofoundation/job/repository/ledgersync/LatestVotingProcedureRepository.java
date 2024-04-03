@@ -3,6 +3,7 @@ package org.cardanofoundation.job.repository.ledgersync;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.cardanofoundation.explorer.common.entity.ledgersync.LatestVotingProcedure;
 import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.LatestVotingProcedureId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.VoterType;
+import org.cardanofoundation.job.projection.LatestEpochVotingProcedureProjection;
 import org.cardanofoundation.job.projection.LatestVotingProcedureProjection;
 
 public interface LatestVotingProcedureRepository
@@ -18,6 +20,15 @@ public interface LatestVotingProcedureRepository
 
   @Query(value = "SELECT lvp.slot FROM LatestVotingProcedure lvp ORDER BY lvp.slot DESC LIMIT 1")
   Optional<Long> findLatestSlotOfVotingProcedure();
+
+  @Query(
+      value =
+          "select max(lvp.epoch) as epoch, lvp.voterHash as voterHash from LatestVotingProcedure lvp "
+              + " where lvp.voterType = 'DREP_KEY_HASH' and lvp.epoch >= :fromEpoch"
+              + " and lvp.voterHash in :dRepHashes"
+              + " group by lvp.voterHash")
+  List<LatestEpochVotingProcedureProjection> findAllByVoterHashAndEpochNo(
+      @Param("fromEpoch") Long fromEpoch, @Param("dRepHashes") Set<String> dRepHashes);
 
   @Query(
       value =

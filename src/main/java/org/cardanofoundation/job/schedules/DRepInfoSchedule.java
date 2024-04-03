@@ -26,9 +26,13 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationE
 import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.DRepActionType;
 import org.cardanofoundation.job.mapper.DRepMapper;
 import org.cardanofoundation.job.projection.DelegationVoteProjection;
+import org.cardanofoundation.job.projection.LatestEpochVotingProcedureProjection;
 import org.cardanofoundation.job.repository.explorer.DRepInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.DRepRegistrationRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationVoteRepository;
+import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
+import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
+import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +46,9 @@ public class DRepInfoSchedule {
   private final DRepInfoRepository dRepInfoRepository;
   private final DRepRegistrationRepository dRepRegistrationRepository;
   private final DelegationVoteRepository delegationVoteRepository;
+  private final EpochParamRepository epochParamRepository;
+  private final LatestVotingProcedureRepository latestVotingProcedureRepository;
+  private final EpochRepository epochRepository;
 
   private final DRepMapper dRepMapper;
   private static final int DEFAULT_PAGE_SIZE = 100;
@@ -51,29 +58,46 @@ public class DRepInfoSchedule {
   public void syncUpDRepInfo() {
     long startTime = System.currentTimeMillis();
     log.info("Scheduled Drep Info Job: -------Start------");
+    Long currentEpoch = epochRepository.findMaxEpochNo().longValue();
+    Long dRepActivity = epochParamRepository.findDRepActivityByEpochNo(currentEpoch);
+
     Pageable pageable =
         PageRequest.of(
             0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, DRepRegistrationEntity_.SLOT));
     Slice<DRepRegistrationEntity> dRepRegistrationEntitySlice =
         dRepRegistrationRepository.findAll(pageable);
-    saveDRepInfo(dRepRegistrationEntitySlice.getContent());
+    saveDRepInfo(dRepRegistrationEntitySlice.getContent(), currentEpoch, dRepActivity);
 
     while (dRepRegistrationEntitySlice.hasNext()) {
       pageable = dRepRegistrationEntitySlice.nextPageable();
       dRepRegistrationEntitySlice = dRepRegistrationRepository.findAll(pageable);
-      saveDRepInfo(dRepRegistrationEntitySlice.getContent());
+      saveDRepInfo(dRepRegistrationEntitySlice.getContent(), currentEpoch, dRepActivity);
     }
     log.info(
         "Update DRep Info successfully, takes: [{} ms]", System.currentTimeMillis() - startTime);
     log.info("Scheduled Drep Info Job: -------End------");
   }
 
-  private void saveDRepInfo(List<DRepRegistrationEntity> dRepRegistrationEntityList) {
+  private void saveDRepInfo(
+      List<DRepRegistrationEntity> dRepRegistrationEntityList,
+      Long currentEpoch,
+      Long dRepActivity) {
     log.info("Processing {} DRep registration entities", dRepRegistrationEntityList.size());
     Set<String> drepHashSet =
         dRepRegistrationEntityList.stream()
             .map(DRepRegistrationEntity::getDrepHash)
             .collect(Collectors.toSet());
+
+    List<LatestEpochVotingProcedureProjection> latestEpochGroupByVoterHashList =
+        latestVotingProcedureRepository.findAllByVoterHashAndEpochNo(
+            currentEpoch - dRepActivity, drepHashSet);
+
+    Map<String, Long> latestEpochMap =
+        latestEpochGroupByVoterHashList.stream()
+            .collect(
+                Collectors.toMap(
+                    LatestEpochVotingProcedureProjection::getVoterHash,
+                    LatestEpochVotingProcedureProjection::getEpoch));
 
     List<DelegationVoteProjection> delegationVoteProjectionList =
         delegationVoteRepository.findAllByDRepHashIn(drepHashSet);
@@ -127,8 +151,15 @@ public class DRepInfoSchedule {
               countDelegation.getOrDefault(dRepInfo.getDrepHash(), 0L).intValue());
           dRepInfo.setStatus(
               dRepRegistrationEntity.getType().equals(DRepActionType.UNREG_DREP_CERT)
-                  ? DRepStatus.INACTIVE
+                  ? DRepStatus.RETIRED
                   : DRepStatus.ACTIVE);
+          if (!dRepInfo.getStatus().equals(DRepStatus.RETIRED)) {
+            Long latestEpoch = latestEpochMap.getOrDefault(dRepInfo.getDrepHash(), 0L);
+            dRepInfo.setStatus(
+                currentEpoch - dRepActivity > latestEpoch
+                    ? DRepStatus.INACTIVE
+                    : DRepStatus.ACTIVE);
+          }
         });
 
     dRepInfoRepository.saveAll(dRepInfoMap.values());
