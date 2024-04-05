@@ -247,7 +247,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   void saveTotalTokenCount() {
     String redisKey = getRedisKey(AGGREGATED_CACHE.name());
     long totalTokenCount = multiAssetRepository.count();
-    redisTemplate.opsForHash().put(redisKey, TOTAL_TOKEN_COUNT, String.valueOf(totalTokenCount));
+    redisTemplate
+        .opsForHash()
+        .put(redisKey, TOTAL_TOKEN_COUNT.name(), String.valueOf(totalTokenCount));
     log.info("Total token count: {}", totalTokenCount);
   }
 
