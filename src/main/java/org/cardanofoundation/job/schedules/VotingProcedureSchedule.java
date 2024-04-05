@@ -17,11 +17,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.cardanofoundation.explorer.common.entity.compositeKey.LatestVotingProcedureId;
+import org.cardanofoundation.explorer.common.entity.compositeKey.VotingProcedureId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.LatestVotingProcedure;
 import org.cardanofoundation.explorer.common.entity.ledgersync.VotingProcedure;
-import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.LatestVotingProcedureId;
-import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.VotingProcedureId;
 import org.cardanofoundation.job.mapper.VotingProcedureMapper;
 import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
 import org.cardanofoundation.job.repository.ledgersync.VotingProcedureRepository;

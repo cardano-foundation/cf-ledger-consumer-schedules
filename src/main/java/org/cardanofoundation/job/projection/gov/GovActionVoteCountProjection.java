@@ -1,7 +1,7 @@
 package org.cardanofoundation.job.projection.gov;
 
+import org.cardanofoundation.explorer.common.entity.compositeKey.GovActionProposalId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.EpochParam;
-import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.GovActionProposalId;
 
 public interface GovActionVoteCountProjection {
   GovActionProposalId getGovActionProposalId();
