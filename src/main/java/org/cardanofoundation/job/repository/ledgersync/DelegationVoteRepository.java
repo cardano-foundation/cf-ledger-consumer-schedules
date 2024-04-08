@@ -7,8 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.cardanofoundation.explorer.common.entity.compositeKey.DelegationVoteId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DelegationVote;
-import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.DelegationVoteId;
 import org.cardanofoundation.job.projection.DelegationVoteProjection;
 
 public interface DelegationVoteRepository extends JpaRepository<DelegationVote, DelegationVoteId> {

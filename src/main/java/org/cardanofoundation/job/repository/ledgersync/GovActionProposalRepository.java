@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.cardanofoundation.explorer.common.entity.compositeKey.GovActionProposalId;
+import org.cardanofoundation.explorer.common.entity.enumeration.GovActionType;
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal;
-import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.GovActionProposalId;
-import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.GovActionType;
 import org.cardanofoundation.job.projection.gov.GovActionVoteCountProjection;
 
 public interface GovActionProposalRepository
