@@ -18,14 +18,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import org.cardanofoundation.explorer.common.entity.compositeKey.GovActionProposalId;
+import org.cardanofoundation.explorer.common.entity.enumeration.CommitteeState;
 import org.cardanofoundation.explorer.common.entity.enumeration.GovActionStatus;
+import org.cardanofoundation.explorer.common.entity.enumeration.GovActionType;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.EpochParam;
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal;
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposalInfo;
-import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.GovActionProposalId;
-import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.CommitteeState;
-import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.GovActionType;
 import org.cardanofoundation.job.projection.gov.GovActionVoteCountProjection;
 import org.cardanofoundation.job.repository.ledgersync.CommitteeRegistrationRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;

@@ -20,14 +20,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.explorer.common.entity.explorer.AggregatePoolInfo;
+import org.cardanofoundation.explorer.common.entity.enumeration.GovActionType;
+import org.cardanofoundation.explorer.common.entity.enumeration.VoterType;
+import org.cardanofoundation.explorer.common.entity.ledgersync.AggregatePoolInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal;
 import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
-import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.GovActionType;
-import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.VoterType;
 import org.cardanofoundation.job.projection.LatestVotingProcedureProjection;
 import org.cardanofoundation.job.projection.PoolCountProjection;
-import org.cardanofoundation.job.repository.explorer.AggregatePoolInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.AggregatePoolInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.GovActionProposalRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;

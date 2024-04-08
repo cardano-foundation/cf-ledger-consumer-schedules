@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.cardanofoundation.explorer.common.entity.compositeKey.VotingProcedureId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.VotingProcedure;
-import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.VotingProcedureId;
 
 public interface VotingProcedureRepository
     extends JpaRepository<VotingProcedure, VotingProcedureId> {
