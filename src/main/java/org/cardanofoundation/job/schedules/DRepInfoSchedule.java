@@ -144,9 +144,14 @@ public class DRepInfoSchedule {
             }
           } else {
             dRepMapper.updateByDRepRegistration(dRepInfo, dRepRegistrationEntity);
+            dRepInfo.setUpdatedAt(dRepRegistrationEntity.getBlockTime());
           }
+
+          // TODO calculate live stake, active vote stake, voting power
           dRepInfo.setActiveVoteStake(null);
           dRepInfo.setLiveStake(null);
+          dRepInfo.setVotingPower(null);
+
           dRepInfo.setDelegators(
               countDelegation.getOrDefault(dRepInfo.getDrepHash(), 0L).intValue());
           dRepInfo.setStatus(
