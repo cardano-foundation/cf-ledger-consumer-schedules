@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
+import org.cardanofoundation.job.projection.PoolHashProjection;
 import org.cardanofoundation.job.projection.PoolHashUrlProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
@@ -60,8 +61,9 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
 
   @Query(
       value =
-          "select min(d.slotNo) from PoolHash ph"
-              + " join Delegation d on d.poolHash.id = ph.id"
-              + " where ph.hashRaw =:poolHash")
-  Long getSlotNoWhenFirstDelegationByPoolHash(@Param("poolHash") String poolHash);
+          "select coalesce(min(d.slotNo),0) as slot, ph.id as poolId"
+              + " from PoolHash ph"
+              + " left join Delegation d on d.poolHash.id = ph.id"
+              + " group by ph.id")
+  List<PoolHashProjection> getSlotNoWhenFirstDelegation();
 }
