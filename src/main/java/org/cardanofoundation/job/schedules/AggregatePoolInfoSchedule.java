@@ -161,25 +161,22 @@ public class AggregatePoolInfoSchedule {
                 Collectors.toMap(
                     Entry::getKey,
                     entry -> {
-                      Long slot = poolSlotMap.getOrDefault(entry.getKey(),0L);
+                      Long slot = poolSlotMap.getOrDefault(entry.getKey(), 0L);
                       return entry.getValue().stream()
-                          .filter(
-                              votingProcedure -> votingProcedure.getSlotGov() >= slot)
+                          .filter(votingProcedure -> votingProcedure.getSlotGov() >= slot)
                           .collect(Collectors.toList());
                     }));
 
     Map<Long, Long> countVoteMap =
         latestVotingProcedureMap.entrySet().parallelStream()
-            .collect(
-                Collectors.toMap(
-                    Entry::getKey, entry -> (long) entry.getValue().size()));
+            .collect(Collectors.toMap(Entry::getKey, entry -> (long) entry.getValue().size()));
 
     return countVoteMap.entrySet().parallelStream()
         .collect(
             Collectors.toMap(
                 Entry::getKey,
                 entry -> {
-                  Long slot = poolSlotMap.getOrDefault(entry.getKey(),0L);
+                  Long slot = poolSlotMap.getOrDefault(entry.getKey(), 0L);
                   long countOfGovActionThatAllowedToVoteForSPO =
                       govActionProposalList.stream()
                           .filter(govActionProposal -> govActionProposal.getSlot() >= slot)
@@ -203,13 +200,13 @@ public class AggregatePoolInfoSchedule {
         return new HashMap<>();
       }
       return poolInfoList.parallelStream()
-              .filter(poolInfoProjection -> poolInfoProjection.getActiveStake() != null)
-              .collect(
-                  Collectors.toMap(
-                      PoolInfoProjection::getPoolId,
-                      poolInfoProjection ->
-                          poolInfoProjection.getActiveStake().doubleValue()
-                              / sumOfActiveStake.doubleValue()));
+          .filter(poolInfoProjection -> poolInfoProjection.getActiveStake() != null)
+          .collect(
+              Collectors.toMap(
+                  PoolInfoProjection::getPoolId,
+                  poolInfoProjection ->
+                      poolInfoProjection.getActiveStake().doubleValue()
+                          / sumOfActiveStake.doubleValue()));
     }
     return new HashMap<>();
   }
