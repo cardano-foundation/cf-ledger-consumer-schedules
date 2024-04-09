@@ -14,6 +14,6 @@ import org.cardanofoundation.job.projection.PoolInfoProjection;
 public interface PoolInfoRepository extends JpaRepository<PoolInfo, Long> {
   @Query(
       value =
-          "select pi.poolId as poolId, coalesce(pi.activeStake,0) as activeStake from PoolInfo pi where pi.fetchedAtEpoch = :epochNo")
+          "select pi.poolId as poolId, pi.activeStake as activeStake from PoolInfo pi where pi.fetchedAtEpoch = :epochNo")
   List<PoolInfoProjection> findAllByEpochNo(@Param("epochNo") Integer epochNo);
 }

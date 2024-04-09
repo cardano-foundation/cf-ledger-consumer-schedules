@@ -6,9 +6,11 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,7 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal
 import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
 import org.cardanofoundation.job.projection.LatestVotingProcedureProjection;
 import org.cardanofoundation.job.projection.PoolCountProjection;
+import org.cardanofoundation.job.projection.PoolHashProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.repository.ledgersync.AggregatePoolInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
@@ -61,63 +64,10 @@ public class AggregatePoolInfoSchedule {
   public void updateAggregatePoolInfoJob() {
     long startTime = System.currentTimeMillis();
 
-    Integer currentEpoch = epochRepository.findMaxEpochNo();
     Boolean useKoi0s = fetchRewardDataService.isKoiOs();
-    List<PoolInfoProjection> poolInfoList = poolInfoRepository.findAllByEpochNo(currentEpoch);
-
-    BigInteger sumOfActiveStake =
-        poolInfoList.parallelStream()
-            .map(PoolInfoProjection::getActiveStake)
-            .reduce(BigInteger.ZERO, BigInteger::add);
-    Map<Long, Double> votingPowerMap =
-        poolInfoList.parallelStream()
-            .collect(
-                Collectors.toMap(
-                    PoolInfoProjection::getPoolId,
-                    poolInfoProjection -> {
-                      return poolInfoProjection.getActiveStake().doubleValue()
-                          / sumOfActiveStake.doubleValue();
-                    }));
     Map<Long, PoolHash> poolHashMap =
         poolHashRepository.findAll().parallelStream()
             .collect(Collectors.toMap(PoolHash::getId, Function.identity()));
-    Map<Long, List<LatestVotingProcedureProjection>> latestVotingProcedureMap =
-        latestVotingProcedureRepository
-            .findAllByVoterType(VoterType.STAKING_POOL_KEY_HASH)
-            .parallelStream()
-            .collect(Collectors.groupingBy(LatestVotingProcedureProjection::getPoolId));
-
-    List<GovActionType> govActionTypeList = new ArrayList<>(List.of(GovActionType.values()));
-
-    govActionTypeList.remove(GovActionType.TREASURY_WITHDRAWALS_ACTION);
-    govActionTypeList.remove(GovActionType.NEW_CONSTITUTION);
-    govActionTypeList.remove(GovActionType.PARAMETER_CHANGE_ACTION);
-
-    List<GovActionProposal> govActionProposalList =
-        govActionProposalRepository.getGovActionThatAllowedToVoteForSPO(govActionTypeList);
-
-    Map<Long, Long> poolVoteMap =
-        latestVotingProcedureMap.entrySet().parallelStream()
-            .collect(
-                Collectors.toMap(
-                    Entry::getKey, entry -> (Long) entry.getValue().parallelStream().count()));
-
-    Map<Long, Double> governanceParticipationRate =
-        poolVoteMap.entrySet().parallelStream()
-            .collect(
-                Collectors.toMap(
-                    Entry::getKey,
-                    entry -> {
-                      Long slot =
-                          poolHashRepository.getSlotNoWhenFirstDelegationByPoolHash(
-                              poolHashMap.get(entry.getKey()).getHashRaw());
-                      long countOfGovActionThatAllowedToVoteForSPO =
-                          govActionProposalList.stream()
-                              .filter(govActionProposal -> govActionProposal.getEpoch() < slot)
-                              .count();
-                      return (Double)
-                          (entry.getValue() * 1.0 / (countOfGovActionThatAllowedToVoteForSPO));
-                    }));
 
     Map<Long, AggregatePoolInfo> aggregatePoolInfoMap =
         aggregatePoolInfoRepository.findAllByPoolIdIn(poolHashMap.keySet()).parallelStream()
@@ -149,6 +99,10 @@ public class AggregatePoolInfoSchedule {
                 Collectors.toMap(
                     PoolCountProjection::getPoolId, PoolCountProjection::getCountValue));
 
+    Map<Long, Double> governanceParticipationRateMap = getGovernanceParticipationRateMap();
+
+    Map<Long, Double> votingPowerMap = getVotingPowerMap(useKoi0s);
+
     Timestamp currentTime =
         Timestamp.valueOf(LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC));
 
@@ -163,20 +117,97 @@ public class AggregatePoolInfoSchedule {
               aggregatePoolInfo.setUpdateTime(currentTime);
               aggregatePoolInfo.setPoolId(entry.getKey());
               if (useKoi0s) {
-                aggregatePoolInfo.setVotingPower(
-                    sumOfActiveStake.equals(BigInteger.ZERO)
-                        ? null
-                        : votingPowerMap.getOrDefault(entry.getKey(), 0.0));
-              } else {
-                aggregatePoolInfo.setVotingPower(null);
+                aggregatePoolInfo.setVotingPower(votingPowerMap.getOrDefault(entry.getKey(), null));
               }
               aggregatePoolInfo.setGovernanceParticipationRate(
-                  governanceParticipationRate.getOrDefault(entry.getKey(), 0.0));
+                  governanceParticipationRateMap.getOrDefault(entry.getKey(), 0.0));
             });
 
     aggregatePoolInfoRepository.saveAll(aggregatePoolInfoMap.values());
     log.info(
         "Update aggregate pool info done! Time taken: {} ms",
         System.currentTimeMillis() - startTime);
+  }
+
+  private Map<Long, Double> getGovernanceParticipationRateMap() {
+
+    List<GovActionType> govActionTypeList = new ArrayList<>(List.of(GovActionType.values()));
+
+    /* Gov Action that not allowed vote by SPOs
+     * refer: CIP1694 */
+    govActionTypeList.remove(GovActionType.TREASURY_WITHDRAWALS_ACTION);
+    govActionTypeList.remove(GovActionType.NEW_CONSTITUTION);
+    govActionTypeList.remove(GovActionType.PARAMETER_CHANGE_ACTION);
+
+    List<GovActionProposal> govActionProposalList =
+        govActionProposalRepository.getGovActionThatAllowedToVoteForSPO(govActionTypeList);
+
+    // get slot when the pool had registered
+    // agr1: poolId, agr2: slot
+    Map<Long, Long> poolSlotMap =
+        poolHashRepository.getSlotNoWhenFirstDelegation().stream()
+            .collect(Collectors.toMap(PoolHashProjection::getPoolId, PoolHashProjection::getSlot));
+
+    Map<Long, List<LatestVotingProcedureProjection>> latestVotingProcedureNotFilterSlotMap =
+        latestVotingProcedureRepository
+            .findAllByVoterType(VoterType.STAKING_POOL_KEY_HASH)
+            .parallelStream()
+            .collect(Collectors.groupingBy(LatestVotingProcedureProjection::getPoolId));
+
+    // filter gov action that submitted before the pool had registered
+    Map<Long, List<LatestVotingProcedureProjection>> latestVotingProcedureMap =
+        latestVotingProcedureNotFilterSlotMap.entrySet().parallelStream()
+            .collect(
+                Collectors.toMap(
+                    Entry::getKey,
+                    entry -> {
+                      Long slot = poolSlotMap.getOrDefault(entry.getKey(), 0L);
+                      return entry.getValue().stream()
+                          .filter(votingProcedure -> votingProcedure.getSlotGov() >= slot)
+                          .collect(Collectors.toList());
+                    }));
+
+    Map<Long, Long> countVoteMap =
+        latestVotingProcedureMap.entrySet().parallelStream()
+            .collect(Collectors.toMap(Entry::getKey, entry -> (long) entry.getValue().size()));
+
+    return countVoteMap.entrySet().parallelStream()
+        .collect(
+            Collectors.toMap(
+                Entry::getKey,
+                entry -> {
+                  Long slot = poolSlotMap.getOrDefault(entry.getKey(), 0L);
+                  long countOfGovActionThatAllowedToVoteForSPO =
+                      govActionProposalList.stream()
+                          .filter(govActionProposal -> govActionProposal.getSlot() >= slot)
+                          .count();
+                  return (Double)
+                      (entry.getValue() * 1.0 / (countOfGovActionThatAllowedToVoteForSPO));
+                }));
+  }
+
+  private Map<Long, Double> getVotingPowerMap(Boolean useKoi0s) {
+    BigInteger sumOfActiveStake;
+    if (useKoi0s) {
+      Integer currentEpoch = epochRepository.findMaxEpochNo();
+      List<PoolInfoProjection> poolInfoList = poolInfoRepository.findAllByEpochNo(currentEpoch);
+      sumOfActiveStake =
+          poolInfoList.stream()
+              .map(PoolInfoProjection::getActiveStake)
+              .filter(Objects::nonNull)
+              .reduce(BigInteger.ZERO, BigInteger::add);
+      if (sumOfActiveStake.equals(BigInteger.ZERO)) {
+        return new HashMap<>();
+      }
+      return poolInfoList.parallelStream()
+          .filter(poolInfoProjection -> poolInfoProjection.getActiveStake() != null)
+          .collect(
+              Collectors.toMap(
+                  PoolInfoProjection::getPoolId,
+                  poolInfoProjection ->
+                      poolInfoProjection.getActiveStake().doubleValue()
+                          / sumOfActiveStake.doubleValue()));
+    }
+    return new HashMap<>();
   }
 }
