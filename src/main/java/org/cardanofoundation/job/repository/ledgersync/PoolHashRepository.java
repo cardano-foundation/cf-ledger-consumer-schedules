@@ -48,7 +48,7 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
 
   @Query(
       value =
-          "SELECT ph.id AS id, pod.poolName AS poolName, ph.hashRaw AS poolId, ph.view AS poolView "
+          "SELECT ph.id AS id, pod.poolName AS poolName, ph.hashRaw AS hashRaw, ph.view AS poolView "
               + "FROM PoolHash ph "
               + "LEFT JOIN PoolOfflineData pod ON ph.id  = pod.pool.id AND pod.id = (SELECT max(pod2.id) FROM PoolOfflineData pod2 WHERE ph.id = pod2.pool.id ) "
               + "WHERE ph.view = :poolView "

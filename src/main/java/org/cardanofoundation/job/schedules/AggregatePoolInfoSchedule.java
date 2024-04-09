@@ -1,5 +1,6 @@
 package org.cardanofoundation.job.schedules;
 
+import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -27,12 +28,16 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal
 import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
 import org.cardanofoundation.job.projection.LatestVotingProcedureProjection;
 import org.cardanofoundation.job.projection.PoolCountProjection;
+import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.repository.ledgersync.AggregatePoolInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
+import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
 import org.cardanofoundation.job.repository.ledgersync.GovActionProposalRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolInfoRepository;
 import org.cardanofoundation.job.service.DelegationService;
+import org.cardanofoundation.job.service.FetchRewardDataService;
 
 @Slf4j
 @Component
@@ -47,11 +52,32 @@ public class AggregatePoolInfoSchedule {
   final PoolHashRepository poolHashRepository;
   final GovActionProposalRepository govActionProposalRepository;
   final LatestVotingProcedureRepository latestVotingProcedureRepository;
+  final EpochRepository epochRepository;
+  final FetchRewardDataService fetchRewardDataService;
+  final PoolInfoRepository poolInfoRepository;
 
   @Scheduled(fixedDelayString = "${jobs.aggregate-pool-info.fixed-delay}")
   @Transactional
   public void updateAggregatePoolInfoJob() {
     long startTime = System.currentTimeMillis();
+
+    Integer currentEpoch = epochRepository.findMaxEpochNo();
+    Boolean useKoi0s = fetchRewardDataService.isKoiOs();
+    List<PoolInfoProjection> poolInfoList = poolInfoRepository.findAllByEpochNo(currentEpoch);
+
+    BigInteger sumOfActiveStake =
+        poolInfoList.parallelStream()
+            .map(PoolInfoProjection::getActiveStake)
+            .reduce(BigInteger.ZERO, BigInteger::add);
+    Map<Long, Double> votingPowerMap =
+        poolInfoList.parallelStream()
+            .collect(
+                Collectors.toMap(
+                    PoolInfoProjection::getPoolId,
+                    poolInfoProjection -> {
+                      return poolInfoProjection.getActiveStake().doubleValue()
+                          / sumOfActiveStake.doubleValue();
+                    }));
     Map<Long, PoolHash> poolHashMap =
         poolHashRepository.findAll().parallelStream()
             .collect(Collectors.toMap(PoolHash::getId, Function.identity()));
@@ -136,6 +162,14 @@ public class AggregatePoolInfoSchedule {
               aggregatePoolInfo.setBlockInEpoch(blockInEpochMap.getOrDefault(entry.getKey(), 0));
               aggregatePoolInfo.setUpdateTime(currentTime);
               aggregatePoolInfo.setPoolId(entry.getKey());
+              if (useKoi0s) {
+                aggregatePoolInfo.setVotingPower(
+                    sumOfActiveStake.equals(BigInteger.ZERO)
+                        ? null
+                        : votingPowerMap.getOrDefault(entry.getKey(), 0.0));
+              } else {
+                aggregatePoolInfo.setVotingPower(null);
+              }
               aggregatePoolInfo.setGovernanceParticipationRate(
                   governanceParticipationRate.getOrDefault(entry.getKey(), 0.0));
             });
