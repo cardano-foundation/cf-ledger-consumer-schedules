@@ -172,7 +172,7 @@ public class PoolLifecycleServiceImpl implements PoolLifecycleService {
               totalFee = totalFee.add(deRegistration.getFee());
             }
             deRegistration.setTotalFee(totalFee);
-            deRegistration.setPoolId(poolInfo.getPoolId());
+            deRegistration.setPoolId(poolInfo.getHashRaw());
             deRegistration.setPoolName(poolInfo.getPoolName());
             deRegistration.setPoolView(poolInfo.getPoolView());
             deRegistration.setStakeKeys(poolUpdateRepository.findOwnerAccountByPoolView(poolView));
