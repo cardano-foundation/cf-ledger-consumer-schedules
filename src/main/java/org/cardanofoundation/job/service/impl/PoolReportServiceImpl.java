@@ -39,13 +39,15 @@ public class PoolReportServiceImpl implements PoolReportService {
   private String folderPrefix;
 
   @Override
-  public void exportPoolReport(PoolReportHistory poolReportHistory, Long zoneOffset, String timePattern) throws Exception {
+  public void exportPoolReport(
+      PoolReportHistory poolReportHistory, Long zoneOffset, String timePattern) throws Exception {
     var startTime = System.currentTimeMillis();
     try {
       List<ExportContent> exportContents = getExportContents(poolReportHistory);
       String storageKey = generateStorageKey(poolReportHistory);
       String excelFileName = storageKey + ExportType.EXCEL.getValue();
-      InputStream excelInputStream = excelHelper.writeContent(exportContents, zoneOffset, timePattern);
+      InputStream excelInputStream =
+          excelHelper.writeContent(exportContents, zoneOffset, timePattern);
       storageService.uploadFile(excelInputStream.readAllBytes(), excelFileName);
       poolReportHistory.getReportHistory().setStatus(ReportStatus.GENERATED);
       poolReportHistory.getReportHistory().setStorageKey(storageKey);

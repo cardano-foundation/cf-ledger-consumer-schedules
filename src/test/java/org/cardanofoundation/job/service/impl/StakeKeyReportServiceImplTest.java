@@ -109,11 +109,15 @@ class StakeKeyReportServiceImplTest {
     when(reportHistoryServiceAsync.exportStakeWalletActivitys(
             anyString(), any(StakeLifeCycleFilterRequest.class), any(Pageable.class), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
-    when(excelHelper.writeContent(anyList(), anyLong(), anyString())).thenReturn(new ByteArrayInputStream(new byte[0]));
+    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+        .thenReturn(new ByteArrayInputStream(new byte[0]));
 
     doThrow(new RuntimeException()).when(storageService).uploadFile(any(), anyString());
     Assertions.assertThrows(
-        Exception.class, () -> stakeKeyReportService.exportStakeKeyReport(stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
+        Exception.class,
+        () ->
+            stakeKeyReportService.exportStakeKeyReport(
+                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
     Assertions.assertEquals(
         ReportStatus.FAILED, stakeKeyReportHistory.getReportHistory().getStatus());
   }
@@ -168,13 +172,16 @@ class StakeKeyReportServiceImplTest {
     when(reportHistoryServiceAsync.exportStakeWalletActivitys(
             anyString(), any(StakeLifeCycleFilterRequest.class), any(Pageable.class), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
-    when(excelHelper.writeContent(anyList(), anyLong(), anyString())).thenReturn(new ByteArrayInputStream(new byte[0]));
+    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+        .thenReturn(new ByteArrayInputStream(new byte[0]));
     doNothing().when(storageService).uploadFile(any(), anyString());
     when(stakeKeyReportHistoryRepository.save(any(StakeKeyReportHistory.class)))
         .thenReturn(new StakeKeyReportHistory());
 
     Assertions.assertDoesNotThrow(
-        () -> stakeKeyReportService.exportStakeKeyReport(stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
+        () ->
+            stakeKeyReportService.exportStakeKeyReport(
+                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
     Assertions.assertEquals(
         ReportStatus.GENERATED, stakeKeyReportHistory.getReportHistory().getStatus());
   }

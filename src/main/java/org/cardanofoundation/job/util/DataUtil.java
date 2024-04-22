@@ -49,7 +49,8 @@ public class DataUtil {
     return "";
   }
 
-  public static String localDateTimeToString(LocalDateTime value, Long timezoneOffset, String pattern) {
+  public static String localDateTimeToString(
+      LocalDateTime value, Long timezoneOffset, String pattern) {
     if (pattern != null) {
       DateTimeFormatter dtf = DateTimeFormatter.ofPattern(pattern);
       return dtf.format(value.plus(Duration.ofHours(timezoneOffset)));

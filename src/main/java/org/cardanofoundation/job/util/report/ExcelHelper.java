@@ -46,12 +46,13 @@ public class ExcelHelper {
   @Value("${jobs.limit-content}")
   private int limitSize;
 
-  public ByteArrayInputStream writeContent(List<ExportContent> exportContents, Long timezoneOffset, String timePattern) {
-    if(timezoneOffset == null) {
+  public ByteArrayInputStream writeContent(
+      List<ExportContent> exportContents, Long timezoneOffset, String timePattern) {
+    if (timezoneOffset == null) {
       timezoneOffset = 0L;
     }
 
-    if(timePattern == null) {
+    if (timePattern == null) {
       timePattern = DATE_TIME_PATTERN;
     }
 
@@ -73,7 +74,8 @@ public class ExcelHelper {
           sheet.trackColumnForAutoSizing(i);
           sheet.autoSizeColumn(i);
         }
-        writeDataReport(workbook, exportContent, sheet, lstColumn, lstData, timezoneOffset, timePattern);
+        writeDataReport(
+            workbook, exportContent, sheet, lstColumn, lstData, timezoneOffset, timePattern);
       }
       try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
         workbook.write(out);
@@ -139,7 +141,8 @@ public class ExcelHelper {
         } else if (value instanceof Date || value instanceof Timestamp) {
           text = DataUtil.dateToString(((Date) value), timezoneOffset, timePattern);
         } else if (value instanceof LocalDateTime) {
-          text = DataUtil.localDateTimeToString(((LocalDateTime) value), timezoneOffset, timePattern);
+          text =
+              DataUtil.localDateTimeToString(((LocalDateTime) value), timezoneOffset, timePattern);
         } else if (value instanceof Enum<?>) {
           text = DataUtil.enumToString((Enum<?>) value);
         } else {

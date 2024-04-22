@@ -52,13 +52,16 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
    * @throws Exception
    */
   @Override
-  public void exportStakeKeyReport(StakeKeyReportHistory stakeKeyReportHistory, Long zoneOffset, String timePattern) throws Exception {
+  public void exportStakeKeyReport(
+      StakeKeyReportHistory stakeKeyReportHistory, Long zoneOffset, String timePattern)
+      throws Exception {
     var startTime = System.currentTimeMillis();
     try {
       List<ExportContent> exportContents = getExportContents(stakeKeyReportHistory);
       String storageKey = generateStorageKey(stakeKeyReportHistory);
       String excelFileName = storageKey + ExportType.EXCEL.getValue();
-      InputStream excelInputStream = excelHelper.writeContent(exportContents, zoneOffset, timePattern);
+      InputStream excelInputStream =
+          excelHelper.writeContent(exportContents, zoneOffset, timePattern);
       storageService.uploadFile(excelInputStream.readAllBytes(), excelFileName);
       stakeKeyReportHistory.getReportHistory().setStatus(ReportStatus.GENERATED);
       stakeKeyReportHistory.getReportHistory().setStorageKey(storageKey);
