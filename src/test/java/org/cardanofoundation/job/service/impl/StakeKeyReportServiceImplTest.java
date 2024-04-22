@@ -2,6 +2,7 @@ package org.cardanofoundation.job.service.impl;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -108,11 +109,15 @@ class StakeKeyReportServiceImplTest {
     when(reportHistoryServiceAsync.exportStakeWalletActivitys(
             anyString(), any(StakeLifeCycleFilterRequest.class), any(Pageable.class), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
-    when(excelHelper.writeContent(anyList())).thenReturn(new ByteArrayInputStream(new byte[0]));
+    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+        .thenReturn(new ByteArrayInputStream(new byte[0]));
 
     doThrow(new RuntimeException()).when(storageService).uploadFile(any(), anyString());
     Assertions.assertThrows(
-        Exception.class, () -> stakeKeyReportService.exportStakeKeyReport(stakeKeyReportHistory));
+        Exception.class,
+        () ->
+            stakeKeyReportService.exportStakeKeyReport(
+                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
     Assertions.assertEquals(
         ReportStatus.FAILED, stakeKeyReportHistory.getReportHistory().getStatus());
   }
@@ -167,13 +172,16 @@ class StakeKeyReportServiceImplTest {
     when(reportHistoryServiceAsync.exportStakeWalletActivitys(
             anyString(), any(StakeLifeCycleFilterRequest.class), any(Pageable.class), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
-    when(excelHelper.writeContent(anyList())).thenReturn(new ByteArrayInputStream(new byte[0]));
+    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+        .thenReturn(new ByteArrayInputStream(new byte[0]));
     doNothing().when(storageService).uploadFile(any(), anyString());
     when(stakeKeyReportHistoryRepository.save(any(StakeKeyReportHistory.class)))
         .thenReturn(new StakeKeyReportHistory());
 
     Assertions.assertDoesNotThrow(
-        () -> stakeKeyReportService.exportStakeKeyReport(stakeKeyReportHistory));
+        () ->
+            stakeKeyReportService.exportStakeKeyReport(
+                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
     Assertions.assertEquals(
         ReportStatus.GENERATED, stakeKeyReportHistory.getReportHistory().getStatus());
   }

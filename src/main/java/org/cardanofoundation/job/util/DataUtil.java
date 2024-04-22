@@ -41,26 +41,27 @@ public class DataUtil {
     return map == null || map.isEmpty();
   }
 
-  public static String instantToString(Instant value, String pattern) {
+  public static String instantToString(Instant value, Long timezoneOffset, String pattern) {
     if (pattern != null) {
       DateTimeFormatter dtf = DateTimeFormatter.ofPattern(pattern);
-      return dtf.format(value.plus(Duration.ofHours(7)));
+      return dtf.format(value.plus(Duration.ofMinutes(timezoneOffset)));
     }
     return "";
   }
 
-  public static String localDateTimeToString(LocalDateTime value, String pattern) {
+  public static String localDateTimeToString(
+      LocalDateTime value, Long timezoneOffset, String pattern) {
     if (pattern != null) {
       DateTimeFormatter dtf = DateTimeFormatter.ofPattern(pattern);
-      return dtf.format(value.plus(Duration.ofHours(7)));
+      return dtf.format(value.plus(Duration.ofHours(timezoneOffset)));
     }
     return "";
   }
 
-  public static String dateToString(Date value, String pattern) {
+  public static String dateToString(Date value, Long timezoneOffset, String pattern) {
     if (pattern != null) {
       SimpleDateFormat dtf = new SimpleDateFormat(pattern);
-      return dtf.format(Date.from(value.toInstant().plus(Duration.ofHours(7))));
+      return dtf.format(Date.from(value.toInstant().plus(Duration.ofMinutes(timezoneOffset))));
     }
     return "";
   }

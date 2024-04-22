@@ -2,6 +2,7 @@ package org.cardanofoundation.job.service.impl;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -74,10 +75,12 @@ class PoolReportServiceImplTest {
     when(reportHistoryServiceAsync.exportEpochSize(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
-    when(excelHelper.writeContent(anyList())).thenReturn(new ByteArrayInputStream(new byte[0]));
+    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+        .thenReturn(new ByteArrayInputStream(new byte[0]));
     doThrow(new RuntimeException()).when(storageService).uploadFile(any(), anyString());
     Assertions.assertThrows(
-        Exception.class, () -> poolReportService.exportPoolReport(poolReportHistory));
+        Exception.class,
+        () -> poolReportService.exportPoolReport(poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
     Assertions.assertEquals(ReportStatus.FAILED, poolReportHistory.getReportHistory().getStatus());
   }
 
@@ -114,11 +117,13 @@ class PoolReportServiceImplTest {
     when(reportHistoryServiceAsync.exportEpochSize(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
-    when(excelHelper.writeContent(anyList())).thenReturn(new ByteArrayInputStream(new byte[0]));
+    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+        .thenReturn(new ByteArrayInputStream(new byte[0]));
     doNothing().when(storageService).uploadFile(any(), anyString());
     when(poolReportRepository.save(any())).thenReturn(new PoolReportHistory());
 
-    Assertions.assertDoesNotThrow(() -> poolReportService.exportPoolReport(poolReportHistory));
+    Assertions.assertDoesNotThrow(
+        () -> poolReportService.exportPoolReport(poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
     Assertions.assertEquals(
         ReportStatus.GENERATED, poolReportHistory.getReportHistory().getStatus());
   }
