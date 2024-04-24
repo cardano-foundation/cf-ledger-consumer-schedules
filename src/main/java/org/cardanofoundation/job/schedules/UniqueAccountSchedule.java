@@ -1,6 +1,7 @@
 package org.cardanofoundation.job.schedules;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,12 +54,12 @@ public class UniqueAccountSchedule {
       if (Boolean.FALSE.equals(redisTemplate.hasKey(redisKey))
           || epoch.getNo() > currentEpoch - 5) {
         log.info("Building unique account for epoch: {}", epoch.getNo());
-        Map<String, Integer> uniqueAccounts =
-            epochRepository.findUniqueAccountsInEpoch(epoch.getNo()).stream()
-                .collect(
-                    Collectors.toMap(
-                        UniqueAccountTxCountProjection::getAccount,
-                        UniqueAccountTxCountProjection::getTxCount));
+        Map<String, Integer> uniqueAccounts = new HashMap<>();
+//            epochRepository.findUniqueAccountsInEpoch(epoch.getNo()).stream()
+//                .collect(
+//                    Collectors.toMap(
+//                        UniqueAccountTxCountProjection::getAccount,
+//                        UniqueAccountTxCountProjection::getTxCount));
         if (!CollectionUtils.isEmpty(uniqueAccounts)) {
           redisTemplate.opsForHash().putAll(redisKey, uniqueAccounts);
         }
