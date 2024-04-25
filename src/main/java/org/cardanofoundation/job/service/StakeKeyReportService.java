@@ -10,6 +10,10 @@ public interface StakeKeyReportService {
    * @param stakeKeyReportHistory stake key report history
    */
   void exportStakeKeyReport(
-      StakeKeyReportHistory stakeKeyReportHistory, Long zoneOffset, String timePattern)
+      StakeKeyReportHistory stakeKeyReportHistory,
+      Long zoneOffset,
+      String timePattern,
+      String dateFormat,
+      String stakeAddress)
       throws Exception;
 }

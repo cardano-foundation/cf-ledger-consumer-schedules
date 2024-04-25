@@ -47,13 +47,21 @@ public class ReportsListener {
           StakeKeyReportHistory stakeKeyReportHistory =
               stakeKeyReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
           stakeKeyReportService.exportStakeKeyReport(
-              stakeKeyReportHistory, reportMessage.getZoneOffset(), reportMessage.getTimePattern());
+              stakeKeyReportHistory,
+              reportMessage.getZoneOffset(),
+              reportMessage.getTimePattern(),
+              reportMessage.getDateFormat(),
+              reportMessage.getStakeAddress());
           break;
         case POOL_ID:
           PoolReportHistory poolReportHistory =
               poolReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
           poolReportService.exportPoolReport(
-              poolReportHistory, reportMessage.getZoneOffset(), reportMessage.getTimePattern());
+              poolReportHistory,
+              reportMessage.getZoneOffset(),
+              reportMessage.getTimePattern(),
+              reportMessage.getDateFormat(),
+              reportMessage.getPoolId());
           break;
         default:
           break;

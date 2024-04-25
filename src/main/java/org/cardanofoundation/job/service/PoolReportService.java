@@ -4,6 +4,11 @@ import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
 
 public interface PoolReportService {
 
-  void exportPoolReport(PoolReportHistory poolReportHistory, Long zoneOffset, String timePattern)
+  void exportPoolReport(
+      PoolReportHistory poolReportHistory,
+      Long zoneOffset,
+      String timePattern,
+      String dateFormat,
+      String poolId)
       throws Exception;
 }
