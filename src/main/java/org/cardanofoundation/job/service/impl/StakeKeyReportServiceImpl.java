@@ -56,14 +56,12 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
       StakeKeyReportHistory stakeKeyReportHistory,
       Long zoneOffset,
       String timePattern,
-      String dateFormat,
-      String stakeAddress)
+      String dateFormat)
       throws Exception {
     var startTime = System.currentTimeMillis();
     try {
       List<ExportContent> exportContents =
-          getExportContents(
-              stakeKeyReportHistory, zoneOffset, timePattern, dateFormat, stakeAddress);
+          getExportContents(stakeKeyReportHistory, zoneOffset, timePattern, dateFormat);
       String storageKey = generateStorageKey(stakeKeyReportHistory);
       String excelFileName = storageKey + ExportType.EXCEL.getValue();
       InputStream excelInputStream =
@@ -98,8 +96,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
       StakeKeyReportHistory stakeKeyReportHistory,
       Long zoneOffset,
       String timePattern,
-      String dateFormat,
-      String stakeAddress) {
+      String dateFormat) {
     StakeLifeCycleFilterRequest stakeLifeCycleFilterRequest =
         getStakeLifeCycleFilterRequest(stakeKeyReportHistory);
 
@@ -115,11 +112,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
 
     exportContents.add(
         reportHistoryServiceAsync.exportInformationOnTheReport(
-            stakeKeyReportHistory.getReportHistory(),
-            zoneOffset,
-            timePattern,
-            dateFormat,
-            stakeAddress));
+            stakeKeyReportHistory.getReportHistory(), zoneOffset, timePattern, dateFormat));
 
     if (Boolean.TRUE.equals(stakeKeyReportHistory.getEventRegistration())) {
       exportContents.add(

@@ -344,15 +344,10 @@ public class ReportHistoryServiceAsync {
 
   @Async
   public CompletableFuture<ExportContent> exportInformationOnTheReport(
-      ReportHistory reportHistory,
-      Long zoneOffset,
-      String timePattern,
-      String dateFormat,
-      String poolIdOrStakeAddress) {
+      ReportHistory reportHistory, Long zoneOffset, String timePattern, String dateFormat) {
     boolean isPoolReport = ReportType.POOL_ID.equals(reportHistory.getType());
     InformationReport informationReport =
-        buildInformationReport(
-            reportHistory, zoneOffset, timePattern, dateFormat, poolIdOrStakeAddress);
+        buildInformationReport(reportHistory, zoneOffset, timePattern, dateFormat);
 
     List<InformationReport> list = new ArrayList<>(List.of(informationReport));
     return CompletableFuture.completedFuture(
@@ -365,22 +360,16 @@ public class ReportHistoryServiceAsync {
   }
 
   private InformationReport buildInformationReport(
-      ReportHistory reportHistory,
-      Long zoneOffset,
-      String timePattern,
-      String dateFormat,
-      String poolIdOrStakeAddress) {
+      ReportHistory reportHistory, Long zoneOffset, String timePattern, String dateFormat) {
     boolean isPoolReport = ReportType.POOL_ID.equals(reportHistory.getType());
     if (isPoolReport) {
-      return buildPoolReport(reportHistory, dateFormat, poolIdOrStakeAddress);
+      return buildPoolReport(reportHistory, dateFormat);
     } else {
-      return buildStakeReport(
-          reportHistory, zoneOffset, timePattern, dateFormat, poolIdOrStakeAddress);
+      return buildStakeReport(reportHistory, zoneOffset, timePattern, dateFormat);
     }
   }
 
-  private InformationReport buildPoolReport(
-      ReportHistory reportHistory, String dateFormat, String poolId) {
+  private InformationReport buildPoolReport(ReportHistory reportHistory, String dateFormat) {
     PoolReportHistory poolReportHistory =
         poolReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
     Integer epochBegin = poolReportHistory.getBeginEpoch();
@@ -411,7 +400,7 @@ public class ReportHistoryServiceAsync {
     return InformationReport.builder()
         .createdAt(reportHistory.getCreatedAt())
         .reportType("Pool Report")
-        .poolId(poolId)
+        .poolId(poolReportHistory.getPoolView())
         .reportName(reportHistory.getReportName())
         .epochRange(epochRange)
         .dateTimeFormat(dateFormat)
@@ -421,11 +410,7 @@ public class ReportHistoryServiceAsync {
   }
 
   private InformationReport buildStakeReport(
-      ReportHistory reportHistory,
-      Long zoneOffset,
-      String timePattern,
-      String dateFormat,
-      String stakeAddress) {
+      ReportHistory reportHistory, Long zoneOffset, String timePattern, String dateFormat) {
     StakeKeyReportHistory stakeKeyReportHistory =
         stakeKeyReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
 
@@ -463,7 +448,7 @@ public class ReportHistoryServiceAsync {
     return InformationReport.builder()
         .createdAt(reportHistory.getCreatedAt())
         .reportType("Stake Address Report")
-        .stakeAddress(stakeAddress)
+        .stakeAddress(stakeKeyReportHistory.getStakeKey())
         .reportName(reportHistory.getReportName())
         .dateRange(dateRange)
         .dateTimeFormat(dateFormat)

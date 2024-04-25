@@ -92,7 +92,7 @@ class StakeKeyReportServiceImplTest {
                 .build());
 
     when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString(), anyString()))
+            any(), anyLong(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
     when(reportHistoryServiceAsync.exportStakeRegistrations(stakeKey, condition))
@@ -121,11 +121,7 @@ class StakeKeyReportServiceImplTest {
         Exception.class,
         () ->
             stakeKeyReportService.exportStakeKeyReport(
-                stakeKeyReportHistory,
-                0L,
-                "MM/dd/yyyy HH:mm:ss",
-                "MM/DD/YYYY (UTC)",
-                "stakeAddress"));
+                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
     Assertions.assertEquals(
         ReportStatus.FAILED, stakeKeyReportHistory.getReportHistory().getStatus());
   }
@@ -163,7 +159,7 @@ class StakeKeyReportServiceImplTest {
                 .build());
 
     when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString(), anyString()))
+            any(), anyLong(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
     when(reportHistoryServiceAsync.exportStakeRegistrations(stakeKey, condition))
@@ -193,11 +189,7 @@ class StakeKeyReportServiceImplTest {
     Assertions.assertDoesNotThrow(
         () ->
             stakeKeyReportService.exportStakeKeyReport(
-                stakeKeyReportHistory,
-                0L,
-                "MM/dd/yyyy HH:mm:ss",
-                "MM/DD/YYYY (UTC)",
-                "stakeAddress"));
+                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
     Assertions.assertEquals(
         ReportStatus.GENERATED, stakeKeyReportHistory.getReportHistory().getStatus());
   }

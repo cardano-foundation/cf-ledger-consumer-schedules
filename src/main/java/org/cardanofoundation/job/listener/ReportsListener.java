@@ -50,8 +50,7 @@ public class ReportsListener {
               stakeKeyReportHistory,
               reportMessage.getZoneOffset(),
               reportMessage.getTimePattern(),
-              reportMessage.getDateFormat(),
-              reportMessage.getStakeAddress());
+              reportMessage.getDateFormat());
           break;
         case POOL_ID:
           PoolReportHistory poolReportHistory =
@@ -60,8 +59,7 @@ public class ReportsListener {
               poolReportHistory,
               reportMessage.getZoneOffset(),
               reportMessage.getTimePattern(),
-              reportMessage.getDateFormat(),
-              reportMessage.getPoolId());
+              reportMessage.getDateFormat());
           break;
         default:
           break;

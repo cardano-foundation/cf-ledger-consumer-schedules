@@ -13,7 +13,6 @@ public interface StakeKeyReportService {
       StakeKeyReportHistory stakeKeyReportHistory,
       Long zoneOffset,
       String timePattern,
-      String dateFormat,
-      String stakeAddress)
+      String dateFormat)
       throws Exception;
 }

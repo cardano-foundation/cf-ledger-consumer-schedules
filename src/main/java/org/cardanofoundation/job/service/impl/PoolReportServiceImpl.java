@@ -41,16 +41,12 @@ public class PoolReportServiceImpl implements PoolReportService {
 
   @Override
   public void exportPoolReport(
-      PoolReportHistory poolReportHistory,
-      Long zoneOffset,
-      String timePattern,
-      String dateFormat,
-      String poolId)
+      PoolReportHistory poolReportHistory, Long zoneOffset, String timePattern, String dateFormat)
       throws Exception {
     var startTime = System.currentTimeMillis();
     try {
       List<ExportContent> exportContents =
-          getExportContents(poolReportHistory, zoneOffset, timePattern, dateFormat, poolId);
+          getExportContents(poolReportHistory, zoneOffset, timePattern, dateFormat);
       String storageKey = generateStorageKey(poolReportHistory);
       String excelFileName = storageKey + ExportType.EXCEL.getValue();
       InputStream excelInputStream =
@@ -76,11 +72,7 @@ public class PoolReportServiceImpl implements PoolReportService {
   }
 
   private List<ExportContent> getExportContents(
-      PoolReportHistory poolReportHistory,
-      Long zoneOffset,
-      String timePattern,
-      String dateFormat,
-      String poolId) {
+      PoolReportHistory poolReportHistory, Long zoneOffset, String timePattern, String dateFormat) {
     List<CompletableFuture<ExportContent>> exportContents = new ArrayList<>();
     var currentTime = System.currentTimeMillis();
     /* Check all events are enabled or not then get content correspondingly to each event
@@ -92,7 +84,7 @@ public class PoolReportServiceImpl implements PoolReportService {
      */
     exportContents.add(
         reportHistoryServiceAsync.exportInformationOnTheReport(
-            poolReportHistory.getReportHistory(), zoneOffset, timePattern, dateFormat, poolId));
+            poolReportHistory.getReportHistory(), zoneOffset, timePattern, dateFormat));
 
     if (Boolean.TRUE.equals(poolReportHistory.getEventRegistration())) {
       exportContents.add(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory));

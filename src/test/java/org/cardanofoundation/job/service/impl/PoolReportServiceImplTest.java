@@ -65,7 +65,7 @@ class PoolReportServiceImplTest {
                 .build());
 
     when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString(), anyString()))
+            any(), anyLong(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
@@ -85,7 +85,7 @@ class PoolReportServiceImplTest {
         Exception.class,
         () ->
             poolReportService.exportPoolReport(
-                poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)", "poolId"));
+                poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
     Assertions.assertEquals(ReportStatus.FAILED, poolReportHistory.getReportHistory().getStatus());
   }
 
@@ -111,7 +111,7 @@ class PoolReportServiceImplTest {
                 .isPoolSize(Boolean.TRUE)
                 .build());
     when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString(), anyString()))
+            any(), anyLong(), anyString(), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
@@ -132,7 +132,7 @@ class PoolReportServiceImplTest {
     Assertions.assertDoesNotThrow(
         () ->
             poolReportService.exportPoolReport(
-                poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)", "stakeAddress"));
+                poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
     Assertions.assertEquals(
         ReportStatus.GENERATED, poolReportHistory.getReportHistory().getStatus());
   }
