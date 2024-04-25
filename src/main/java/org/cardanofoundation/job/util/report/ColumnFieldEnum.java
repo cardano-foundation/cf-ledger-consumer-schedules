@@ -32,6 +32,17 @@ public enum ColumnFieldEnum {
   OWNER_COLUMN("owner"),
   OPERATOR_REWARD_COLUMN("rawOperatorReward"),
   REWARD_ACCOUNT_COLUMN("rewardAccount"),
-  POOL_NAME_COLUMN("poolName");
+  POOL_NAME_COLUMN("poolName"),
+  CREATED_AT_COLUMN("createdAt"),
+  REPORT_TYPE_COLUMN("reportType"),
+  STAKE_ADDRESS_COLUMN("stakeAddress"),
+  POOL_ID_COLUMN("poolId"),
+  REPORT_NAME_COLUMN("reportName"),
+  DATE_RANGE_COLUMN("dateRange"),
+  EPOCH_RANGE_COLUMN("epochRange"),
+  DATE_TIME_FORTMAT_COLUMN("dateTimeFormat"),
+  EVENTS_COLUMN("events"),
+  ADA_TRANSFERS_COLUMN("isADATransfers"),
+  POOL_SIZE_COLUMN("isPoolSize");
   private String value;
 }

@@ -31,6 +31,17 @@ public enum ColumnTitleEnum {
   OWNER_TITLE("Owner"),
   OPERATOR_REWARD_TITLE("Operator Reward ADA"),
   REWARD_ACCOUNT_TITLE("Reward Account"),
-  POOL_NAME_TITLE("Delegating to");
+  POOL_NAME_TITLE("Delegating to"),
+  CREATED_AT_TITLE("Created At"),
+  REPORT_TYPE_TITLE("Report Type"),
+  STAKE_ADDRESS_TITLE("Stake Address"),
+  POOL_ID_TITLE("Pool ID"),
+  REPORT_NAME_TITLE("Report Name"),
+  DATE_RANGE_TITLE("Date Range"),
+  EPOCH_RANGE_TITLE("Epoch Range"),
+  DATE_TIME_FORMAT_TITLE("Date-Time Format"),
+  EVENTS_TITLE("Events"),
+  ADA_TRANSFERS_TITLE("ADA Transfers"),
+  POOL_SIZE_TITLE("Pool Size");
   private String value;
 }
