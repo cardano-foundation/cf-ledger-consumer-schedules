@@ -19,6 +19,7 @@ import org.cardanofoundation.explorer.common.entity.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
 import org.cardanofoundation.job.common.enumeration.ExportType;
 import org.cardanofoundation.job.repository.explorer.PoolReportHistoryRepository;
+import org.cardanofoundation.job.repository.explorer.ReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.util.report.ExcelHelper;
@@ -32,7 +33,7 @@ public class PoolReportServiceImpl implements PoolReportService {
   private final StorageReportServiceImpl storageService;
   private final PoolReportHistoryRepository poolReportRepository;
   private final ExcelHelper excelHelper;
-
+  private final ReportHistoryRepository reportHistoryRepository;
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
 
   @Value("${application.network}")
@@ -40,10 +41,12 @@ public class PoolReportServiceImpl implements PoolReportService {
 
   @Override
   public void exportPoolReport(
-      PoolReportHistory poolReportHistory, Long zoneOffset, String timePattern) throws Exception {
+      PoolReportHistory poolReportHistory, Long zoneOffset, String timePattern, String dateFormat)
+      throws Exception {
     var startTime = System.currentTimeMillis();
     try {
-      List<ExportContent> exportContents = getExportContents(poolReportHistory);
+      List<ExportContent> exportContents =
+          getExportContents(poolReportHistory, zoneOffset, timePattern, dateFormat);
       String storageKey = generateStorageKey(poolReportHistory);
       String excelFileName = storageKey + ExportType.EXCEL.getValue();
       InputStream excelInputStream =
@@ -68,10 +71,10 @@ public class PoolReportServiceImpl implements PoolReportService {
     }
   }
 
-  private List<ExportContent> getExportContents(PoolReportHistory poolReportHistory) {
+  private List<ExportContent> getExportContents(
+      PoolReportHistory poolReportHistory, Long zoneOffset, String timePattern, String dateFormat) {
     List<CompletableFuture<ExportContent>> exportContents = new ArrayList<>();
     var currentTime = System.currentTimeMillis();
-
     /* Check all events are enabled or not then get content correspondingly to each event
      * Each data of event will be stored in a different sheet.
      * Due to retrieving data for each sheet is independent of one another,
@@ -79,6 +82,9 @@ public class PoolReportServiceImpl implements PoolReportService {
      * to retrieve data concurrently.
      * ReportHistoryServiceAsync is used to retrieve data concurrently.
      */
+    exportContents.add(
+        reportHistoryServiceAsync.exportInformationOnTheReport(
+            poolReportHistory.getReportHistory(), zoneOffset, timePattern, dateFormat));
 
     if (Boolean.TRUE.equals(poolReportHistory.getEventRegistration())) {
       exportContents.add(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory));
