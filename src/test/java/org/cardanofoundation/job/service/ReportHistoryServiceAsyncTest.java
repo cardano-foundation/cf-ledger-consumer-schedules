@@ -31,6 +31,8 @@ import org.cardanofoundation.job.dto.report.stake.StakeRegistrationLifeCycle;
 import org.cardanofoundation.job.dto.report.stake.StakeRewardResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWalletActivityResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWithdrawalFilterResponse;
+import org.cardanofoundation.job.repository.explorer.PoolReportHistoryRepository;
+import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ReportHistoryServiceAsyncTest {
@@ -48,6 +50,9 @@ class ReportHistoryServiceAsyncTest {
   @Mock StakeKeyLifeCycleService stakeKeyLifeCycleService;
   @Mock PoolLifecycleService poolLifecycleService;
   @Mock FetchRewardDataService fetchRewardDataService;
+  @Mock StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
+
+  @Mock PoolReportHistoryRepository poolReportHistoryRepository;
   ReportHistoryServiceAsync reportHistoryServiceAsync;
 
   private Pageable defPageableStake;
@@ -61,7 +66,11 @@ class ReportHistoryServiceAsyncTest {
   void setUp() {
     reportHistoryServiceAsync =
         new ReportHistoryServiceAsync(
-            stakeKeyLifeCycleService, poolLifecycleService, fetchRewardDataService);
+            stakeKeyLifeCycleService,
+            poolLifecycleService,
+            fetchRewardDataService,
+            stakeKeyReportHistoryRepository,
+            poolReportHistoryRepository);
     defPageableStake = PageRequest.of(0, 1000, Sort.by("time").descending());
     defPageablePool = PageRequest.of(0, 1000, Sort.by("id").descending());
     ReflectionTestUtils.setField(reportHistoryServiceAsync, "limitSize", 1000);
@@ -231,5 +240,12 @@ class ReportHistoryServiceAsyncTest {
     Assertions.assertEquals(DEREGISTRATION_TITLE, response.getHeaderTitle());
     Assertions.assertEquals(0, response.getLstData().size());
     Assertions.assertEquals(PoolDeregistration.class, response.getClazz());
+  }
+
+  @Test
+  void getTeset() {
+    String pattern = "MM/dd/yyyy, HH:mm:ss";
+    String datePattern = pattern.substring(0, pattern.indexOf(','));
+    System.out.println(datePattern.length());
   }
 }

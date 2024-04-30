@@ -46,7 +46,16 @@ public class ExcelHelper {
   @Value("${jobs.limit-content}")
   private int limitSize;
 
-  public ByteArrayInputStream writeContent(List<ExportContent> exportContents) {
+  public ByteArrayInputStream writeContent(
+      List<ExportContent> exportContents, Long timezoneOffset, String timePattern) {
+    if (timezoneOffset == null) {
+      timezoneOffset = 0L;
+    }
+
+    if (timePattern == null) {
+      timePattern = DATE_TIME_PATTERN;
+    }
+
     var currentTime = System.currentTimeMillis();
     try (SXSSFWorkbook workbook = new SXSSFWorkbook(100)) {
       CellStyle cellStyleHeader = createStyleHeader(workbook);
@@ -65,7 +74,8 @@ public class ExcelHelper {
           sheet.trackColumnForAutoSizing(i);
           sheet.autoSizeColumn(i);
         }
-        writeDataReport(workbook, exportContent, sheet, lstColumn, lstData);
+        writeDataReport(
+            workbook, exportContent, sheet, lstColumn, lstData, timezoneOffset, timePattern);
       }
       try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
         workbook.write(out);
@@ -82,7 +92,9 @@ public class ExcelHelper {
       ExportContent exportContent,
       SXSSFSheet sheet,
       List<ExportColumn> lstColumn,
-      List<?> lstData)
+      List<?> lstData,
+      Long timezoneOffset,
+      String timePattern)
       throws IllegalAccessException {
     List<Field> fields = ReflectorUtil.getAllFields(exportContent.getClazz());
     Map<String, Field> mapField = new HashMap<>();
@@ -125,11 +137,12 @@ public class ExcelHelper {
         if (value instanceof Double) {
           text = DataUtil.doubleToString((Double) value);
         } else if (value instanceof Instant) {
-          text = DataUtil.instantToString((Instant) value, DATE_TIME_PATTERN);
+          text = DataUtil.instantToString((Instant) value, timezoneOffset, timePattern);
         } else if (value instanceof Date || value instanceof Timestamp) {
-          text = DataUtil.dateToString(((Date) value), DATE_TIME_PATTERN);
+          text = DataUtil.dateToString(((Date) value), timezoneOffset, timePattern);
         } else if (value instanceof LocalDateTime) {
-          text = DataUtil.localDateTimeToString(((LocalDateTime) value), DATE_TIME_PATTERN);
+          text =
+              DataUtil.localDateTimeToString(((LocalDateTime) value), timezoneOffset, timePattern);
         } else if (value instanceof Enum<?>) {
           text = DataUtil.enumToString((Enum<?>) value);
         } else {

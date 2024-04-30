@@ -4,8 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.cardanofoundation.explorer.common.entity.compositeKey.CommitteeRegistrationId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.CommitteeRegistration;
-import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.CommitteeRegistrationId;
 
 public interface CommitteeRegistrationRepository
     extends JpaRepository<CommitteeRegistration, CommitteeRegistrationId> {

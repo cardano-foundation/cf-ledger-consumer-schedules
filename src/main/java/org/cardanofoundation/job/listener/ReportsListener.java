@@ -13,6 +13,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
 import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
 import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
+import org.cardanofoundation.explorer.common.model.ReportMessage;
 import org.cardanofoundation.job.repository.explorer.PoolReportHistoryRepository;
 import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
@@ -34,9 +35,10 @@ public class ReportsListener {
 
   @KafkaListener(topics = "${kafka.listeners.topics.reports}")
   public void consume(
-      ConsumerRecord<String, ReportHistory> consumerRecord, Acknowledgment acknowledgment) {
+      ConsumerRecord<String, ReportMessage> consumerRecord, Acknowledgment acknowledgment) {
     try {
-      ReportHistory reportHistory = consumerRecord.value();
+      ReportMessage reportMessage = consumerRecord.value();
+      ReportHistory reportHistory = reportMessage.getReportHistory();
       log.info(
           "Receive report history {} with type {}", reportHistory.getId(), reportHistory.getType());
 
@@ -44,12 +46,20 @@ public class ReportsListener {
         case STAKE_KEY:
           StakeKeyReportHistory stakeKeyReportHistory =
               stakeKeyReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
-          stakeKeyReportService.exportStakeKeyReport(stakeKeyReportHistory);
+          stakeKeyReportService.exportStakeKeyReport(
+              stakeKeyReportHistory,
+              reportMessage.getZoneOffset(),
+              reportMessage.getTimePattern(),
+              reportMessage.getDateFormat());
           break;
         case POOL_ID:
           PoolReportHistory poolReportHistory =
               poolReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
-          poolReportService.exportPoolReport(poolReportHistory);
+          poolReportService.exportPoolReport(
+              poolReportHistory,
+              reportMessage.getZoneOffset(),
+              reportMessage.getTimePattern(),
+              reportMessage.getDateFormat());
           break;
         default:
           break;

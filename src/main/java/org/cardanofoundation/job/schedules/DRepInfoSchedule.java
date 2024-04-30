@@ -19,11 +19,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.cardanofoundation.explorer.common.entity.enumeration.DRepActionType;
 import org.cardanofoundation.explorer.common.entity.enumeration.DRepStatus;
 import org.cardanofoundation.explorer.common.entity.explorer.DRepInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity_;
-import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.DRepActionType;
 import org.cardanofoundation.job.mapper.DRepMapper;
 import org.cardanofoundation.job.projection.DelegationVoteProjection;
 import org.cardanofoundation.job.projection.LatestEpochVotingProcedureProjection;
@@ -132,6 +132,7 @@ public class DRepInfoSchedule {
             if (dRepRegistrationEntity.getType().equals(DRepActionType.REG_DREP_CERT)) {
               dRepInfo = dRepMapper.fromDRepRegistration(dRepRegistrationEntity);
               dRepInfo.setCreatedAt(dRepRegistrationEntity.getBlockTime());
+              dRepInfo.setUpdatedAt(dRepRegistrationEntity.getBlockTime());
               // TODO calculate live stake, active vote stake, delegators
               dRepInfo.setActiveVoteStake(null);
               dRepInfo.setLiveStake(null);
@@ -144,9 +145,14 @@ public class DRepInfoSchedule {
             }
           } else {
             dRepMapper.updateByDRepRegistration(dRepInfo, dRepRegistrationEntity);
+            dRepInfo.setUpdatedAt(dRepRegistrationEntity.getBlockTime());
           }
+
+          // TODO calculate live stake, active vote stake, voting power
           dRepInfo.setActiveVoteStake(null);
           dRepInfo.setLiveStake(null);
+          dRepInfo.setVotingPower(null);
+
           dRepInfo.setDelegators(
               countDelegation.getOrDefault(dRepInfo.getDrepHash(), 0L).intValue());
           dRepInfo.setStatus(

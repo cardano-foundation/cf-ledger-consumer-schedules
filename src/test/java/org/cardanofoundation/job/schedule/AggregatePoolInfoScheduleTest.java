@@ -18,16 +18,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import org.cardanofoundation.explorer.common.entity.explorer.AggregatePoolInfo;
+import org.cardanofoundation.explorer.common.entity.ledgersync.AggregatePoolInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
 import org.cardanofoundation.job.projection.PoolCountProjectionImpl;
-import org.cardanofoundation.job.repository.explorer.AggregatePoolInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.AggregatePoolInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
+import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
 import org.cardanofoundation.job.repository.ledgersync.GovActionProposalRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
 import org.cardanofoundation.job.repository.ledgersync.PoolHashRepository;
+import org.cardanofoundation.job.repository.ledgersync.PoolInfoRepository;
 import org.cardanofoundation.job.schedules.AggregatePoolInfoSchedule;
 import org.cardanofoundation.job.service.DelegationService;
+import org.cardanofoundation.job.service.FetchRewardDataService;
 
 @ExtendWith(MockitoExtension.class)
 class AggregatePoolInfoScheduleTest {
@@ -38,6 +41,10 @@ class AggregatePoolInfoScheduleTest {
   @Mock GovActionProposalRepository govActionProposalRepository;
   @Mock LatestVotingProcedureRepository latestVotingProcedureRepository;
   @Mock PoolHashRepository poolHashRepository;
+
+  @Mock EpochRepository epochRepository;
+  @Mock FetchRewardDataService fetchRewardDataService;
+  @Mock PoolInfoRepository poolInfoRepository;
 
   @Captor ArgumentCaptor<List<AggregatePoolInfo>> aggregatePoolInfoCaptor;
   AggregatePoolInfoSchedule aggregatePoolInfoSchedule;
@@ -51,7 +58,10 @@ class AggregatePoolInfoScheduleTest {
             aggregatePoolInfoRepository,
             poolHashRepository,
             govActionProposalRepository,
-            latestVotingProcedureRepository);
+            latestVotingProcedureRepository,
+            epochRepository,
+            fetchRewardDataService,
+            poolInfoRepository);
   }
 
   @Test

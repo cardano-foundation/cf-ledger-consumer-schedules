@@ -9,9 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.cardanofoundation.explorer.common.entity.compositeKey.LatestVotingProcedureId;
+import org.cardanofoundation.explorer.common.entity.enumeration.VoterType;
 import org.cardanofoundation.explorer.common.entity.ledgersync.LatestVotingProcedure;
-import org.cardanofoundation.explorer.common.entity.ledgersync.compositeKey.LatestVotingProcedureId;
-import org.cardanofoundation.explorer.common.entity.ledgersync.enumeration.VoterType;
 import org.cardanofoundation.job.projection.LatestEpochVotingProcedureProjection;
 import org.cardanofoundation.job.projection.LatestVotingProcedureProjection;
 
@@ -40,8 +40,9 @@ public interface LatestVotingProcedureRepository
   @Query(
       value =
           "SELECT lvp.voterHash as voterHash, lvp.govActionTxHash as govActionTxHash, lvp.govActionIndex as govActionIndex,"
-              + " lvp.vote as vote, ph.id as poolId "
+              + " lvp.vote as vote, ph.id as poolId, gap.slot as slotGov"
               + " FROM LatestVotingProcedure lvp"
+              + " join GovActionProposal gap on gap.txHash = lvp.govActionTxHash and gap.index = lvp.govActionIndex "
               + " join PoolHash ph on lvp.voterHash = ph.hashRaw"
               + " WHERE lvp.voterType = :voterType")
   List<LatestVotingProcedureProjection> findAllByVoterType(@Param("voterType") VoterType voterType);
