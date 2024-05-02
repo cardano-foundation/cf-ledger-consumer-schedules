@@ -1,7 +1,6 @@
 package org.cardanofoundation.job.schedules;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -20,6 +19,7 @@ import org.springframework.util.CollectionUtils;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.Epoch;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
 
 @Slf4j
@@ -33,6 +33,7 @@ import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
 public class UniqueAccountSchedule {
 
   private final EpochRepository epochRepository;
+  private final AddressTxAmountRepository addressTxAmountRepository;
 
   private final RedisTemplate<String, Object> redisTemplate;
 
@@ -52,14 +53,14 @@ public class UniqueAccountSchedule {
       final String redisKey =
           String.join(UNDERSCORE, getRedisKey(UNIQUE_ACCOUNTS_KEY), epoch.getNo().toString());
       if (Boolean.FALSE.equals(redisTemplate.hasKey(redisKey))
-          || epoch.getNo() > currentEpoch - 5) {
+          || epoch.getNo() > 0) {
         log.info("Building unique account for epoch: {}", epoch.getNo());
-        Map<String, Integer> uniqueAccounts = new HashMap<>();
-//            epochRepository.findUniqueAccountsInEpoch(epoch.getNo()).stream()
-//                .collect(
-//                    Collectors.toMap(
-//                        UniqueAccountTxCountProjection::getAccount,
-//                        UniqueAccountTxCountProjection::getTxCount));
+        Map<String, Integer> uniqueAccounts =
+            addressTxAmountRepository.findUniqueAccountsInEpoch(epoch.getNo()).stream()
+                .collect(
+                    Collectors.toMap(
+                        UniqueAccountTxCountProjection::getAccount,
+                        UniqueAccountTxCountProjection::getTxCount));
         if (!CollectionUtils.isEmpty(uniqueAccounts)) {
           redisTemplate.opsForHash().putAll(redisKey, uniqueAccounts);
         }
