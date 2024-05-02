@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -362,6 +363,9 @@ public class ReportHistoryServiceAsync {
   private InformationReport buildInformationReport(
       ReportHistory reportHistory, Long zoneOffset, String timePattern, String dateFormat) {
     boolean isPoolReport = ReportType.POOL_ID.equals(reportHistory.getType());
+    if (Objects.nonNull(dateFormat)) {
+      dateFormat = dateFormat.replace("Date format", "").trim();
+    }
     if (isPoolReport) {
       return buildPoolReport(reportHistory, dateFormat);
     } else {
