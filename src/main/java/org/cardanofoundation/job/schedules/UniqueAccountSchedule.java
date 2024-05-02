@@ -53,7 +53,7 @@ public class UniqueAccountSchedule {
       final String redisKey =
           String.join(UNDERSCORE, getRedisKey(UNIQUE_ACCOUNTS_KEY), epoch.getNo().toString());
       if (Boolean.FALSE.equals(redisTemplate.hasKey(redisKey))
-          || epoch.getNo() > 0) {
+          || epoch.getNo() > currentEpoch - 5) {
         log.info("Building unique account for epoch: {}", epoch.getNo());
         Map<String, Integer> uniqueAccounts =
             addressTxAmountRepository.findUniqueAccountsInEpoch(epoch.getNo()).stream()
