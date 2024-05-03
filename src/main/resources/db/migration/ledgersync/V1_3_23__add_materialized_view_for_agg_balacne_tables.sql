@@ -61,3 +61,21 @@ GROUP BY tx.id, atm.block_time, sa.id;
 CREATE INDEX IF NOT EXISTS stake_tx_balance_tx_id_idx ON stake_tx_balance (tx_id);
 CREATE INDEX IF NOT EXISTS stake_tx_balance_time_idx ON stake_tx_balance (time);
 CREATE INDEX IF NOT EXISTS stake_tx_balance_stake_address_id_idx ON stake_tx_balance (stake_address_id);
+
+
+--- latest token balance
+CREATE MATERIALIZED VIEW IF NOT EXISTS latest_token_balance AS
+SELECT ab.address AS address, ab.slot as slot, ab.unit AS unit, ab.quantity as quantity
+from address_balance ab
+         JOIN (SELECT ab2.address AS address, ab2.unit AS unit, max(ab2.slot) AS slot
+               FROM address_balance ab2
+               where ab2.unit != 'lovelace'
+               GROUP BY ab2.address, ab2.unit) as tmp
+              ON tmp.address = ab.address AND tmp.slot = ab.slot AND tmp.unit = ab.unit
+WHERE ab.quantity > 0
+  and ab.unit != 'lovelace';
+
+CREATE INDEX IF NOT EXISTS latest_token_balance_address_idx ON latest_token_balance (address);
+CREATE INDEX IF NOT EXISTS latest_token_balance_unit_idx ON latest_token_balance (unit);
+CREATE INDEX IF NOT EXISTS latest_token_balance_slot_idx ON latest_token_balance (slot);
+CREATE INDEX IF NOT EXISTS latest_token_balance_quantity_idx ON latest_token_balance (quantity);
