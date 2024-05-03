@@ -15,5 +15,5 @@ public class StakeTxProjection {
 
   Long txId;
   BigInteger amount;
-  Timestamp time;
+  Long time;
 }
