@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
+import org.cardanofoundation.job.service.AddressService;
 
 @Component
 @Slf4j
@@ -16,6 +17,7 @@ public class AggregateAnalyticSchedule {
 
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
+  private final AddressService addressService;
 
   @Scheduled(
       cron = "0 20 0 * * *",
@@ -38,5 +40,13 @@ public class AggregateAnalyticSchedule {
     log.info("Start job refreshAggBalanceAddressTx");
     aggregateAddressTxBalanceRepository.refreshMaterializedView();
     log.info("End Job refreshAggBalanceAddressTx, Time taken {}ms", System.currentTimeMillis() - currentTime);
+  }
+  @Scheduled(fixedRateString = "${jobs.address.fixed-delay}")
+  public void updateTxCountTable() {
+    log.info("Start job to update tx count for address");
+    long startTime = System.currentTimeMillis();
+    addressService.refreshDataForAddressTxCount();
+    long executionTime = System.currentTimeMillis() - startTime;
+    log.info("Update tx count for address successfully, takes: [{} ms]", executionTime);
   }
 }

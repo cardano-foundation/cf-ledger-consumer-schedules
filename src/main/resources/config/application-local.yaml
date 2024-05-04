@@ -138,6 +138,8 @@ jobs:
   tx-chart:
     enabled: ${TX_CHART_JOB_ENABLED:true}
     fixed-delay: ${TX_CHART_FIXED_DELAY:300000}
+  address:
+    fixed-delay: ${ADDRESS_FIXED_DELAY:300000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
