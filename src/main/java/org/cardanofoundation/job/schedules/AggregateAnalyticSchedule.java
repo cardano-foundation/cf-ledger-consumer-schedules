@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import org.cardanofoundation.job.repository.ledgersync.AddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
@@ -18,6 +19,7 @@ public class AggregateAnalyticSchedule {
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
+  private final AddressTxCountRepository addressTxCountRepository;
 
   @Scheduled(
       cron = "0 20 0 * * *",
@@ -54,5 +56,14 @@ public class AggregateAnalyticSchedule {
     log.info(
         "End Job refreshLatestTokenBalance, Time taken {}ms",
         System.currentTimeMillis() - currentTime);
+  }
+
+  @Scheduled(fixedRateString = "${jobs.agg-address.fixed-delay}")
+  public void updateTxCountTable() {
+    log.info("Start job to update tx count for address");
+    long startTime = System.currentTimeMillis();
+    addressTxCountRepository.refreshMaterializedView();
+    long executionTime = System.currentTimeMillis() - startTime;
+    log.info("Update tx count for address successfully, takes: [{} ms]", executionTime);
   }
 }
