@@ -6,9 +6,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import org.cardanofoundation.job.repository.ledgersync.AddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
+import org.cardanofoundation.job.service.TxChartService;
 
 @Component
 @Slf4j
@@ -18,6 +20,8 @@ public class AggregateAnalyticSchedule {
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
+  private final AddressTxCountRepository addressTxCountRepository;
+  private final TxChartService txChartService;
 
   @Scheduled(
       cron = "0 20 0 * * *",
@@ -54,5 +58,23 @@ public class AggregateAnalyticSchedule {
     log.info(
         "End Job refreshLatestTokenBalance, Time taken {}ms",
         System.currentTimeMillis() - currentTime);
+  }
+
+  @Scheduled(fixedDelay = 1000 * 60 * 15) // 15 minutes
+  public void updateTxCountTable() {
+    log.info("Start job to update tx count for address");
+    long startTime = System.currentTimeMillis();
+    addressTxCountRepository.refreshMaterializedView();
+    long executionTime = System.currentTimeMillis() - startTime;
+    log.info("Update tx count for address successfully, takes: [{} ms]", executionTime);
+  }
+
+  @Scheduled(fixedDelay = 1000 * 60 * 5) // 5 minutes
+  public void updateTxChartData() {
+    log.info("Start job to update data for tx chart");
+    long startTime = System.currentTimeMillis();
+    txChartService.refreshDataForTxChart();
+    long executionTime = System.currentTimeMillis() - startTime;
+    log.info("Update tx chart data successfully, takes: [{} ms]", executionTime);
   }
 }
