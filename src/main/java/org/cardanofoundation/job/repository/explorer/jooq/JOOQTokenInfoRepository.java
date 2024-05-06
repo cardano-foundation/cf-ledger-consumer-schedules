@@ -45,12 +45,16 @@ public class JOOQTokenInfoRepository {
                   field(entityUtil.getColumnField(TokenInfo_.MULTI_ASSET_ID)),
                   field(entityUtil.getColumnField(TokenInfo_.NUMBER_OF_HOLDERS)),
                   field(entityUtil.getColumnField(TokenInfo_.VOLUME24H)),
+                  field(entityUtil.getColumnField(TokenInfo_.TOTAL_VOLUME)),
+                  field(entityUtil.getColumnField(TokenInfo_.TX_COUNT)),
                   field(entityUtil.getColumnField(TokenInfo_.UPDATE_TIME)))
               .values(
                   tokenInfo.getBlockNo(),
                   tokenInfo.getMultiAssetId(),
                   tokenInfo.getNumberOfHolders(),
                   tokenInfo.getVolume24h(),
+                  tokenInfo.getTotalVolume(),
+                  tokenInfo.getTxCount(),
                   tokenInfo.getUpdateTime());
 
       queries.add(query);
