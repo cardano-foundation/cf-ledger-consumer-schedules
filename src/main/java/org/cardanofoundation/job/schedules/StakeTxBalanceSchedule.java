@@ -28,7 +28,6 @@ public class StakeTxBalanceSchedule {
     long startTime = System.currentTimeMillis();
     stakeTxBalanceRepository.refreshMaterializedView();
     log.info(
-        "End Job sync stake tx balance, Time taken {} ms",
-        System.currentTimeMillis() - startTime);
+        "End Job sync stake tx balance, Time taken {} ms", System.currentTimeMillis() - startTime);
   }
 }

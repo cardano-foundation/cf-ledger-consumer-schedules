@@ -103,7 +103,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     var maxMultiAssetId = multiAssetRepository.getCurrentMaxIdent();
 
-    if(maxMultiAssetId == null) {
+    if (maxMultiAssetId == null) {
       log.info("No multi-asset found >>> Skip token info initialization");
       return;
     }
@@ -187,7 +187,6 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         StreamUtil.toMap(
             tokensInTransactionWithNewBlockRange, MultiAsset::getId, Function.identity());
 
-
     // Retrieve multi-assets involved in transactions
     // from 24h before last update time to 24h before the current time
     var tokenNeedUpdateVolume24h =
@@ -218,14 +217,12 @@ public class TokenInfoServiceImpl implements TokenInfoService {
           var tokenVolume24hMap =
               StreamUtil.toMap(volumes, TokenVolume::getIdent, TokenVolume::getVolume);
           var totalVolumeMap =
-              addressTxAmountRepository.getTotalVolumeByIdentIn(multiAssetIds)
-                  .stream()
+              addressTxAmountRepository.getTotalVolumeByIdentIn(multiAssetIds).stream()
                   .collect(Collectors.toMap(TokenVolume::getIdent, TokenVolume::getVolume));
 
           var mapNumberHolder = multiAssetService.getMapNumberHolder(multiAssetIds);
           var totalTxCountMap =
-              addressTxAmountRepository.getTotalTxCountByIdentIn(multiAssetIds)
-                  .stream()
+              addressTxAmountRepository.getTotalTxCountByIdentIn(multiAssetIds).stream()
                   .collect(Collectors.toMap(TokenTxCount::getIdent, TokenTxCount::getTxCount));
 
           var tokenInfoMap =
@@ -236,9 +233,11 @@ public class TokenInfoServiceImpl implements TokenInfoService {
               multiAssetId -> {
                 var tokenInfo = tokenInfoMap.getOrDefault(multiAssetId, new TokenInfo());
                 tokenInfo.setMultiAssetId(multiAssetId);
-                tokenInfo.setVolume24h(tokenVolume24hMap.getOrDefault(multiAssetId, BigInteger.ZERO));
+                tokenInfo.setVolume24h(
+                    tokenVolume24hMap.getOrDefault(multiAssetId, BigInteger.ZERO));
                 tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAssetId, 0L));
-                tokenInfo.setTotalVolume(totalVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
+                tokenInfo.setTotalVolume(
+                    totalVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
                 tokenInfo.setTxCount(totalTxCountMap.getOrDefault(multiAssetId, 0L));
                 tokenInfo.setUpdateTime(updateTime);
                 tokenInfo.setBlockNo(maxBlockNo);

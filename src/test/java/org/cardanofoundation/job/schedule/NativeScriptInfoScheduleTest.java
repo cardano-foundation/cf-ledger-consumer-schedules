@@ -15,7 +15,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -35,6 +34,7 @@ import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
 import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
 import org.cardanofoundation.job.projection.TxInfoProjection;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;

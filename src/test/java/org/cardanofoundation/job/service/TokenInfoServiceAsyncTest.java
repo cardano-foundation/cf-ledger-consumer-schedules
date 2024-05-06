@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import org.cardanofoundation.job.model.TokenTxCount;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,7 +21,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
+import org.cardanofoundation.job.model.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 
 @ExtendWith(MockitoExtension.class)
 class TokenInfoServiceAsyncTest {
@@ -90,11 +90,26 @@ class TokenInfoServiceAsyncTest {
             TokenInfo::getNumberOfHolders,
             TokenInfo::getUpdateTime)
         .containsExactlyInAnyOrder(
-            tuple(blockNo, volume24h1.getVolume(),
-                  totalVolume1.getVolume(), tokenTxCount1.getTxCount(), 10L, updateTime),
-            tuple(blockNo, volume24h2.getVolume(),
-                  totalVolume2.getVolume(), tokenTxCount2.getTxCount(), 20L, updateTime),
-            tuple(blockNo, volume24h3.getVolume(),
-                  totalVolume3.getVolume(), tokenTxCount3.getTxCount(), 30L, updateTime));
+            tuple(
+                blockNo,
+                volume24h1.getVolume(),
+                totalVolume1.getVolume(),
+                tokenTxCount1.getTxCount(),
+                10L,
+                updateTime),
+            tuple(
+                blockNo,
+                volume24h2.getVolume(),
+                totalVolume2.getVolume(),
+                tokenTxCount2.getTxCount(),
+                20L,
+                updateTime),
+            tuple(
+                blockNo,
+                volume24h3.getVolume(),
+                totalVolume3.getVolume(),
+                tokenTxCount3.getTxCount(),
+                30L,
+                updateTime));
   }
 }

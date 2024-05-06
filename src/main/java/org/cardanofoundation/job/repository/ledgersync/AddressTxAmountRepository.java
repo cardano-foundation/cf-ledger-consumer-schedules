@@ -1,6 +1,5 @@
 package org.cardanofoundation.job.repository.ledgersync;
 
-import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -28,7 +27,6 @@ public interface AddressTxAmountRepository
       """)
   List<UniqueAccountTxCountProjection> findUniqueAccountsInEpoch(@Param("epochNo") Integer epochNo);
 
-
   @Query(
       value =
           "SELECT new org.cardanofoundation.job.projection.StakeTxProjection(tx.id, sum(addTxAmount.quantity), addTxAmount.blockTime)"
@@ -44,7 +42,6 @@ public interface AddressTxAmountRepository
       @Param("toDate") Long toDate,
       Pageable pageable);
 
-
   @Query(
       "SELECT COUNT(DISTINCT addTxAmount.txHash) FROM AddressTxAmount addTxAmount"
           + " WHERE addTxAmount.stakeAddress = :stakeAddress"
@@ -54,8 +51,9 @@ public interface AddressTxAmountRepository
       @Param("fromDate") Long fromDate,
       @Param("toDate") Long toDate);
 
-
-  @Query(value = """
+  @Query(
+      value =
+          """
       SELECT new org.cardanofoundation.job.model.TokenVolume(ma.id, sum(ata.quantity))
       FROM AddressTxAmount ata
       JOIN MultiAsset ma ON ata.unit = ma.unit
@@ -65,11 +63,14 @@ public interface AddressTxAmountRepository
       AND ata.quantity > 0
       GROUP BY ma.id
       """)
-  List<TokenVolume> sumBalanceAfterTx(@Param("startIdent") Long startIdent,
-                                      @Param("endIdent") Long endIdent,
-                                      @Param("txId") Long txId);
+  List<TokenVolume> sumBalanceAfterTx(
+      @Param("startIdent") Long startIdent,
+      @Param("endIdent") Long endIdent,
+      @Param("txId") Long txId);
 
-  @Query(value = """
+  @Query(
+      value =
+          """
       SELECT new org.cardanofoundation.job.model.TokenVolume(ma.id, sum(ata.quantity))
       FROM AddressTxAmount ata
       JOIN MultiAsset ma ON ata.unit = ma.unit
@@ -79,10 +80,12 @@ public interface AddressTxAmountRepository
       AND ata.quantity > 0
       GROUP BY ma.id
       """)
-  List<TokenVolume> sumBalanceAfterTx(@Param("multiAssetIds") List<Long> multiAssetIds,
-                                      @Param("txId") Long txId);
+  List<TokenVolume> sumBalanceAfterTx(
+      @Param("multiAssetIds") List<Long> multiAssetIds, @Param("txId") Long txId);
 
-  @Query(value = """
+  @Query(
+      value =
+          """
       SELECT new org.cardanofoundation.job.model.TokenVolume(ma.id, sum(ata.quantity))
       FROM AddressTxAmount ata
       JOIN MultiAsset ma ON ata.unit = ma.unit
@@ -90,20 +93,24 @@ public interface AddressTxAmountRepository
       AND ata.quantity > 0
       GROUP BY ma.id
       """)
-  List<TokenVolume> getTotalVolumeByIdentInRange(@Param("startIdent") Long startIdent,
-                                   @Param("endIdent") Long endIdent);
+  List<TokenVolume> getTotalVolumeByIdentInRange(
+      @Param("startIdent") Long startIdent, @Param("endIdent") Long endIdent);
 
-  @Query(value = """
+  @Query(
+      value =
+          """
       SELECT new org.cardanofoundation.job.model.TokenTxCount(ma.id, count(distinct (ata.txHash)))
       FROM AddressTxAmount ata
       JOIN MultiAsset ma ON ata.unit = ma.unit
       WHERE ma.id >= :startIdent AND ma.id <= :endIdent
       GROUP BY ma.id
       """)
-  List<TokenTxCount> getTotalTxCountByIdentInRange(@Param("startIdent") Long startIdent,
-                                     @Param("endIdent") Long endIdent);
+  List<TokenTxCount> getTotalTxCountByIdentInRange(
+      @Param("startIdent") Long startIdent, @Param("endIdent") Long endIdent);
 
-  @Query(value = """
+  @Query(
+      value =
+          """
       SELECT new org.cardanofoundation.job.model.TokenVolume(ma.id, sum(ata.quantity))
       FROM AddressTxAmount ata
       JOIN MultiAsset ma ON ata.unit = ma.unit
@@ -113,7 +120,9 @@ public interface AddressTxAmountRepository
       """)
   List<TokenVolume> getTotalVolumeByIdentIn(@Param("multiAssetIds") List<Long> multiAssetIds);
 
-  @Query(value = """
+  @Query(
+      value =
+          """
       SELECT new org.cardanofoundation.job.model.TokenTxCount(ma.id, count(distinct (ata.txHash)))
       FROM AddressTxAmount ata
       JOIN MultiAsset ma ON ata.unit = ma.unit
@@ -121,5 +130,4 @@ public interface AddressTxAmountRepository
       GROUP BY ma.id
       """)
   List<TokenTxCount> getTotalTxCountByIdentIn(@Param("multiAssetIds") List<Long> multiAssetIds);
-
 }

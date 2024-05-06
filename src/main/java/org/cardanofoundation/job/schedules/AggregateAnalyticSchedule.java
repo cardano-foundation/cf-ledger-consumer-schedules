@@ -28,7 +28,9 @@ public class AggregateAnalyticSchedule {
     log.info("Start job refreshAggBalanceAddressToken");
     aggregateAddressTokenRepository.refreshMaterializedView();
 
-    log.info("End Job refreshAggBalanceAddressToken, Time taken {}ms", System.currentTimeMillis() - currentTime);
+    log.info(
+        "End Job refreshAggBalanceAddressToken, Time taken {}ms",
+        System.currentTimeMillis() - currentTime);
   }
 
   @Scheduled(
@@ -39,7 +41,9 @@ public class AggregateAnalyticSchedule {
     long currentTime = System.currentTimeMillis();
     log.info("Start job refreshAggBalanceAddressTx");
     aggregateAddressTxBalanceRepository.refreshMaterializedView();
-    log.info("End Job refreshAggBalanceAddressTx, Time taken {}ms", System.currentTimeMillis() - currentTime);
+    log.info(
+        "End Job refreshAggBalanceAddressTx, Time taken {}ms",
+        System.currentTimeMillis() - currentTime);
   }
 
   @Scheduled(fixedDelay = 1000 * 60 * 5) // 5 minutes
@@ -47,6 +51,8 @@ public class AggregateAnalyticSchedule {
     long currentTime = System.currentTimeMillis();
     log.info("Start job refreshLatestTokenBalance");
     latestTokenBalanceRepository.refreshMaterializedView();
-    log.info("End Job refreshLatestTokenBalance, Time taken {}ms", System.currentTimeMillis() - currentTime);
+    log.info(
+        "End Job refreshLatestTokenBalance, Time taken {}ms",
+        System.currentTimeMillis() - currentTime);
   }
 }

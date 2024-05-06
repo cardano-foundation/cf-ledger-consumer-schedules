@@ -19,8 +19,6 @@ import java.util.concurrent.CompletableFuture;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
-import org.cardanofoundation.job.util.DateUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,7 +34,9 @@ import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
 import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
 import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
+import org.cardanofoundation.job.util.DateUtils;
 import org.cardanofoundation.job.util.report.ExcelHelper;
 import org.cardanofoundation.job.util.report.ExportContent;
 
@@ -104,7 +104,9 @@ class StakeKeyReportServiceImplTest {
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
     when(addressTxAmountRepository.getCountTxByStakeInDateRange(
-        stakeKey, DateUtils.timestampToEpochSecond(condition.getFromDate()), DateUtils.timestampToEpochSecond(condition.getToDate())))
+            stakeKey,
+            DateUtils.timestampToEpochSecond(condition.getFromDate()),
+            DateUtils.timestampToEpochSecond(condition.getToDate())))
         .thenReturn(2000000L);
 
     when(reportHistoryServiceAsync.exportStakeWalletActivitys(
@@ -167,7 +169,9 @@ class StakeKeyReportServiceImplTest {
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
     when(addressTxAmountRepository.getCountTxByStakeInDateRange(
-            stakeKey, DateUtils.timestampToEpochSecond(condition.getFromDate()), DateUtils.timestampToEpochSecond(condition.getToDate())))
+            stakeKey,
+            DateUtils.timestampToEpochSecond(condition.getFromDate()),
+            DateUtils.timestampToEpochSecond(condition.getToDate())))
         .thenReturn(2000000L);
 
     when(reportHistoryServiceAsync.exportStakeWalletActivitys(

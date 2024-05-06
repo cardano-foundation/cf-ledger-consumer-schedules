@@ -34,20 +34,15 @@ public class MultiAssetServiceImpl implements MultiAssetService {
    */
   @Override
   public Map<Long, Long> getMapNumberHolder(List<Long> multiAssetIds) {
-    var numberOfHolders =
-        latestTokenBalanceRepository.countHoldersByMultiAssetIdIn(multiAssetIds);
+    var numberOfHolders = latestTokenBalanceRepository.countHoldersByMultiAssetIdIn(multiAssetIds);
 
     var numberHoldersMap =
         StreamUtil.toMap(
-            numberOfHolders,
-            TokenNumberHolders::getIdent,
-            TokenNumberHolders::getNumberOfHolders);
+            numberOfHolders, TokenNumberHolders::getIdent, TokenNumberHolders::getNumberOfHolders);
 
     return multiAssetIds.stream()
         .collect(
-            Collectors.toMap(
-                ident -> ident,
-                ident -> numberHoldersMap.getOrDefault(ident, 0L)));
+            Collectors.toMap(ident -> ident, ident -> numberHoldersMap.getOrDefault(ident, 0L)));
   }
 
   /**
@@ -67,15 +62,11 @@ public class MultiAssetServiceImpl implements MultiAssetService {
 
     var numberHoldersMap =
         StreamUtil.toMap(
-            numberOfHolders,
-            TokenNumberHolders::getIdent,
-            TokenNumberHolders::getNumberOfHolders);
+            numberOfHolders, TokenNumberHolders::getIdent, TokenNumberHolders::getNumberOfHolders);
 
     return LongStream.rangeClosed(startIdent, endIdent)
         .boxed()
         .collect(
-            Collectors.toMap(
-                ident -> ident,
-                ident -> numberHoldersMap.getOrDefault(ident, 0L)));
+            Collectors.toMap(ident -> ident, ident -> numberHoldersMap.getOrDefault(ident, 0L)));
   }
 }

@@ -74,8 +74,10 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
     var txAmountList =
         addressTxAmountRepository
             .findTxAndAmountByStake(
-                stakeKey, DateUtils.timestampToEpochSecond(condition.getFromDate()),
-                DateUtils.timestampToEpochSecond(condition.getToDate()), pageable)
+                stakeKey,
+                DateUtils.timestampToEpochSecond(condition.getFromDate()),
+                DateUtils.timestampToEpochSecond(condition.getToDate()),
+                pageable)
             .getContent();
 
     List<Long> txIds =

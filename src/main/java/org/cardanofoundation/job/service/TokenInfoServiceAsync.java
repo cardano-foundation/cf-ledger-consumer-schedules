@@ -56,10 +56,13 @@ public class TokenInfoServiceAsync {
     List<TokenVolume> totalVolumes =
         addressTxAmountRepository.getTotalVolumeByIdentInRange(startIdent, endIdent);
 
-    List<TokenTxCount> txCounts = addressTxAmountRepository.getTotalTxCountByIdentInRange(startIdent, endIdent);
+    List<TokenTxCount> txCounts =
+        addressTxAmountRepository.getTotalTxCountByIdentInRange(startIdent, endIdent);
 
-    var tokenVolume24hMap = StreamUtil.toMap(volumes24h, TokenVolume::getIdent, TokenVolume::getVolume);
-    var totalVolumeMap = StreamUtil.toMap(totalVolumes, TokenVolume::getIdent, TokenVolume::getVolume);
+    var tokenVolume24hMap =
+        StreamUtil.toMap(volumes24h, TokenVolume::getIdent, TokenVolume::getVolume);
+    var totalVolumeMap =
+        StreamUtil.toMap(totalVolumes, TokenVolume::getIdent, TokenVolume::getVolume);
     var txCountMap = StreamUtil.toMap(txCounts, TokenTxCount::getIdent, TokenTxCount::getTxCount);
     var mapNumberHolder = multiAssetService.getMapNumberHolder(startIdent, endIdent);
 

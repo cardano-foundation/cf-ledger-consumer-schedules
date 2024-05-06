@@ -30,7 +30,6 @@ import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
@@ -50,6 +49,7 @@ import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
@@ -163,7 +163,6 @@ class TokenInfoServiceImplTest {
     when(tokensInTransactionWithNewBlockRange.getId()).thenReturn(1L);
     when(multiAssetRepository.getTokensInTransactionInBlockRange(anyLong(), anyLong()))
         .thenReturn(List.of(tokensInTransactionWithNewBlockRange));
-
 
     MultiAsset tokenNeedUpdateVolume24h = Mockito.mock(MultiAsset.class);
     when(tokenNeedUpdateVolume24h.getId()).thenReturn(3L);

@@ -39,7 +39,6 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
   @Query("SELECT max(multiAsset.id) FROM MultiAsset multiAsset")
   Long getCurrentMaxIdent();
 
-
   @Query(
       "select distinct multiAsset "
           + " from MultiAsset multiAsset "
@@ -59,5 +58,4 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
           + " where block.time >= :fromTime and block.time <= :toTime")
   List<MultiAsset> getTokensInTransactionInTimeRange(
       @Param("fromTime") Timestamp fromTime, @Param("toTime") Timestamp toTime);
-
 }

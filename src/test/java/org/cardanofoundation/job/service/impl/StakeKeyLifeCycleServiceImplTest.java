@@ -17,8 +17,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
-import org.cardanofoundation.job.util.DateUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -37,6 +35,7 @@ import org.cardanofoundation.job.projection.StakeHistoryProjection;
 import org.cardanofoundation.job.projection.StakeRewardProjection;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.projection.StakeWithdrawalProjection;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.cardanofoundation.job.repository.ledgersync.RewardRepository;
@@ -46,6 +45,7 @@ import org.cardanofoundation.job.repository.ledgersync.StakeRegistrationReposito
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 import org.cardanofoundation.job.repository.ledgersync.WithdrawalRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
+import org.cardanofoundation.job.util.DateUtils;
 
 @ExtendWith(MockitoExtension.class)
 class StakeKeyLifeCycleServiceImplTest {
@@ -112,28 +112,33 @@ class StakeKeyLifeCycleServiceImplTest {
     StakeTxProjection projection = Mockito.mock(StakeTxProjection.class);
     when(projection.getTxId()).thenReturn(100L);
     when(projection.getAmount()).thenReturn(BigInteger.valueOf(-500174301));
-    when(projection.getTime()).thenReturn(
-        DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
+    when(projection.getTime())
+        .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection1 = Mockito.mock(StakeTxProjection.class);
     when(projection1.getTxId()).thenReturn(101L);
     when(projection1.getAmount()).thenReturn(BigInteger.valueOf(72960943));
-    when(projection1.getTime()).thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
+    when(projection1.getTime())
+        .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection2 = Mockito.mock(StakeTxProjection.class);
     when(projection2.getTxId()).thenReturn(102L);
     when(projection2.getAmount()).thenReturn(BigInteger.valueOf(-2174301));
-    when(projection2.getTime()).thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
+    when(projection2.getTime())
+        .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection3 = Mockito.mock(StakeTxProjection.class);
     when(projection3.getTxId()).thenReturn(103L);
     when(projection3.getAmount()).thenReturn(BigInteger.valueOf(-181385));
-    when(projection3.getTime()).thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
+    when(projection3.getTime())
+        .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection4 = Mockito.mock(StakeTxProjection.class);
     when(projection4.getTxId()).thenReturn(104L);
     when(projection4.getAmount()).thenReturn(BigInteger.valueOf(-172761));
-    when(projection4.getTime()).thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
+    when(projection4.getTime())
+        .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection5 = Mockito.mock(StakeTxProjection.class);
     when(projection5.getTxId()).thenReturn(105L);
     when(projection5.getAmount()).thenReturn(BigInteger.valueOf(-2174301));
-    when(projection5.getTime()).thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
+    when(projection5.getTime())
+        .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     Page<StakeTxProjection> page =
         new PageImpl<>(
             List.of(projection, projection1, projection2, projection3, projection4, projection5),
@@ -197,8 +202,10 @@ class StakeKeyLifeCycleServiceImplTest {
         StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
 
     when(addressTxAmountRepository.findTxAndAmountByStake(
-            stakeAddress.getView(), DateUtils.timestampToEpochSecond(condition.getFromDate()),
-            DateUtils.timestampToEpochSecond(condition.getToDate()), pageable))
+            stakeAddress.getView(),
+            DateUtils.timestampToEpochSecond(condition.getFromDate()),
+            DateUtils.timestampToEpochSecond(condition.getToDate()),
+            pageable))
         .thenReturn(page);
 
     when(txRepository.findByIdIn(any())).thenReturn(txList);
