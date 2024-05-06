@@ -59,7 +59,6 @@ CREATE INDEX IF NOT EXISTS agg_address_tx_balance_address_id_day_balance_idx
 
 
 -- aggregate stake address tx balance
-DROP MATERIALIZED VIEW IF EXISTS stake_tx_balance;
 DROP TABLE IF EXISTS stake_tx_balance;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS stake_tx_balance AS
