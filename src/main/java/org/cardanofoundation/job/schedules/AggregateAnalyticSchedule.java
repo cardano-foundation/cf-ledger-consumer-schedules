@@ -60,7 +60,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedRateString = "${jobs.agg-address.fixed-delay}")
+  @Scheduled(fixedDelay = 1000 * 60 * 15) // 15 minutes
   public void updateTxCountTable() {
     log.info("Start job to update tx count for address");
     long startTime = System.currentTimeMillis();
@@ -69,7 +69,7 @@ public class AggregateAnalyticSchedule {
     log.info("Update tx count for address successfully, takes: [{} ms]", executionTime);
   }
 
-  @Scheduled(fixedRateString = "${jobs.agg-address.fixed-delay}")
+  @Scheduled(fixedDelay = 1000 * 60 * 5) // 5 minutes
   public void updateTxChartData() {
     log.info("Start job to update data for tx chart");
     long startTime = System.currentTimeMillis();
