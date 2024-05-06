@@ -64,7 +64,6 @@ public class NativeScriptInfoSchedule {
   @Scheduled(fixedDelayString = "${jobs.native-script-info.fixed-delay}")
   @Transactional(value = "explorerTransactionManager")
   public void syncNativeScriptInfo() {
-    refreshLatestTokenBalance();
     final String nativeScriptTxCheckPoint = getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());
     final Long currentTxId = txRepository.findCurrentTxInfo().getTxId();
     final Integer checkpoint = redisTemplate.opsForValue().get(nativeScriptTxCheckPoint);
@@ -74,13 +73,6 @@ public class NativeScriptInfoSchedule {
       update(checkpoint, currentTxId);
     }
     redisTemplate.opsForValue().set(nativeScriptTxCheckPoint, currentTxId.intValue());
-  }
-
-  private void refreshLatestTokenBalance() {
-    long startTime = System.currentTimeMillis();
-    log.info("Start refreshLatestTokenBalance");
-    latestTokenBalanceRepository.refreshMaterializedView();
-    log.info("End refreshLatestTokenBalance in {} ms", System.currentTimeMillis() - startTime);
   }
 
   private void update(Integer checkpoint, Long currentTxId) {

@@ -1,5 +1,21 @@
--- aggregate address token
+-- index on existing tables
+CREATE INDEX IF NOT EXISTS address_balance_address_idx ON address_balance (address);
+CREATE INDEX IF NOT EXISTS address_balance_unit_idx ON address_balance (unit);
+CREATE INDEX IF NOT EXISTS address_balance_quantity_idx ON address_balance (quantity);
+CREATE INDEX IF NOT EXISTS address_balance_address_unit_idx ON address_balance (address, unit);
+CREATE INDEX IF NOT EXISTS address_balance_address_slot_idx ON address_balance (address, slot);
 
+CREATE INDEX IF NOT EXISTS address_tx_amount_unit_idx ON address_tx_amount (unit);
+CREATE INDEX IF NOT EXISTS address_tx_amount_quantity_idx ON address_tx_amount (quantity);
+CREATE INDEX IF NOT EXISTS address_tx_amount_address_idx ON address_tx_amount (address);
+CREATE INDEX IF NOT EXISTS address_tx_amount_tx_hash_idx ON address_tx_amount (tx_hash);
+CREATE INDEX IF NOT EXISTS address_tx_amount_stake_address_idx ON address_tx_amount (stake_address);
+CREATE INDEX IF NOT EXISTS address_tx_amount_unit_quantity_idx ON address_tx_amount (unit, quantity);
+CREATE INDEX IF NOT EXISTS address_tx_amount_epoch_idx ON address_tx_amount (epoch);
+
+CREATE INDEX IF NOT EXISTS multi_asset_unit_idx ON multi_asset (unit);
+
+-- aggregate address token
 CREATE MATERIALIZED VIEW IF NOT EXISTS agg_address_token AS
 SELECT ma.id                                           AS ident,
        sum(atm.quantity)                               AS balance,

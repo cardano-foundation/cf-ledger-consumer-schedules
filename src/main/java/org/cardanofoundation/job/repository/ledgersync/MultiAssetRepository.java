@@ -1,5 +1,6 @@
 package org.cardanofoundation.job.repository.ledgersync;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -34,4 +35,29 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
       @Param("fromTxId") Long fromTxId,
       @Param("toTxId") Long toTxId,
       @Param("types") Collection<ScriptType> types);
+
+  @Query("SELECT max(multiAsset.id) FROM MultiAsset multiAsset")
+  Long getCurrentMaxIdent();
+
+
+  @Query(
+      "select distinct multiAsset "
+          + " from MultiAsset multiAsset "
+          + " join AddressTxAmount addressTxAmount on multiAsset.unit = addressTxAmount.unit"
+          + " join Tx tx on tx.hash = addressTxAmount.txHash"
+          + " join Block block on block.id = tx.blockId"
+          + " where block.blockNo > :fromBlockNo and block.blockNo <= :toBlockNo ")
+  List<MultiAsset> getTokensInTransactionInBlockRange(
+      @Param("fromBlockNo") Long fromBlockNo, @Param("toBlockNo") Long toBlockNo);
+
+  @Query(
+      "select distinct multiAsset "
+          + " from MultiAsset multiAsset "
+          + " join AddressTxAmount addressTxAmount on multiAsset.unit = addressTxAmount.unit"
+          + " join Tx tx on tx.hash = addressTxAmount.txHash"
+          + " join Block block on block.id = tx.blockId"
+          + " where block.time >= :fromTime and block.time <= :toTime")
+  List<MultiAsset> getTokensInTransactionInTimeRange(
+      @Param("fromTime") Timestamp fromTime, @Param("toTime") Timestamp toTime);
+
 }
