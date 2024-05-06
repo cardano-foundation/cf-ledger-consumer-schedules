@@ -10,6 +10,7 @@ import org.cardanofoundation.job.repository.ledgersync.AddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
+import org.cardanofoundation.job.service.TxChartService;
 
 @Component
 @Slf4j
@@ -20,6 +21,7 @@ public class AggregateAnalyticSchedule {
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
   private final AddressTxCountRepository addressTxCountRepository;
+  private final TxChartService txChartService;
 
   @Scheduled(
       cron = "0 20 0 * * *",
@@ -65,5 +67,14 @@ public class AggregateAnalyticSchedule {
     addressTxCountRepository.refreshMaterializedView();
     long executionTime = System.currentTimeMillis() - startTime;
     log.info("Update tx count for address successfully, takes: [{} ms]", executionTime);
+  }
+
+  @Scheduled(fixedRateString = "${jobs.agg-address.fixed-delay}")
+  public void updateTxChartData() {
+    log.info("Start job to update data for tx chart");
+    long startTime = System.currentTimeMillis();
+    txChartService.refreshDataForTxChart();
+    long executionTime = System.currentTimeMillis() - startTime;
+    log.info("Update tx chart data successfully, takes: [{} ms]", executionTime);
   }
 }

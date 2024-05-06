@@ -135,9 +135,6 @@ jobs:
   governance-info:
     enabled: ${GOVERNANCE_INFO_JOB_ENABLED:true}
     fixed-delay: ${GOVERNANCE_INFO_FIXED_DELAY:30000}
-  tx-chart:
-    enabled: ${TX_CHART_JOB_ENABLED:true}
-    fixed-delay: ${TX_CHART_FIXED_DELAY:300000}
   agg-address:
     fixed-delay: ${AGG_ADDRESS_FIXED_DELAY:300000}
   install-batch: 100
