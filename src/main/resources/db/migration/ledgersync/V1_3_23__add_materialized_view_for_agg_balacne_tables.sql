@@ -94,3 +94,16 @@ CREATE INDEX IF NOT EXISTS latest_token_balance_address_idx ON latest_token_bala
 CREATE INDEX IF NOT EXISTS latest_token_balance_unit_idx ON latest_token_balance (unit);
 CREATE INDEX IF NOT EXISTS latest_token_balance_slot_idx ON latest_token_balance (slot);
 CREATE INDEX IF NOT EXISTS latest_token_balance_quantity_idx ON latest_token_balance (quantity);
+
+
+-- latest address balance
+CREATE MATERIALIZED VIEW IF NOT EXISTS latest_address_balance AS
+SELECT ab.address AS address, ab.slot as slot, ab.unit AS unit, ab.quantity as quantity
+from address_balance ab
+where ab.unit = 'lovelace'
+  and not exists(select 1 from address_balance ab2 where ab2.address = ab.address and ab2.slot > ab.slot and ab2.unit = 'lovelace');
+
+CREATE INDEX IF NOT EXISTS latest_address_balance_address_idx ON latest_address_balance (address);
+CREATE INDEX IF NOT EXISTS latest_address_balance_unit_idx ON latest_address_balance (unit);
+CREATE INDEX IF NOT EXISTS latest_address_balance_slot_idx ON latest_address_balance (slot);
+CREATE INDEX IF NOT EXISTS latest_address_balance_quantity_idx ON latest_address_balance (quantity);
