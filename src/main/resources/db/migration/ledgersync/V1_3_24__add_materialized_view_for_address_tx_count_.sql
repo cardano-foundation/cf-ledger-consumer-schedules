@@ -6,3 +6,6 @@ SELECT add.address                        AS address,
 FROM address add
          left join address_tx_amount ata on ata.address = add.address
 GROUP BY add.address;
+
+CREATE INDEX IF NOT EXISTS address_tx_count_address_idx ON address_tx_count (address);
+CREATE INDEX IF NOT EXISTS address_tx_count_tx_count_idx ON address_tx_count (tx_count);
