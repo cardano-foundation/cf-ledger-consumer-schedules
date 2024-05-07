@@ -12,6 +12,7 @@ CREATE INDEX IF NOT EXISTS address_tx_amount_tx_hash_idx ON address_tx_amount (t
 CREATE INDEX IF NOT EXISTS address_tx_amount_stake_address_idx ON address_tx_amount (stake_address);
 CREATE INDEX IF NOT EXISTS address_tx_amount_unit_quantity_idx ON address_tx_amount (unit, quantity);
 CREATE INDEX IF NOT EXISTS address_tx_amount_epoch_idx ON address_tx_amount (epoch);
+CREATE INDEX IF NOT EXISTS address_tx_amount_block_time_idx ON address_tx_amount (block_time);
 
 CREATE INDEX IF NOT EXISTS multi_asset_unit_idx ON multi_asset (unit);
 
