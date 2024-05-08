@@ -13,6 +13,7 @@ CREATE INDEX IF NOT EXISTS address_tx_amount_stake_address_idx ON address_tx_amo
 CREATE INDEX IF NOT EXISTS address_tx_amount_unit_quantity_idx ON address_tx_amount (unit, quantity);
 CREATE INDEX IF NOT EXISTS address_tx_amount_epoch_idx ON address_tx_amount (epoch);
 CREATE INDEX IF NOT EXISTS address_tx_amount_block_time_idx ON address_tx_amount (block_time);
+CREATE INDEX IF NOT EXISTS address_tx_amount_unit_quantity_block_time_idx ON address_tx_amount (unit, quantity, block_time);
 
 CREATE INDEX IF NOT EXISTS multi_asset_unit_idx ON multi_asset (unit);
 
@@ -102,6 +103,7 @@ CREATE INDEX IF NOT EXISTS latest_token_balance_unit_idx ON latest_token_balance
 CREATE INDEX IF NOT EXISTS latest_token_balance_slot_idx ON latest_token_balance (slot);
 CREATE INDEX IF NOT EXISTS latest_token_balance_quantity_idx ON latest_token_balance (quantity);
 CREATE INDEX IF NOT EXISTS latest_token_balance_block_time_idx ON latest_token_balance (block_time);
+CREATE INDEX IF NOT EXISTS latest_token_balance_unit_quantity_idx ON latest_token_balance (unit, quantity);
 
 -- latest address balance
 CREATE MATERIALIZED VIEW IF NOT EXISTS latest_address_balance AS
