@@ -81,21 +81,27 @@ CREATE INDEX IF NOT EXISTS stake_tx_balance_stake_address_id_idx ON stake_tx_bal
 
 --- latest token balance
 CREATE MATERIALIZED VIEW IF NOT EXISTS latest_token_balance AS
-SELECT ab.address AS address, ab.slot as slot, ab.unit AS unit, ab.quantity as quantity
-from address_balance ab
-         JOIN (SELECT ab2.address AS address, ab2.unit AS unit, max(ab2.slot) AS slot
-               FROM address_balance ab2
-               where ab2.unit != 'lovelace'
-               GROUP BY ab2.address, ab2.unit) as tmp
-              ON tmp.address = ab.address AND tmp.slot = ab.slot AND tmp.unit = ab.unit
+SELECT ab.address         AS address,
+       addr.stake_address as stake_address,
+       ab.slot            as slot,
+       ab.unit            AS unit,
+       ab.quantity        AS quantity,
+       ab.block_time      AS block_time
+FROM address_balance ab
+         JOIN address addr on ab.address = addr.address
 WHERE ab.quantity > 0
-  and ab.unit != 'lovelace';
+  AND ab.unit != 'lovelace'
+  AND NOT exists(SELECT 1
+                 FROM address_balance ab2
+                 WHERE ab2.address = ab.address
+                   AND ab2.slot > ab.slot
+                   AND ab2.unit = ab.unit);
 
 CREATE INDEX IF NOT EXISTS latest_token_balance_address_idx ON latest_token_balance (address);
 CREATE INDEX IF NOT EXISTS latest_token_balance_unit_idx ON latest_token_balance (unit);
 CREATE INDEX IF NOT EXISTS latest_token_balance_slot_idx ON latest_token_balance (slot);
 CREATE INDEX IF NOT EXISTS latest_token_balance_quantity_idx ON latest_token_balance (quantity);
-
+CREATE INDEX IF NOT EXISTS latest_token_balance_block_time_idx ON latest_token_balance (block_time);
 
 -- latest address balance
 CREATE MATERIALIZED VIEW IF NOT EXISTS latest_address_balance AS
