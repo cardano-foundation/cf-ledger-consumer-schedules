@@ -64,10 +64,10 @@ CREATE INDEX IF NOT EXISTS agg_address_tx_balance_address_id_day_balance_idx
 DROP TABLE IF EXISTS stake_tx_balance;
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS stake_tx_balance AS
-SELECT sa.id                        AS stake_address_id,
-       tx.id                        AS tx_id,
-       SUM(atm.quantity)            AS balance_change,
-       to_timestamp(atm.block_time) AS time
+SELECT sa.id             AS stake_address_id,
+       tx.id             AS tx_id,
+       SUM(atm.quantity) AS balance_change,
+       atm.block_time    AS time
 FROM address_tx_amount atm
          INNER JOIN tx on atm.tx_hash = tx.hash
          INNER JOIN stake_address sa ON sa.view = atm.stake_address
@@ -116,3 +116,13 @@ CREATE INDEX IF NOT EXISTS latest_address_balance_address_idx ON latest_address_
 CREATE INDEX IF NOT EXISTS latest_address_balance_unit_idx ON latest_address_balance (unit);
 CREATE INDEX IF NOT EXISTS latest_address_balance_slot_idx ON latest_address_balance (slot);
 CREATE INDEX IF NOT EXISTS latest_address_balance_quantity_idx ON latest_address_balance (quantity);
+
+-- latest stake address balance
+CREATE MATERIALIZED VIEW IF NOT EXISTS latest_stake_address_balance AS
+SELECT sab.address AS address, sab.slot as slot, sab.quantity as quantity
+from stake_address_balance sab
+where not exists(select 1 from stake_address_balance sab2 where sab2.address = sab.address and sab2.slot > sab.slot);
+
+CREATE INDEX IF NOT EXISTS latest_stake_address_balance_address_idx ON latest_stake_address_balance (address);
+CREATE INDEX IF NOT EXISTS latest_stake_address_balance_slot_idx ON latest_stake_address_balance (slot);
+CREATE INDEX IF NOT EXISTS latest_stake_address_balance_quantity_idx ON latest_stake_address_balance (quantity);
