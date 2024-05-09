@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.job.repository.ledgersync.AddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestAddressBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.LatestStakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
@@ -22,6 +23,7 @@ public class AggregateAnalyticSchedule {
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
   private final LatestAddressBalanceRepository latestAddressBalanceRepository;
+  private final LatestStakeAddressBalanceRepository latestStakeAddressBalanceRepository;
   private final AddressTxCountRepository addressTxCountRepository;
   private final TxChartService txChartService;
 
@@ -65,10 +67,20 @@ public class AggregateAnalyticSchedule {
   @Scheduled(fixedDelay = 1000 * 60 * 5) // 5 minutes
   public void refreshLatestAddressBalance() {
     long currentTime = System.currentTimeMillis();
-    log.info("Start job refreshLatestTokenBalance");
+    log.info("Start job refreshLatestAddressBalance");
     latestAddressBalanceRepository.refreshMaterializedView();
     log.info(
-        "End Job refreshLatestTokenBalance, Time taken {}ms",
+        "End Job refreshLatestAddressBalance, Time taken {}ms",
+        System.currentTimeMillis() - currentTime);
+  }
+
+  @Scheduled(fixedDelay = 1000 * 60 * 5) // 5 minutes
+  public void refreshLatestStakeAddressBalance() {
+    long currentTime = System.currentTimeMillis();
+    log.info("Start job refreshLatestStakeAddressBalance");
+    latestStakeAddressBalanceRepository.refreshMaterializedView();
+    log.info(
+        "End Job refreshLatestStakeAddressBalance, Time taken {}ms",
         System.currentTimeMillis() - currentTime);
   }
 
