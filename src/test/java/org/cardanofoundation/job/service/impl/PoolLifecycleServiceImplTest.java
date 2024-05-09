@@ -195,7 +195,7 @@ class PoolLifecycleServiceImplTest {
     when(projection.getPoolView())
         .thenReturn("pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s");
     when(projection.getPoolName()).thenReturn("Test");
-    when(projection.getPoolId())
+    when(projection.getHashRaw())
         .thenReturn("d867f77bb62fe58df4b13285f6b8d37a8aae41eea662b248b80321ec5ce60asda");
     when(poolHashRepository.getPoolInfo("pool1h0anq89dytn6vtm0afhreyawcnn0w99w7e4s4q5w0yh3ymzh94s"))
         .thenReturn(projection);

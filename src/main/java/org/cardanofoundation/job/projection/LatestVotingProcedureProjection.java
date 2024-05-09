@@ -12,4 +12,6 @@ public interface LatestVotingProcedureProjection {
   Vote getVote();
 
   Long getPoolId();
+
+  Long getSlotGov();
 }

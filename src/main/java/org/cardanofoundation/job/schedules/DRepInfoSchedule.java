@@ -150,10 +150,12 @@ public class DRepInfoSchedule {
             }
           } else {
             dRepMapper.updateByDRepRegistration(dRepInfo, dRepRegistrationEntity);
+            dRepInfo.setUpdatedAt(dRepRegistrationEntity.getBlockTime());
           }
           dRepInfo.setActiveVoteStake(
               activeStakeMap.getOrDefault(dRepInfo.getDrepHash(), BigInteger.ZERO));
           dRepInfo.setLiveStake(null);
+          dRepInfo.setVotingPower(null);
           dRepInfo.setDelegators(
               countDelegation.getOrDefault(dRepInfo.getDrepHash(), 0L).intValue());
           dRepInfo.setStatus(

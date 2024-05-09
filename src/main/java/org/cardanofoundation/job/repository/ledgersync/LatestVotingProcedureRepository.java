@@ -40,8 +40,9 @@ public interface LatestVotingProcedureRepository
   @Query(
       value =
           "SELECT lvp.voterHash as voterHash, lvp.govActionTxHash as govActionTxHash, lvp.govActionIndex as govActionIndex,"
-              + " lvp.vote as vote, ph.id as poolId "
+              + " lvp.vote as vote, ph.id as poolId, gap.slot as slotGov"
               + " FROM LatestVotingProcedure lvp"
+              + " join GovActionProposal gap on gap.txHash = lvp.govActionTxHash and gap.index = lvp.govActionIndex "
               + " join PoolHash ph on lvp.voterHash = ph.hashRaw"
               + " WHERE lvp.voterType = :voterType")
   List<LatestVotingProcedureProjection> findAllByVoterType(@Param("voterType") VoterType voterType);

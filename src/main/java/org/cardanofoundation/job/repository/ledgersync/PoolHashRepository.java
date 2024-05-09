@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.PoolHash;
+import org.cardanofoundation.job.projection.PoolHashProjection;
 import org.cardanofoundation.job.projection.PoolHashUrlProjection;
 import org.cardanofoundation.job.projection.PoolInfoProjection;
 import org.cardanofoundation.job.projection.PoolRegistrationProjection;
@@ -48,7 +49,7 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
 
   @Query(
       value =
-          "SELECT ph.id AS id, pod.poolName AS poolName, ph.hashRaw AS poolId, ph.view AS poolView "
+          "SELECT ph.id AS id, pod.poolName AS poolName, ph.hashRaw AS hashRaw, ph.view AS poolView "
               + "FROM PoolHash ph "
               + "LEFT JOIN PoolOfflineData pod ON ph.id  = pod.pool.id AND pod.id = (SELECT max(pod2.id) FROM PoolOfflineData pod2 WHERE ph.id = pod2.pool.id ) "
               + "WHERE ph.view = :poolView "
@@ -60,8 +61,9 @@ public interface PoolHashRepository extends JpaRepository<PoolHash, Long> {
 
   @Query(
       value =
-          "select min(d.slotNo) from PoolHash ph"
-              + " join Delegation d on d.poolHash.id = ph.id"
-              + " where ph.hashRaw =:poolHash")
-  Long getSlotNoWhenFirstDelegationByPoolHash(@Param("poolHash") String poolHash);
+          "select coalesce(min(d.slotNo),0) as slot, ph.id as poolId"
+              + " from PoolHash ph"
+              + " left join Delegation d on d.poolHash.id = ph.id"
+              + " group by ph.id")
+  List<PoolHashProjection> getSlotNoWhenFirstDelegation();
 }
