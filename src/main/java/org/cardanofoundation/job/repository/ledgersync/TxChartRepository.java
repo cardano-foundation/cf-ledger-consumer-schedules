@@ -13,6 +13,6 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.TxChart;
 public interface TxChartRepository extends JpaRepository<TxChart, Long> {
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW tx_chart", nativeQuery = true)
+  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY tx_chart", nativeQuery = true)
   void refreshMaterializedView();
 }

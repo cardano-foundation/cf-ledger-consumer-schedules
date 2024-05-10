@@ -11,6 +11,6 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 public interface TokenTxCountRepository extends JpaRepository<TokenTxCount, Long> {
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW token_tx_count", nativeQuery = true)
+  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY token_tx_count", nativeQuery = true)
   void refreshMaterializedView();
 }

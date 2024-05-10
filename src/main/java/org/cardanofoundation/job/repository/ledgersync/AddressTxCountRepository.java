@@ -11,6 +11,6 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxCount;
 public interface AddressTxCountRepository extends JpaRepository<AddressTxCount, Long> {
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW address_tx_count", nativeQuery = true)
+  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY address_tx_count", nativeQuery = true)
   void refreshMaterializedView();
 }

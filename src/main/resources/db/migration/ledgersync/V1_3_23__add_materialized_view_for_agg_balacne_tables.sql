@@ -30,6 +30,8 @@ WHERE to_timestamp(atm.block_time) < date_trunc('day', now())
 GROUP BY ma.id, day
 ORDER BY day;
 
+CREATE UNIQUE INDEX IF NOT EXISTS unique_agg_address_token_idx ON agg_address_token (ident, day);
+
 CREATE INDEX IF NOT EXISTS agg_address_token_day_idx
     ON agg_address_token (day);
 
@@ -49,6 +51,8 @@ WHERE to_timestamp(atm.block_time) > now() - INTERVAL '3' MONTH - INTERVAL '1' D
   AND atm.unit = 'lovelace'
 GROUP BY addr.id, sa.id, day
 ORDER BY day;
+
+CREATE UNIQUE INDEX IF NOT EXISTS unique_agg_address_tx_balance_idx ON agg_address_tx_balance (address_id, stake_address_id, day);
 
 CREATE INDEX IF NOT EXISTS agg_address_tx_balance_day_idx
     ON agg_address_tx_balance (day);
@@ -75,6 +79,7 @@ WHERE to_timestamp(atm.block_time) > now() - INTERVAL '3' MONTH - INTERVAL '1' D
   AND atm.unit = 'lovelace'
 GROUP BY tx.id, atm.block_time, sa.id;
 
+CREATE UNIQUE INDEX IF NOT EXISTS unique_stake_tx_balance_idx ON stake_tx_balance (stake_address_id, tx_id, time);
 CREATE INDEX IF NOT EXISTS stake_tx_balance_tx_id_idx ON stake_tx_balance (tx_id);
 CREATE INDEX IF NOT EXISTS stake_tx_balance_time_idx ON stake_tx_balance (time);
 CREATE INDEX IF NOT EXISTS stake_tx_balance_stake_address_id_idx ON stake_tx_balance (stake_address_id);
@@ -98,7 +103,7 @@ WHERE ab.quantity > 0
                    AND ab2.slot > ab.slot
                    AND ab2.unit = ab.unit);
 
-CREATE INDEX IF NOT EXISTS latest_token_balance_address_idx ON latest_token_balance (address);
+CREATE UNIQUE INDEX IF NOT EXISTS unique_latest_token_balance_idx ON latest_token_balance (address,unit);
 CREATE INDEX IF NOT EXISTS latest_token_balance_unit_idx ON latest_token_balance (unit);
 CREATE INDEX IF NOT EXISTS latest_token_balance_slot_idx ON latest_token_balance (slot);
 CREATE INDEX IF NOT EXISTS latest_token_balance_quantity_idx ON latest_token_balance (quantity);
@@ -112,7 +117,7 @@ from address_balance ab
 where ab.unit = 'lovelace'
   and not exists(select 1 from address_balance ab2 where ab2.address = ab.address and ab2.slot > ab.slot and ab2.unit = 'lovelace');
 
-CREATE INDEX IF NOT EXISTS latest_address_balance_address_idx ON latest_address_balance (address);
+CREATE UNIQUE INDEX IF NOT EXISTS unique_latest_address_balance_idx ON latest_address_balance (address);
 CREATE INDEX IF NOT EXISTS latest_address_balance_unit_idx ON latest_address_balance (unit);
 CREATE INDEX IF NOT EXISTS latest_address_balance_slot_idx ON latest_address_balance (slot);
 CREATE INDEX IF NOT EXISTS latest_address_balance_quantity_idx ON latest_address_balance (quantity);
@@ -123,6 +128,6 @@ SELECT sab.address AS address, sab.slot as slot, sab.quantity as quantity
 from stake_address_balance sab
 where not exists(select 1 from stake_address_balance sab2 where sab2.address = sab.address and sab2.slot > sab.slot);
 
-CREATE INDEX IF NOT EXISTS latest_stake_address_balance_address_idx ON latest_stake_address_balance (address);
+CREATE UNIQUE INDEX IF NOT EXISTS unique_latest_stake_address_balance_idx ON latest_stake_address_balance (address);
 CREATE INDEX IF NOT EXISTS latest_stake_address_balance_slot_idx ON latest_stake_address_balance (slot);
 CREATE INDEX IF NOT EXISTS latest_stake_address_balance_quantity_idx ON latest_stake_address_balance (quantity);

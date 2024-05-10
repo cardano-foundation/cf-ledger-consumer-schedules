@@ -53,6 +53,6 @@ public interface LatestTokenBalanceRepository
 
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW latest_token_balance", nativeQuery = true)
+  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY latest_token_balance", nativeQuery = true)
   void refreshMaterializedView();
 }

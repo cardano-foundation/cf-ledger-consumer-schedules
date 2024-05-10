@@ -13,6 +13,6 @@ public interface AggregateAddressTokenRepository
 
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW agg_address_token", nativeQuery = true)
+  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY agg_address_token", nativeQuery = true)
   void refreshMaterializedView();
 }

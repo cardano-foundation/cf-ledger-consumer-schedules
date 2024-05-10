@@ -14,6 +14,6 @@ public interface LatestAddressBalanceRepository
 
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW latest_address_balance", nativeQuery = true)
+  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY latest_address_balance", nativeQuery = true)
   void refreshMaterializedView();
 }

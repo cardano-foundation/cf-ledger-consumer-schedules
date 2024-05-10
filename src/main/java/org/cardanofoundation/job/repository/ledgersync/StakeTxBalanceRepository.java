@@ -11,6 +11,6 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.StakeTxBalance;
 public interface StakeTxBalanceRepository extends JpaRepository<StakeTxBalance, Long> {
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW stake_tx_balance", nativeQuery = true)
+  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY stake_tx_balance", nativeQuery = true)
   void refreshMaterializedView();
 }

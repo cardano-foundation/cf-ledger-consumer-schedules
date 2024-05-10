@@ -16,6 +16,6 @@ public interface LatestStakeAddressBalanceRepository
 
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW latest_stake_address_balance", nativeQuery = true)
+  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY latest_stake_address_balance", nativeQuery = true)
   void refreshMaterializedView();
 }
