@@ -8,7 +8,7 @@ FROM address add
          left join address_tx_amount ata on ata.address = add.address
 GROUP BY add.address;
 
-CREATE INDEX IF NOT EXISTS address_tx_count_address_idx ON address_tx_count (address);
+CREATE UNIQUE INDEX IF NOT EXISTS unique_address_tx_count_idx ON address_tx_count (address);
 CREATE INDEX IF NOT EXISTS address_tx_count_tx_count_idx ON address_tx_count (tx_count);
 
 -- token_tx_count
@@ -20,7 +20,7 @@ FROM address_tx_amount ata
          JOIN multi_asset ma ON ata.unit = ma.unit
 GROUP BY ma.id;
 
-CREATE INDEX IF NOT EXISTS token_tx_count_ident_idx ON token_tx_count(ident);
+CREATE UNIQUE INDEX IF NOT EXISTS unique_token_tx_count__idx ON token_tx_count(ident);
 CREATE INDEX IF NOT EXISTS token_tx_count_tx_count_idx ON token_tx_count(tx_count);
 
 -- add index for address entitys
