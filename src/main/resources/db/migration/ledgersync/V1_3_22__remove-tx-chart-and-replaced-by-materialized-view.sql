@@ -24,8 +24,8 @@ CREATE MATERIALIZED VIEW IF NOT EXISTS tx_chart as SELECT EXTRACT(epoch FROM dat
                                      GROUP BY minute, hour, day, month, year
                                      ORDER BY minute;
 
+CREATE UNIQUE INDEX IF NOT EXISTS unique_tx_chart_idx ON tx_chart (minute,hour,day,month,year);
 CREATE INDEX IF NOT EXISTS idx_mat_tx_chart_minute ON tx_chart ("minute");
 CREATE INDEX IF NOT EXISTS idx_mat_tx_chart_hour ON tx_chart ("hour");
 CREATE INDEX IF NOT EXISTS idx_mat_tx_chart_day ON tx_chart ("day");
 CREATE INDEX IF NOT EXISTS idx_mat_tx_chart_month ON tx_chart ("month");
-REFRESH MATERIALIZED VIEW tx_chart;
