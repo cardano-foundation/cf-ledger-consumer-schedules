@@ -42,7 +42,7 @@ public class TokenInfoSchedule {
     }
   }
 
-  @Scheduled(fixedRate = 1000 * 60 * 15) // 15 minutes
+  @Scheduled(fixedRate = 1000 * 60 * 5) // 15 minutes
   public void updateNumberOfTokenTx() {
     try {
       log.info("Token Info Job: -------Start------");

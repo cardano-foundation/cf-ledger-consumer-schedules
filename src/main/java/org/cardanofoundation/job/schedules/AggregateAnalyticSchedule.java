@@ -54,7 +54,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60 * 5) // 5 minutes
+  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
   public void refreshLatestTokenBalance() {
     long currentTime = System.currentTimeMillis();
     log.info("Start job refreshLatestTokenBalance");
@@ -64,7 +64,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60 * 5) // 5 minutes
+  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
   public void refreshLatestAddressBalance() {
     long currentTime = System.currentTimeMillis();
     log.info("Start job refreshLatestAddressBalance");
@@ -74,7 +74,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60 * 5) // 5 minutes
+  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
   public void refreshLatestStakeAddressBalance() {
     long currentTime = System.currentTimeMillis();
     log.info("Start job refreshLatestStakeAddressBalance");
@@ -84,7 +84,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60 * 15) // 15 minutes
+  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
   public void updateTxCountTable() {
     log.info("Start job to update tx count for address");
     long startTime = System.currentTimeMillis();
@@ -93,7 +93,7 @@ public class AggregateAnalyticSchedule {
     log.info("Update tx count for address successfully, takes: [{} ms]", executionTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60 * 5) // 5 minutes
+  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
   public void updateTxChartData() {
     log.info("Start job to update data for tx chart");
     long startTime = System.currentTimeMillis();
