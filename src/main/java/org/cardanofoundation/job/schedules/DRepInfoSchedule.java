@@ -151,6 +151,7 @@ public class DRepInfoSchedule {
             }
           } else {
             dRepMapper.updateByDRepRegistration(dRepInfo, dRepRegistrationEntity);
+            dRepInfo.setUpdatedAt(dRepRegistrationEntity.getBlockTime());
           }
           dRepInfo.setActiveVoteStake(
               activeStakeMap.getOrDefault(dRepInfo.getDrepHash(), BigInteger.ZERO));
