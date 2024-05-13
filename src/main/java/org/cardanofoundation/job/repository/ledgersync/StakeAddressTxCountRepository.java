@@ -11,6 +11,8 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.StakeAddressTxCou
 public interface StakeAddressTxCountRepository extends JpaRepository<StakeAddressTxCount, String> {
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY stake_address_tx_count", nativeQuery = true)
+  @Query(
+      value = "REFRESH MATERIALIZED VIEW CONCURRENTLY stake_address_tx_count",
+      nativeQuery = true)
   void refreshMaterializedView();
 }

@@ -13,6 +13,8 @@ public interface AggregateAddressTxBalanceRepository
 
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY agg_address_tx_balance", nativeQuery = true)
+  @Query(
+      value = "REFRESH MATERIALIZED VIEW CONCURRENTLY agg_address_tx_balance",
+      nativeQuery = true)
   void refreshMaterializedView();
 }
