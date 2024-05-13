@@ -29,3 +29,16 @@ CREATE INDEX IF NOT EXISTS address_address_hash_idx ON address using hash (addre
 CREATE INDEX IF NOT EXISTS address_payment_credential_hash_idx ON address using hash (payment_credential);
 CREATE INDEX IF NOT EXISTS address_stake_address_hash_idx ON address using hash (stake_address);
 CREATE INDEX IF NOT EXISTS address_stake_credential_hash_idx ON address using hash (stake_credential);
+
+
+-- materialized view for stake_address_tx_count
+DROP MATERIALIZED VIEW IF EXISTS stake_address_tx_count;
+
+CREATE MATERIALIZED VIEW stake_address_tx_count AS
+SELECT ata.stake_address           AS stake_address,
+       count(distinct ata.tx_hash) AS tx_count
+FROM address_tx_amount ata
+GROUP BY ata.stake_address;
+
+CREATE UNIQUE INDEX IF NOT EXISTS unique_stake_address_tx_count_idx ON stake_address_tx_count (stake_address);
+CREATE INDEX IF NOT EXISTS stake_address_tx_count_tx_count_idx ON stake_address_tx_count (tx_count);

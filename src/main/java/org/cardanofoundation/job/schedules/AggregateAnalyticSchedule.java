@@ -10,6 +10,7 @@ import org.cardanofoundation.job.repository.ledgersync.AddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestStakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.StakeAddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
@@ -25,6 +26,7 @@ public class AggregateAnalyticSchedule {
   private final LatestAddressBalanceRepository latestAddressBalanceRepository;
   private final LatestStakeAddressBalanceRepository latestStakeAddressBalanceRepository;
   private final AddressTxCountRepository addressTxCountRepository;
+  private final StakeAddressTxCountRepository stakeAddressTxCountRepository;
   private final TxChartService txChartService;
 
   @Scheduled(
@@ -81,6 +83,16 @@ public class AggregateAnalyticSchedule {
     latestStakeAddressBalanceRepository.refreshMaterializedView();
     log.info(
         "End Job refreshLatestStakeAddressBalance, Time taken {}ms",
+        System.currentTimeMillis() - currentTime);
+  }
+
+  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
+  public void refreshLatestStakeAddressTxCount() {
+    long currentTime = System.currentTimeMillis();
+    log.info("Start job refreshLatestStakeAddressTxCount");
+    stakeAddressTxCountRepository.refreshMaterializedView();
+    log.info(
+        "End Job refreshLatestStakeAddressTxCount, Time taken {}ms",
         System.currentTimeMillis() - currentTime);
   }
 
