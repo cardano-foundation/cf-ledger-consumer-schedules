@@ -184,8 +184,8 @@ public class GovActionInfoSchedule {
 
     switch (govActionType) {
       case NO_CONFIDENCE -> {
-        if (percentageDRepYesVotes >= epochParam.getPvtMotionNoConfidence()
-            && percentagePoolYesVotes >= epochParam.getPvtMotionNoConfidence()) {
+        if (percentageDRepYesVotes >= getDoubleValue(epochParam.getPvtMotionNoConfidence())
+            && percentagePoolYesVotes >= getDoubleValue(epochParam.getPvtMotionNoConfidence())) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
           return GovActionStatus.EXPIRED;
@@ -194,12 +194,12 @@ public class GovActionInfoSchedule {
 
       case UPDATE_COMMITTEE -> {
         if (committeeState == CommitteeState.NORMAL
-            && percentageDRepYesVotes >= epochParam.getDvtCommitteeNormal()
-            && percentagePoolYesVotes >= epochParam.getPvtCommitteeNormal()) {
+            && percentageDRepYesVotes >= getDoubleValue(epochParam.getDvtCommitteeNormal())
+            && percentagePoolYesVotes >= getDoubleValue(epochParam.getPvtCommitteeNormal())) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else if (committeeState == CommitteeState.NO_CONFIDENCE
-            && percentageDRepYesVotes >= epochParam.getDvtCommitteeNoConfidence()
-            && percentagePoolYesVotes >= epochParam.getPvtCommitteeNoConfidence()) {
+            && percentageDRepYesVotes >= getDoubleValue(epochParam.getDvtCommitteeNoConfidence())
+            && percentagePoolYesVotes >= getDoubleValue(epochParam.getPvtCommitteeNoConfidence())) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
           return GovActionStatus.EXPIRED;
@@ -207,7 +207,7 @@ public class GovActionInfoSchedule {
       }
 
       case NEW_CONSTITUTION -> {
-        if (percentageDRepYesVotes >= epochParam.getDvtUpdateToConstitution()
+        if (percentageDRepYesVotes >= getDoubleValue(epochParam.getDvtUpdateToConstitution())
             && percentageCCRepYesVotes >= 0) {
 
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
@@ -217,8 +217,8 @@ public class GovActionInfoSchedule {
       }
 
       case HARD_FORK_INITIATION_ACTION -> {
-        if (percentageDRepYesVotes >= epochParam.getDvtHardForkInitiation()
-            && percentagePoolYesVotes >= epochParam.getDvtHardForkInitiation()
+        if (percentageDRepYesVotes >= getDoubleValue(epochParam.getDvtHardForkInitiation())
+            && percentagePoolYesVotes >= getDoubleValue(epochParam.getDvtHardForkInitiation())
             && percentageCCRepYesVotes >= 0) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
@@ -227,7 +227,7 @@ public class GovActionInfoSchedule {
       }
 
       case PARAMETER_CHANGE_ACTION -> {
-        if (percentageDRepYesVotes >= epochParam.getDvtPPGovGroup()
+        if (percentageDRepYesVotes >= getDoubleValue(epochParam.getDvtPPGovGroup())
             && percentageCCRepYesVotes >= 0) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
@@ -236,7 +236,7 @@ public class GovActionInfoSchedule {
       }
 
       case TREASURY_WITHDRAWALS_ACTION -> {
-        if (percentageDRepYesVotes >= epochParam.getDvtTreasuryWithdrawal()
+        if (percentageDRepYesVotes >= getDoubleValue(epochParam.getDvtTreasuryWithdrawal())
             && percentageCCRepYesVotes >= 0) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
         } else {
@@ -259,5 +259,9 @@ public class GovActionInfoSchedule {
 
   int getGovActionLifetime(BigInteger govActionLifetime) {
     return govActionLifetime == null ? 0 : govActionLifetime.intValue();
+  }
+
+  double getDoubleValue(Double value) {
+    return value == null ? 0 : value;
   }
 }
