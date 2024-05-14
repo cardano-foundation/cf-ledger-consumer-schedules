@@ -15,6 +15,8 @@ CREATE INDEX IF NOT EXISTS address_tx_amount_epoch_idx ON address_tx_amount (epo
 CREATE INDEX IF NOT EXISTS address_tx_amount_block_time_idx ON address_tx_amount (block_time);
 CREATE INDEX IF NOT EXISTS address_tx_amount_unit_quantity_block_time_idx ON address_tx_amount (unit, quantity, block_time);
 CREATE INDEX IF NOT EXISTS address_tx_amount_unit_tx_hash_idx ON address_tx_amount (unit, tx_hash);
+CREATE INDEX IF NOT EXISTS address_tx_amount_unit_block_time_idx ON address_tx_amount (unit, block_time);
+CREATE INDEX IF NOT EXISTS address_tx_amount_unit_block_time2_idx ON address_tx_amount (unit, to_timestamp(block_time));
 CREATE INDEX IF NOT EXISTS address_tx_amount_unit_tx_hash_block_time_idx ON address_tx_amount (unit, tx_hash, block_time);
 CREATE INDEX IF NOT EXISTS address_tx_amount_address_tx_hash_idx ON address_tx_amount (address, tx_hash);
 CREATE INDEX IF NOT EXISTS address_tx_amount_stake_address_tx_hash_idx ON address_tx_amount (stake_address, tx_hash);

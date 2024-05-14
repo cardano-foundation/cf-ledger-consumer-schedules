@@ -22,6 +22,7 @@ GROUP BY ma.id;
 
 CREATE UNIQUE INDEX IF NOT EXISTS unique_token_tx_count__idx ON token_tx_count(ident);
 CREATE INDEX IF NOT EXISTS token_tx_count_tx_count_idx ON token_tx_count(tx_count);
+CREATE INDEX IF NOT EXISTS token_tx_count_ident_tx_count_idx ON token_tx_count (ident, tx_count);
 
 -- add index for address entitys
 
