@@ -19,13 +19,15 @@ public interface AddressTxAmountRepository
     extends JpaRepository<AddressTxAmount, AddressTxAmountId> {
 
   @Query(
-      value = """
+      value =
+          """
       select (case when ata.stake_address is null then ata.address else ata.stake_address end) as account, count(distinct(ata.tx_hash)) as txCount
       from address_tx_amount ata
       where ata.epoch = :epochNo
       and ata.slot != -1
       group by account
-      """, nativeQuery = true)
+      """,
+      nativeQuery = true)
   List<UniqueAccountTxCountProjection> findUniqueAccountsInEpoch(@Param("epochNo") Integer epochNo);
 
   @Query(

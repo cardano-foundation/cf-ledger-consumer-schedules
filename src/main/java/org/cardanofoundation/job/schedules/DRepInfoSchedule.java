@@ -25,7 +25,7 @@ import org.cardanofoundation.explorer.common.entity.enumeration.DRepStatus;
 import org.cardanofoundation.explorer.common.entity.explorer.DRepInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity_;
-import org.cardanofoundation.explorer.common.entity.ledgersync.StakeAddress;
+import org.cardanofoundation.explorer.common.entity.ledgersync.StakeAddressBalance;
 import org.cardanofoundation.job.mapper.DRepMapper;
 import org.cardanofoundation.job.projection.DelegationVoteProjection;
 import org.cardanofoundation.job.projection.LatestEpochVotingProcedureProjection;
@@ -35,7 +35,7 @@ import org.cardanofoundation.job.repository.ledgersync.DelegationVoteRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
-import org.cardanofoundation.job.repository.ledgersync.StakeAddressRepository;
+import org.cardanofoundation.job.repository.ledgersync.StakeAddressBalanceRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -51,7 +51,7 @@ public class DRepInfoSchedule {
   private final DelegationVoteRepository delegationVoteRepository;
   private final EpochParamRepository epochParamRepository;
   private final LatestVotingProcedureRepository latestVotingProcedureRepository;
-  private final StakeAddressRepository stakeAddressRepository;
+  private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
   private final EpochRepository epochRepository;
 
   private final DRepMapper dRepMapper;
@@ -189,12 +189,15 @@ public class DRepInfoSchedule {
         delegationVoteProjectionList.stream()
             .map(DelegationVoteProjection::getAddress)
             .collect(Collectors.toSet());
-    List<StakeAddress> stakeAddressList =
-        stakeAddressRepository.findStakeAddressesByViewIn(stakeAddressSet);
+
+    List<StakeAddressBalance> stakeAddressList =
+        stakeAddressBalanceRepository.findAllByStakeAddressIn(stakeAddressSet);
 
     Map<String, BigInteger> stakeAddressBalanceMap =
         stakeAddressList.stream()
-            .collect(Collectors.toMap(StakeAddress::getView, StakeAddress::getBalance));
+            .collect(
+                Collectors.toMap(
+                    StakeAddressBalance::getAddress, StakeAddressBalance::getQuantity));
 
     return delegatorMap.entrySet().stream()
         .collect(
