@@ -25,12 +25,15 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
       @Param("policyIds") Collection<String> policyIds);
 
   @Query(
-      "SELECT multiAsset.policy as scriptHash"
-          + " FROM MultiAsset multiAsset"
-          + " INNER JOIN Script script ON script.hash = multiAsset.policy AND script.type IN :types"
-          + " INNER JOIN AddressTxAmount addressTxAmount ON addressTxAmount.unit = multiAsset.unit"
-          + " INNER JOIN Tx tx ON tx.hash = addressTxAmount.txHash"
-          + " WHERE tx.id BETWEEN :fromTxId AND :toTxId")
+      value =
+          """
+          SELECT multiAsset.policy as scriptHash
+                FROM MultiAsset multiAsset
+                INNER JOIN Script script ON script.hash = multiAsset.policy AND script.type IN :types
+                INNER JOIN AddressTxAmount addressTxAmount ON addressTxAmount.unit = multiAsset.unit
+                INNER JOIN Tx tx ON tx.hash = addressTxAmount.txHash
+                WHERE tx.id BETWEEN :fromTxId AND :toTxId
+      """)
   Set<String> findPolicyByTxIn(
       @Param("fromTxId") Long fromTxId,
       @Param("toTxId") Long toTxId,
