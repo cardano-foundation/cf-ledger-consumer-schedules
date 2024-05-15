@@ -15,7 +15,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.Epoch;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
@@ -61,9 +60,9 @@ public class UniqueAccountSchedule {
                     Collectors.toMap(
                         UniqueAccountTxCountProjection::getAccount,
                         UniqueAccountTxCountProjection::getTxCount));
-        if (!CollectionUtils.isEmpty(uniqueAccounts)) {
-          redisTemplate.opsForHash().putAll(redisKey, uniqueAccounts);
-        }
+
+        redisTemplate.delete(redisKey);
+        redisTemplate.opsForHash().putAll(redisKey, uniqueAccounts);
         log.info("Building unique account for epoch: {} done", epoch.getNo());
       }
     }
