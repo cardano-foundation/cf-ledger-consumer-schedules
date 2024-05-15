@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -61,6 +63,13 @@ public class NativeScriptInfoSchedule {
   private static final List<ScriptType> NATIVE_SCRIPT_TYPES =
       List.of(ScriptType.TIMELOCK, ScriptType.MULTISIG);
 
+  @PostConstruct
+  void setup() {
+    String nativeScriptTxCheckPoint = getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());
+    log.info("Start setup for NativeScriptInfo jobs");
+    redisTemplate.delete(nativeScriptTxCheckPoint);
+  }
+
   @Scheduled(fixedDelayString = "${jobs.native-script-info.fixed-delay}")
   @Transactional(value = "explorerTransactionManager")
   public void syncNativeScriptInfo() {
@@ -72,7 +81,9 @@ public class NativeScriptInfoSchedule {
     } else if (currentTxId > checkpoint.longValue()) {
       update(checkpoint, currentTxId);
     }
-    redisTemplate.opsForValue().set(nativeScriptTxCheckPoint, currentTxId.intValue());
+    redisTemplate
+        .opsForValue()
+        .set(nativeScriptTxCheckPoint, Math.max(currentTxId.intValue() - 1000, 0));
   }
 
   private void update(Integer checkpoint, Long currentTxId) {
@@ -80,9 +91,7 @@ public class NativeScriptInfoSchedule {
     long startTime = System.currentTimeMillis();
     Long txCheckpoint = checkpoint.longValue();
     Set<String> scriptHashList =
-        scriptRepository.findHashByTypeAndTxIn(txCheckpoint, currentTxId, NATIVE_SCRIPT_TYPES);
-    scriptHashList.addAll(
-        multiAssetRepository.findPolicyByTxIn(txCheckpoint, currentTxId, NATIVE_SCRIPT_TYPES));
+        multiAssetRepository.findPolicyByTxIn(txCheckpoint, currentTxId, NATIVE_SCRIPT_TYPES);
 
     final AtomicInteger counter = new AtomicInteger();
     scriptHashList.stream()
