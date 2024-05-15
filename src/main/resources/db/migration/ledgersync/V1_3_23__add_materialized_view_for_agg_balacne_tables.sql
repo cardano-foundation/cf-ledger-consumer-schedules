@@ -109,6 +109,7 @@ WHERE ab.quantity > 0
                  FROM address_balance ab2
                  WHERE ab2.address = ab.address
                    AND ab2.slot > ab.slot
+                   AND ab2.quantity > 0
                    AND ab2.unit = ab.unit);
 
 CREATE UNIQUE INDEX IF NOT EXISTS unique_latest_token_balance_idx ON latest_token_balance (address,unit);
