@@ -92,6 +92,10 @@ class StakeKeyReportServiceImplTest {
                 .reportHistory(reportHistory)
                 .build());
 
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(
+            any(), anyLong(), anyString(), anyString()))
+        .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
+
     when(reportHistoryServiceAsync.exportStakeRegistrations(stakeKey, condition))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportStakeDelegations(stakeKey, condition))
@@ -120,7 +124,7 @@ class StakeKeyReportServiceImplTest {
         Exception.class,
         () ->
             stakeKeyReportService.exportStakeKeyReport(
-                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
+                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
     Assertions.assertEquals(
         ReportStatus.FAILED, stakeKeyReportHistory.getReportHistory().getStatus());
   }
@@ -157,6 +161,10 @@ class StakeKeyReportServiceImplTest {
                 .reportHistory(reportHistory)
                 .build());
 
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(
+            any(), anyLong(), anyString(), anyString()))
+        .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
+
     when(reportHistoryServiceAsync.exportStakeRegistrations(stakeKey, condition))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportStakeDelegations(stakeKey, condition))
@@ -186,7 +194,7 @@ class StakeKeyReportServiceImplTest {
     Assertions.assertDoesNotThrow(
         () ->
             stakeKeyReportService.exportStakeKeyReport(
-                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
+                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
     Assertions.assertEquals(
         ReportStatus.GENERATED, stakeKeyReportHistory.getReportHistory().getStatus());
   }

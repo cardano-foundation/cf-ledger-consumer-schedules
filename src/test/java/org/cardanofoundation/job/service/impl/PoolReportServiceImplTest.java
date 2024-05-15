@@ -64,6 +64,9 @@ class PoolReportServiceImplTest {
                 .isPoolSize(Boolean.TRUE)
                 .build());
 
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(
+            any(), anyLong(), anyString(), anyString()))
+        .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportPoolUpdate(poolReportHistory))
@@ -80,7 +83,9 @@ class PoolReportServiceImplTest {
     doThrow(new RuntimeException()).when(storageService).uploadFile(any(), anyString());
     Assertions.assertThrows(
         Exception.class,
-        () -> poolReportService.exportPoolReport(poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
+        () ->
+            poolReportService.exportPoolReport(
+                poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
     Assertions.assertEquals(ReportStatus.FAILED, poolReportHistory.getReportHistory().getStatus());
   }
 
@@ -105,7 +110,9 @@ class PoolReportServiceImplTest {
                 .eventReward(Boolean.TRUE)
                 .isPoolSize(Boolean.TRUE)
                 .build());
-
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(
+            any(), anyLong(), anyString(), anyString()))
+        .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportPoolUpdate(poolReportHistory))
@@ -123,7 +130,9 @@ class PoolReportServiceImplTest {
     when(poolReportRepository.save(any())).thenReturn(new PoolReportHistory());
 
     Assertions.assertDoesNotThrow(
-        () -> poolReportService.exportPoolReport(poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss"));
+        () ->
+            poolReportService.exportPoolReport(
+                poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
     Assertions.assertEquals(
         ReportStatus.GENERATED, poolReportHistory.getReportHistory().getStatus());
   }

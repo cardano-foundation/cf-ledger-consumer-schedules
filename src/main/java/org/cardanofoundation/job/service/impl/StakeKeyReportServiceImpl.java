@@ -54,11 +54,15 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
    */
   @Override
   public void exportStakeKeyReport(
-      StakeKeyReportHistory stakeKeyReportHistory, Long zoneOffset, String timePattern)
+      StakeKeyReportHistory stakeKeyReportHistory,
+      Long zoneOffset,
+      String timePattern,
+      String dateFormat)
       throws Exception {
     var startTime = System.currentTimeMillis();
     try {
-      List<ExportContent> exportContents = getExportContents(stakeKeyReportHistory);
+      List<ExportContent> exportContents =
+          getExportContents(stakeKeyReportHistory, zoneOffset, timePattern, dateFormat);
       String storageKey = generateStorageKey(stakeKeyReportHistory);
       String excelFileName = storageKey + ExportType.EXCEL.getValue();
       InputStream excelInputStream =
@@ -89,7 +93,11 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
    * @param stakeKeyReportHistory stakeKeyReportHistory
    * @return List<ExportContent>
    */
-  private List<ExportContent> getExportContents(StakeKeyReportHistory stakeKeyReportHistory) {
+  private List<ExportContent> getExportContents(
+      StakeKeyReportHistory stakeKeyReportHistory,
+      Long zoneOffset,
+      String timePattern,
+      String dateFormat) {
     StakeLifeCycleFilterRequest stakeLifeCycleFilterRequest =
         getStakeLifeCycleFilterRequest(stakeKeyReportHistory);
 
@@ -102,6 +110,10 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
      * to retrieve data concurrently.
      * ReportHistoryServiceAsync is used to retrieve data concurrently.
      */
+
+    exportContents.add(
+        reportHistoryServiceAsync.exportInformationOnTheReport(
+            stakeKeyReportHistory.getReportHistory(), zoneOffset, timePattern, dateFormat));
 
     if (Boolean.TRUE.equals(stakeKeyReportHistory.getEventRegistration())) {
       exportContents.add(
