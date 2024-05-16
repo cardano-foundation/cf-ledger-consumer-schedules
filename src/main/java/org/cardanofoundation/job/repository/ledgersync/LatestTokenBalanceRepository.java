@@ -35,6 +35,7 @@ public interface LatestTokenBalanceRepository
           FROM MultiAsset multiAsset
           LEFT JOIN LatestTokenBalance latestTokenBalance ON multiAsset.unit = latestTokenBalance.unit
           WHERE multiAsset.id IN :multiAssetIds
+          AND latestTokenBalance.quantity > 0
           GROUP BY multiAsset.id
       """)
   List<TokenNumberHolders> countHoldersByMultiAssetIdIn(
@@ -46,6 +47,7 @@ public interface LatestTokenBalanceRepository
           FROM MultiAsset multiAsset
           LEFT JOIN LatestTokenBalance latestTokenBalance ON multiAsset.unit = latestTokenBalance.unit
           WHERE multiAsset.id >= :startIdent AND multiAsset.id <= :endIdent
+          AND latestTokenBalance.quantity > 0
           GROUP BY multiAsset.id
       """)
   List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(
