@@ -24,6 +24,7 @@ public interface LatestTokenBalanceRepository
           FROM MultiAsset multiAsset
           LEFT JOIN LatestTokenBalance latestTokenBalance ON multiAsset.unit = latestTokenBalance.unit
           WHERE multiAsset.policy IN :policies
+          AND latestTokenBalance.quantity > 0
           GROUP BY multiAsset.policy
       """)
   List<ScriptNumberHolderProjection> countHolderByPolicyIn(
