@@ -8,6 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import jakarta.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
@@ -37,7 +39,7 @@ import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
 import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
-import org.cardanofoundation.job.repository.ledgersync.AddressTokenBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
@@ -49,7 +51,7 @@ public class NativeScriptInfoSchedule {
   private final NativeScriptInfoRepository nativeScriptInfoRepository;
   private final ScriptRepository scriptRepository;
   private final MultiAssetRepository multiAssetRepository;
-  private final AddressTokenBalanceRepository addressTokenBalanceRepository;
+  private final LatestTokenBalanceRepository latestTokenBalanceRepository;
   private final TxRepository txRepository;
 
   private final RedisTemplate<String, Integer> redisTemplate;
@@ -61,7 +63,14 @@ public class NativeScriptInfoSchedule {
   private static final List<ScriptType> NATIVE_SCRIPT_TYPES =
       List.of(ScriptType.TIMELOCK, ScriptType.MULTISIG);
 
-  @Scheduled(fixedRateString = "${jobs.native-script-info.fixed-delay}")
+  @PostConstruct
+  void setup() {
+    String nativeScriptTxCheckPoint = getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());
+    log.info("Start setup for NativeScriptInfo jobs");
+    redisTemplate.delete(nativeScriptTxCheckPoint);
+  }
+
+  @Scheduled(fixedDelayString = "${jobs.native-script-info.fixed-delay}")
   @Transactional(value = "explorerTransactionManager")
   public void syncNativeScriptInfo() {
     final String nativeScriptTxCheckPoint = getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());
@@ -72,7 +81,9 @@ public class NativeScriptInfoSchedule {
     } else if (currentTxId > checkpoint.longValue()) {
       update(checkpoint, currentTxId);
     }
-    redisTemplate.opsForValue().set(nativeScriptTxCheckPoint, currentTxId.intValue());
+    redisTemplate
+        .opsForValue()
+        .set(nativeScriptTxCheckPoint, Math.max(currentTxId.intValue() - 1000, 0));
   }
 
   private void update(Integer checkpoint, Long currentTxId) {
@@ -80,9 +91,7 @@ public class NativeScriptInfoSchedule {
     long startTime = System.currentTimeMillis();
     Long txCheckpoint = checkpoint.longValue();
     Set<String> scriptHashList =
-        scriptRepository.findHashByTypeAndTxIn(txCheckpoint, currentTxId, NATIVE_SCRIPT_TYPES);
-    scriptHashList.addAll(
-        multiAssetRepository.findPolicyByTxIn(txCheckpoint, currentTxId, NATIVE_SCRIPT_TYPES));
+        multiAssetRepository.findPolicyByTxIn(txCheckpoint, currentTxId, NATIVE_SCRIPT_TYPES);
 
     final AtomicInteger counter = new AtomicInteger();
     scriptHashList.stream()
@@ -124,7 +133,7 @@ public class NativeScriptInfoSchedule {
                     ScriptNumberTokenProjection::getScriptHash,
                     ScriptNumberTokenProjection::getNumberOfTokens));
     Map<String, Long> scriptNumberHolderMap =
-        addressTokenBalanceRepository.countHolderByPolicyIn(scriptHashes).stream()
+        latestTokenBalanceRepository.countHolderByPolicyIn(scriptHashes).stream()
             .collect(
                 Collectors.toMap(
                     ScriptNumberHolderProjection::getScriptHash,

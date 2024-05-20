@@ -17,34 +17,6 @@ import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
 @Repository
 public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
   @Query(
-      "select distinct multiAsset "
-          + " from MultiAsset multiAsset join AddressToken addressToken"
-          + " on multiAsset.id = addressToken.multiAssetId"
-          + " join Tx tx on tx.id = addressToken.txId"
-          + " join Block block on block.id = tx.blockId"
-          + " where block.blockNo > :fromBlockNo and block.blockNo <= :toBlockNo ")
-  List<MultiAsset> getTokensInTransactionInBlockRange(
-      @Param("fromBlockNo") Long fromBlockNo, @Param("toBlockNo") Long toBlockNo);
-
-  @Query(
-      "select multiAsset from MultiAsset multiAsset where multiAsset.time >= :time"
-          + " and multiAsset.txCount = 0")
-  List<MultiAsset> getTokensWithZeroTxCountAndAfterTime(@Param("time") Timestamp afterTime);
-
-  @Query(
-      "select distinct multiAsset "
-          + " from MultiAsset multiAsset join AddressToken addressToken"
-          + " on multiAsset.id = addressToken.multiAssetId"
-          + " join Tx tx on tx.id = addressToken.txId"
-          + " join Block block on block.id = tx.blockId"
-          + " where block.time >= :fromTime and block.time <= :toTime")
-  List<MultiAsset> getTokensInTransactionInTimeRange(
-      @Param("fromTime") Timestamp fromTime, @Param("toTime") Timestamp toTime);
-
-  @Query("SELECT max(multiAsset.id) FROM MultiAsset multiAsset")
-  Long getCurrentMaxIdent();
-
-  @Query(
       "SELECT count(multiAsset) as numberOfTokens, multiAsset.policy as scriptHash"
           + " FROM MultiAsset multiAsset"
           + " WHERE multiAsset.policy IN :policyIds"
@@ -53,13 +25,40 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
       @Param("policyIds") Collection<String> policyIds);
 
   @Query(
-      "SELECT multiAsset.policy as scriptHash"
-          + " FROM MultiAsset multiAsset"
-          + " INNER JOIN Script script ON script.hash = multiAsset.policy AND script.type IN :types"
-          + " INNER JOIN AddressToken addressToken ON addressToken.multiAssetId = multiAsset.id"
-          + " WHERE addressToken.txId BETWEEN :fromTxId AND :toTxId")
+      value =
+          """
+          SELECT multiAsset.policy as scriptHash
+                FROM MultiAsset multiAsset
+                INNER JOIN Script script ON script.hash = multiAsset.policy AND script.type IN :types
+                INNER JOIN AddressTxAmount addressTxAmount ON addressTxAmount.unit = multiAsset.unit
+                INNER JOIN Tx tx ON tx.hash = addressTxAmount.txHash
+                WHERE tx.id BETWEEN :fromTxId AND :toTxId
+      """)
   Set<String> findPolicyByTxIn(
       @Param("fromTxId") Long fromTxId,
       @Param("toTxId") Long toTxId,
       @Param("types") Collection<ScriptType> types);
+
+  @Query("SELECT max(multiAsset.id) FROM MultiAsset multiAsset")
+  Long getCurrentMaxIdent();
+
+  @Query(
+      "select distinct multiAsset "
+          + " from MultiAsset multiAsset "
+          + " join AddressTxAmount addressTxAmount on multiAsset.unit = addressTxAmount.unit"
+          + " join Tx tx on tx.hash = addressTxAmount.txHash"
+          + " join Block block on block.id = tx.blockId"
+          + " where block.blockNo > :fromBlockNo and block.blockNo <= :toBlockNo ")
+  List<MultiAsset> getTokensInTransactionInBlockRange(
+      @Param("fromBlockNo") Long fromBlockNo, @Param("toBlockNo") Long toBlockNo);
+
+  @Query(
+      "select distinct multiAsset "
+          + " from MultiAsset multiAsset "
+          + " join AddressTxAmount addressTxAmount on multiAsset.unit = addressTxAmount.unit"
+          + " join Tx tx on tx.hash = addressTxAmount.txHash"
+          + " join Block block on block.id = tx.blockId"
+          + " where block.time >= :fromTime and block.time <= :toTime")
+  List<MultiAsset> getTokensInTransactionInTimeRange(
+      @Param("fromTime") Timestamp fromTime, @Param("toTime") Timestamp toTime);
 }

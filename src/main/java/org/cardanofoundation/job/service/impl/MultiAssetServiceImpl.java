@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.job.model.TokenNumberHolders;
-import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.util.StreamUtil;
 
@@ -21,7 +21,7 @@ import org.cardanofoundation.job.util.StreamUtil;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MultiAssetServiceImpl implements MultiAssetService {
 
-  JOOQAddressTokenBalanceRepository jooqAddressTokenBalanceRepository;
+  LatestTokenBalanceRepository latestTokenBalanceRepository;
 
   /**
    * Build a mapping of multiAsset IDs to the total number of holders for each multi-asset. The
@@ -34,28 +34,15 @@ public class MultiAssetServiceImpl implements MultiAssetService {
    */
   @Override
   public Map<Long, Long> getMapNumberHolder(List<Long> multiAssetIds) {
-    var numberOfHoldersWithStakeKey =
-        jooqAddressTokenBalanceRepository.countByMultiAssetIn(multiAssetIds);
-    var numberOfHoldersWithAddressNotHaveStakeKey =
-        jooqAddressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetIn(multiAssetIds);
+    var numberOfHolders = latestTokenBalanceRepository.countHoldersByMultiAssetIdIn(multiAssetIds);
 
-    var numberHoldersStakeKeyMap =
+    var numberHoldersMap =
         StreamUtil.toMap(
-            numberOfHoldersWithStakeKey,
-            TokenNumberHolders::getIdent,
-            TokenNumberHolders::getNumberOfHolders);
-    var numberHoldersAddressNotHaveStakeKeyMap =
-        StreamUtil.toMap(
-            numberOfHoldersWithAddressNotHaveStakeKey,
-            TokenNumberHolders::getIdent,
-            TokenNumberHolders::getNumberOfHolders);
+            numberOfHolders, TokenNumberHolders::getIdent, TokenNumberHolders::getNumberOfHolders);
+
     return multiAssetIds.stream()
         .collect(
-            Collectors.toMap(
-                ident -> ident,
-                ident ->
-                    numberHoldersStakeKeyMap.getOrDefault(ident, 0L)
-                        + numberHoldersAddressNotHaveStakeKeyMap.getOrDefault(ident, 0L)));
+            Collectors.toMap(ident -> ident, ident -> numberHoldersMap.getOrDefault(ident, 0L)));
   }
 
   /**
@@ -70,29 +57,16 @@ public class MultiAssetServiceImpl implements MultiAssetService {
    */
   @Override
   public Map<Long, Long> getMapNumberHolder(Long startIdent, Long endIdent) {
-    var numberOfHoldersWithStakeKey =
-        jooqAddressTokenBalanceRepository.countAddressNotHaveStakeByMultiAssetBetween(
-            startIdent, endIdent);
-    var numberOfHoldersWithAddressNotHaveStakeKey =
-        jooqAddressTokenBalanceRepository.countByMultiAssetBetween(startIdent, endIdent);
+    var numberOfHolders =
+        latestTokenBalanceRepository.countHoldersByMultiAssetIdInRange(startIdent, endIdent);
 
-    var numberHoldersStakeKeyMap =
+    var numberHoldersMap =
         StreamUtil.toMap(
-            numberOfHoldersWithStakeKey,
-            TokenNumberHolders::getIdent,
-            TokenNumberHolders::getNumberOfHolders);
-    var numberHoldersAddressNotHaveStakeKeyMap =
-        StreamUtil.toMap(
-            numberOfHoldersWithAddressNotHaveStakeKey,
-            TokenNumberHolders::getIdent,
-            TokenNumberHolders::getNumberOfHolders);
+            numberOfHolders, TokenNumberHolders::getIdent, TokenNumberHolders::getNumberOfHolders);
+
     return LongStream.rangeClosed(startIdent, endIdent)
         .boxed()
         .collect(
-            Collectors.toMap(
-                ident -> ident,
-                ident ->
-                    numberHoldersStakeKeyMap.getOrDefault(ident, 0L)
-                        + numberHoldersAddressNotHaveStakeKeyMap.getOrDefault(ident, 0L)));
+            Collectors.toMap(ident -> ident, ident -> numberHoldersMap.getOrDefault(ident, 0L)));
   }
 }
