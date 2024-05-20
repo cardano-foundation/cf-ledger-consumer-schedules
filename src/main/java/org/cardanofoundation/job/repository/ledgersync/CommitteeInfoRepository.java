@@ -6,11 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import org.cardanofoundation.explorer.common.entity.ledgersync.StakeTxBalance;
+import org.cardanofoundation.explorer.common.entity.ledgersync.CommitteeInfo;
 
-public interface StakeTxBalanceRepository extends JpaRepository<StakeTxBalance, Long> {
+public interface CommitteeInfoRepository extends JpaRepository<CommitteeInfo, String> {
   @Modifying(clearAutomatically = true)
   @Transactional
-  @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY stake_tx_balance", nativeQuery = true)
+  @Query(value = "REFRESH MATERIALIZED VIEW committee_info", nativeQuery = true)
   void refreshMaterializedView();
 }

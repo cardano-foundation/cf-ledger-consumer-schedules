@@ -49,10 +49,10 @@ import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
-import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
 
@@ -66,7 +66,7 @@ class TokenInfoServiceImplTest {
   @Mock private TokenInfoServiceAsync tokenInfoServiceAsync;
   @Mock private TxRepository txRepository;
   @Mock private JOOQTokenInfoRepository jooqTokenInfoRepository;
-  @Mock private JOOQAddressTokenRepository jooqAddressTokenRepository;
+  @Mock private AddressTxAmountRepository addressTxAmountRepository;
   @Mock private MultiAssetService multiAssetService;
   @Mock private RedisTemplate<String, String> redisTemplate;
   @Mock private HashOperations hashOperations;
@@ -164,11 +164,6 @@ class TokenInfoServiceImplTest {
     when(multiAssetRepository.getTokensInTransactionInBlockRange(anyLong(), anyLong()))
         .thenReturn(List.of(tokensInTransactionWithNewBlockRange));
 
-    MultiAsset tokensWithZeroTxCount = Mockito.mock(MultiAsset.class);
-    when(tokensWithZeroTxCount.getId()).thenReturn(2L);
-    when(multiAssetRepository.getTokensWithZeroTxCountAndAfterTime(any()))
-        .thenReturn(List.of(tokensWithZeroTxCount));
-
     MultiAsset tokenNeedUpdateVolume24h = Mockito.mock(MultiAsset.class);
     when(tokenNeedUpdateVolume24h.getId()).thenReturn(3L);
 
@@ -179,7 +174,7 @@ class TokenInfoServiceImplTest {
     final TokenVolume tokenVolume2 = new TokenVolume(2L, BigInteger.valueOf(200L));
     final TokenVolume tokenVolume3 = new TokenVolume(3L, BigInteger.valueOf(300L));
     final List<TokenVolume> tokenVolumes = List.of(tokenVolume1, tokenVolume2, tokenVolume3);
-    when(jooqAddressTokenRepository.sumBalanceAfterTx(anyList(), anyLong()))
+    when(addressTxAmountRepository.sumBalanceAfterTx(anyList(), anyLong()))
         .thenReturn(tokenVolumes);
 
     when(multiAssetService.getMapNumberHolder(anyList()))
@@ -199,7 +194,7 @@ class TokenInfoServiceImplTest {
     verify(tokenInfoRepository).saveAll(tokenInfosCaptor.capture());
     List<TokenInfo> tokenInfosSaved = tokenInfosCaptor.getValue();
     assertThat(tokenInfosSaved)
-        .hasSize(3)
+        .hasSize(2)
         .extracting(
             TokenInfo::getBlockNo,
             TokenInfo::getVolume24h,
@@ -207,7 +202,6 @@ class TokenInfoServiceImplTest {
             TokenInfo::getUpdateTime)
         .containsExactlyInAnyOrder(
             tuple(latestBlock.getBlockNo(), tokenVolume1.getVolume(), 10L, latestBlock.getTime()),
-            tuple(latestBlock.getBlockNo(), tokenVolume2.getVolume(), 20L, latestBlock.getTime()),
             tuple(latestBlock.getBlockNo(), tokenVolume3.getVolume(), 30L, latestBlock.getTime()));
 
     verify(tokenInfoCheckpointRepository).save(tokenInfoCheckpointCaptor.capture());
@@ -234,7 +228,7 @@ class TokenInfoServiceImplTest {
     tokenInfoService.updateTokenInfoList();
 
     verifyNoInteractions(tokenInfoRepository);
-    verifyNoInteractions(jooqAddressTokenRepository);
+    verifyNoInteractions(addressTxAmountRepository);
     verifyNoInteractions(multiAssetService);
   }
 }

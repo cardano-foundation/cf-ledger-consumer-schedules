@@ -29,14 +29,15 @@ import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.MultiAsset;
+import org.cardanofoundation.job.model.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
-import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
@@ -55,7 +56,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final TokenInfoServiceAsync tokenInfoServiceAsync;
   private final TxRepository txRepository;
   private final JOOQTokenInfoRepository jooqTokenInfoRepository;
-  private final JOOQAddressTokenRepository jooqAddressTokenRepository;
+  private final AddressTxAmountRepository addressTxAmountRepository;
   private final MultiAssetService multiAssetService;
 
   private final RedisTemplate<String, String> redisTemplate;
@@ -101,6 +102,12 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     List<CompletableFuture<List<TokenInfo>>> tokenInfoFutures = new ArrayList<>();
 
     var maxMultiAssetId = multiAssetRepository.getCurrentMaxIdent();
+
+    if (maxMultiAssetId == null) {
+      log.info("No multi-asset found >>> Skip token info initialization");
+      return;
+    }
+
     // Collect the results from all CompletableFuture instances to get the list of multi-assets.
     var multiAssetIdList =
         LongStream.rangeClosed(1, maxMultiAssetId).boxed().collect(Collectors.toList());
@@ -180,15 +187,6 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         StreamUtil.toMap(
             tokensInTransactionWithNewBlockRange, MultiAsset::getId, Function.identity());
 
-    // Retrieve multi-assets with zero transaction counts that were updated after the last update
-    // time.
-    var tokensWithZeroTxCount =
-        multiAssetRepository.getTokensWithZeroTxCountAndAfterTime(
-            tokenInfoCheckpoint.getUpdateTime());
-    log.info("tokensWithZeroTxCount has size: {}", tokensWithZeroTxCount.size());
-    var tokensWithZeroTxCountMap =
-        StreamUtil.toMap(tokensWithZeroTxCount, MultiAsset::getId, Function.identity());
-
     // Retrieve multi-assets involved in transactions
     // from 24h before last update time to 24h before the current time
     var tokenNeedUpdateVolume24h =
@@ -202,7 +200,6 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     // Create a map that merges all the multi-assets that need to be processed in this update.
     var tokenToProcessMap = new HashMap<Long, MultiAsset>();
     tokenToProcessMap.putAll(tokensInTransactionWithNewBlockRangeMap);
-    tokenToProcessMap.putAll(tokensWithZeroTxCountMap);
     tokenToProcessMap.putAll(tokenNeedUpdateVolume24hMap);
 
     log.info("tokenToProcess has size: {}", tokenToProcessMap.size());
@@ -216,10 +213,17 @@ public class TokenInfoServiceImpl implements TokenInfoService {
           List<Long> multiAssetIds = StreamUtil.mapApply(multiAssets, MultiAsset::getId);
           List<TokenInfo> saveEntities = new ArrayList<>();
           List<TokenVolume> volumes =
-              jooqAddressTokenRepository.sumBalanceAfterTx(multiAssetIds, txId);
-          var tokenVolumeMap =
+              addressTxAmountRepository.sumBalanceAfterTx(multiAssetIds, txId);
+          var tokenVolume24hMap =
               StreamUtil.toMap(volumes, TokenVolume::getIdent, TokenVolume::getVolume);
+          var totalVolumeMap =
+              addressTxAmountRepository.getTotalVolumeByIdentIn(multiAssetIds).stream()
+                  .collect(Collectors.toMap(TokenVolume::getIdent, TokenVolume::getVolume));
+
           var mapNumberHolder = multiAssetService.getMapNumberHolder(multiAssetIds);
+          var totalTxCountMap =
+              addressTxAmountRepository.getTotalTxCountByIdentIn(multiAssetIds).stream()
+                  .collect(Collectors.toMap(TokenTxCount::getIdent, TokenTxCount::getTxCount));
 
           var tokenInfoMap =
               tokenInfoRepository.findByMultiAssetIdIn(multiAssetIds).stream()
@@ -229,8 +233,12 @@ public class TokenInfoServiceImpl implements TokenInfoService {
               multiAssetId -> {
                 var tokenInfo = tokenInfoMap.getOrDefault(multiAssetId, new TokenInfo());
                 tokenInfo.setMultiAssetId(multiAssetId);
-                tokenInfo.setVolume24h(tokenVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
+                tokenInfo.setVolume24h(
+                    tokenVolume24hMap.getOrDefault(multiAssetId, BigInteger.ZERO));
                 tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAssetId, 0L));
+                tokenInfo.setTotalVolume(
+                    totalVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
+                tokenInfo.setTxCount(totalTxCountMap.getOrDefault(multiAssetId, 0L));
                 tokenInfo.setUpdateTime(updateTime);
                 tokenInfo.setBlockNo(maxBlockNo);
                 saveEntities.add(tokenInfo);

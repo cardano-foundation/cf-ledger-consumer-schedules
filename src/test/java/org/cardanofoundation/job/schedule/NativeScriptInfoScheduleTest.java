@@ -34,7 +34,7 @@ import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
 import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
 import org.cardanofoundation.job.projection.TxInfoProjection;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
-import org.cardanofoundation.job.repository.ledgersync.AddressTokenBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
@@ -47,7 +47,7 @@ public class NativeScriptInfoScheduleTest {
   @Mock ValueOperations valueOperations;
   @Mock NativeScriptInfoRepository nativeScriptInfoRepository;
   @Mock ScriptRepository scriptRepository;
-  @Mock AddressTokenBalanceRepository addressTokenBalanceRepository;
+  @Mock LatestTokenBalanceRepository latestTokenBalanceRepository;
   @Mock MultiAssetRepository multiAssetRepository;
   @Mock TxRepository txRepository;
 
@@ -62,7 +62,7 @@ public class NativeScriptInfoScheduleTest {
             nativeScriptInfoRepository,
             scriptRepository,
             multiAssetRepository,
-            addressTokenBalanceRepository,
+            latestTokenBalanceRepository,
             txRepository,
             redisTemplate);
     when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -102,7 +102,7 @@ public class NativeScriptInfoScheduleTest {
         Mockito.mock(ScriptNumberHolderProjection.class);
     when(scriptNumberHolderProjection.getScriptHash()).thenReturn(scriptHash);
     when(scriptNumberHolderProjection.getNumberOfHolders()).thenReturn(1L);
-    when(addressTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
+    when(latestTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
         .thenReturn(List.of(scriptNumberHolderProjection));
 
     nativeScriptInfoSchedule.syncNativeScriptInfo();
@@ -156,7 +156,7 @@ public class NativeScriptInfoScheduleTest {
         Mockito.mock(ScriptNumberHolderProjection.class);
     when(scriptNumberHolderProjection.getScriptHash()).thenReturn(scriptHash);
     when(scriptNumberHolderProjection.getNumberOfHolders()).thenReturn(15L);
-    when(addressTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
+    when(latestTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
         .thenReturn(List.of(scriptNumberHolderProjection));
 
     nativeScriptInfoSchedule.syncNativeScriptInfo();

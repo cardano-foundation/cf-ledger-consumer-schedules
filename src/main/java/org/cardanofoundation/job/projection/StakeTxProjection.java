@@ -1,7 +1,6 @@
 package org.cardanofoundation.job.projection;
 
 import java.math.BigInteger;
-import java.sql.Timestamp;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -15,5 +14,5 @@ public class StakeTxProjection {
 
   Long txId;
   BigInteger amount;
-  Timestamp time;
+  Long time;
 }
