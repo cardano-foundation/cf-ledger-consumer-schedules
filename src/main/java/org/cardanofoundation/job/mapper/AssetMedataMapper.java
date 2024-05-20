@@ -1,5 +1,7 @@
 package org.cardanofoundation.job.mapper;
 
+import lombok.extern.log4j.Log4j2;
+
 import com.bloxbean.cardano.client.util.AssetUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -9,6 +11,7 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.AssetMetadata;
 import org.cardanofoundation.job.dto.AssetMetadataDTO;
 
 @Mapper(componentModel = "spring")
+@Log4j2
 public abstract class AssetMedataMapper {
 
   @Mapping(target = "subject", source = "subject")
@@ -28,6 +31,12 @@ public abstract class AssetMedataMapper {
     String policyHex = subject.substring(0, 56);
     // name is remaining bytes of subject
     String assetNameHex = subject.substring(56);
-    return AssetUtil.calculateFingerPrint(policyHex, assetNameHex);
+    try {
+      String fingerprint = AssetUtil.calculateFingerPrint(policyHex, assetNameHex);
+      return fingerprint;
+    } catch (Exception e) {
+      log.error("Error generating fingerprint for asset metadata: {}", e.getMessage());
+      return null;
+    }
   }
 }
