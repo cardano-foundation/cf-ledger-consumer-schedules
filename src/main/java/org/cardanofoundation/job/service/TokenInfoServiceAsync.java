@@ -16,8 +16,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
+import org.cardanofoundation.job.model.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
-import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQAddressTokenRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.util.StreamUtil;
 
 @Component
@@ -25,7 +26,7 @@ import org.cardanofoundation.job.util.StreamUtil;
 @Log4j2
 public class TokenInfoServiceAsync {
 
-  private final JOOQAddressTokenRepository jooqAddressTokenRepository;
+  private final AddressTxAmountRepository addressTxAmountRepository;
   private final MultiAssetService multiAssetService;
 
   /**
@@ -49,20 +50,34 @@ public class TokenInfoServiceAsync {
     var curTime = System.currentTimeMillis();
     List<Long> multiAssetIds =
         LongStream.rangeClosed(startIdent, endIdent).boxed().collect(Collectors.toList());
-    List<TokenVolume> volumes =
-        jooqAddressTokenRepository.sumBalanceAfterTx(startIdent, endIdent, afterTxId);
+    List<TokenVolume> volumes24h =
+        addressTxAmountRepository.sumBalanceAfterTx(startIdent, endIdent, afterTxId);
 
-    var tokenVolumeMap = StreamUtil.toMap(volumes, TokenVolume::getIdent, TokenVolume::getVolume);
+    List<TokenVolume> totalVolumes =
+        addressTxAmountRepository.getTotalVolumeByIdentInRange(startIdent, endIdent);
+
+    List<TokenTxCount> txCounts =
+        addressTxAmountRepository.getTotalTxCountByIdentInRange(startIdent, endIdent);
+
+    var tokenVolume24hMap =
+        StreamUtil.toMap(volumes24h, TokenVolume::getIdent, TokenVolume::getVolume);
+    var totalVolumeMap =
+        StreamUtil.toMap(totalVolumes, TokenVolume::getIdent, TokenVolume::getVolume);
+    var txCountMap = StreamUtil.toMap(txCounts, TokenTxCount::getIdent, TokenTxCount::getTxCount);
     var mapNumberHolder = multiAssetService.getMapNumberHolder(startIdent, endIdent);
 
     // Clear unnecessary lists to free up memory to avoid OOM error
-    volumes.clear();
+    volumes24h.clear();
+    totalVolumes.clear();
+    txCounts.clear();
 
     multiAssetIds.forEach(
         multiAssetId -> {
           var tokenInfo = new TokenInfo();
           tokenInfo.setMultiAssetId(multiAssetId);
-          tokenInfo.setVolume24h(tokenVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
+          tokenInfo.setVolume24h(tokenVolume24hMap.getOrDefault(multiAssetId, BigInteger.ZERO));
+          tokenInfo.setTotalVolume(totalVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
+          tokenInfo.setTxCount(txCountMap.getOrDefault(multiAssetId, 0L));
           tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAssetId, 0L));
           tokenInfo.setUpdateTime(updateTime);
           tokenInfo.setBlockNo(blockNo);

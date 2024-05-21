@@ -23,9 +23,10 @@ import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHisto
 import org.cardanofoundation.job.common.enumeration.ExportType;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
 import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.service.StakeKeyReportService;
+import org.cardanofoundation.job.util.DateUtils;
 import org.cardanofoundation.job.util.report.ExcelHelper;
 import org.cardanofoundation.job.util.report.ExportContent;
 
@@ -37,8 +38,8 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
   private final StorageReportServiceImpl storageService;
   private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
-  private final AddressTxBalanceRepository addressTxBalanceRepository;
   private final ExcelHelper excelHelper;
+  private final AddressTxAmountRepository addressTxAmountRepository;
 
   @Value("${jobs.limit-content}")
   private int limitSize;
@@ -151,10 +152,10 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
 
       // Get total content
       Long totalContent =
-          addressTxBalanceRepository.getCountTxByStakeInDateRange(
+          addressTxAmountRepository.getCountTxByStakeInDateRange(
               stakeKeyReportHistory.getStakeKey(),
-              stakeLifeCycleFilterRequest.getFromDate(),
-              stakeLifeCycleFilterRequest.getToDate());
+              DateUtils.timestampToEpochSecond(stakeLifeCycleFilterRequest.getFromDate()),
+              DateUtils.timestampToEpochSecond(stakeLifeCycleFilterRequest.getToDate()));
 
       // Split content into multiple sheets
       long totalPage = totalContent / limitSize;

@@ -34,7 +34,7 @@ import org.cardanofoundation.job.dto.report.stake.StakeWalletActivityResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWithdrawalFilterResponse;
 import org.cardanofoundation.job.projection.StakeHistoryProjection;
 import org.cardanofoundation.job.projection.StakeTxProjection;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.cardanofoundation.job.repository.ledgersync.RewardRepository;
@@ -46,6 +46,7 @@ import org.cardanofoundation.job.repository.ledgersync.WithdrawalRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 import org.cardanofoundation.job.service.StakeKeyLifeCycleService;
 import org.cardanofoundation.job.util.DataUtil;
+import org.cardanofoundation.job.util.DateUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -60,7 +61,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
   private final RewardRepository rewardRepository;
   private final WithdrawalRepository withdrawalRepository;
   private final FetchRewardDataService fetchRewardDataService;
-  private final AddressTxBalanceRepository addressTxBalanceRepository;
+  private final AddressTxAmountRepository addressTxAmountRepository;
   private final TxRepository txRepository;
   private final EpochParamRepository epochParamRepository;
 
@@ -71,9 +72,12 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
     makeCondition(condition);
 
     var txAmountList =
-        addressTxBalanceRepository
+        addressTxAmountRepository
             .findTxAndAmountByStake(
-                stakeKey, condition.getFromDate(), condition.getToDate(), pageable)
+                stakeKey,
+                DateUtils.timestampToEpochSecond(condition.getFromDate()),
+                DateUtils.timestampToEpochSecond(condition.getToDate()),
+                pageable)
             .getContent();
 
     List<Long> txIds =
@@ -104,7 +108,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
               stakeWalletActivity.setTxHash(txMap.get(item.getTxId()).getHash());
               stakeWalletActivity.setAmount(item.getAmount());
               stakeWalletActivity.setRawAmount(item.getAmount().doubleValue() / 1000000);
-              stakeWalletActivity.setTime(item.getTime().toLocalDateTime());
+              stakeWalletActivity.setTime(DateUtils.epochSecondToLocalDateTime(item.getTime()));
               stakeWalletActivity.setFee(txMap.get(item.getTxId()).getFee());
               if (Boolean.TRUE.equals(txMap.get(item.getTxId()).getValidContract())) {
                 stakeWalletActivity.setStatus(TxStatus.SUCCESS);
