@@ -164,7 +164,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
         if (i == 0 && totalPage == 0) {
           subTitle = "";
         }
-        Pageable pageable = PageRequest.of(i, limitSize, Sort.by("time").descending());
+        Pageable pageable = PageRequest.of(i, limitSize, Sort.by("blockTime").descending());
         exportContents.add(
             reportHistoryServiceAsync.exportStakeWalletActivitys(
                 stakeKeyReportHistory.getStakeKey(),
