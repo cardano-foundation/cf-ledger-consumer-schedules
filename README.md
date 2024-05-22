@@ -61,8 +61,6 @@ To ensure the stability and reliability of this project, unit and mutation tests
 
 - SPRING_PROFILES_ACTIVE: active profiles
 - LOG: application log level
-- POOL_OFFLINE_DATA_JOB_ENABLED: enable fetch pool offline metadata job
-- CRAWL_POOL_DATA_DELAY: delay time between each crawl pool metadata time)
 - META_DATA_JOB_ENABLED: enable metadata job
 - TOKEN_METADATA_URL: url that store token
 - TOKEN_METADATA_FOLDER: store token
@@ -85,3 +83,4 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - DREP_INFO_FIXED_DELAY: fixed delay for job drep info
 - GOVERNANCE_INFO_JOB_ENABLED: enable governance info job
 - GOVERNANCE_INFO_FIXED_DELAY: fixed delay for job governance info
+- AGG_ANALYTIC_FIXED_DELAY: fixed delay for job aggregate analytic that related to address and token
