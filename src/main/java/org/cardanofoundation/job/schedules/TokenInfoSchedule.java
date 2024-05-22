@@ -42,17 +42,15 @@ public class TokenInfoSchedule {
     }
   }
 
-  @Scheduled(fixedRate = 1000 * 60 * 5) // 15 minutes
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateNumberOfTokenTx() {
     try {
-      log.info("Token Info Job: -------Start------");
+      log.info("---TokenInfo--- Refresh job has been started");
       long startTime = System.currentTimeMillis();
-
       tokenTxCountRepository.refreshMaterializedView();
-
-      long executionTime = System.currentTimeMillis() - startTime;
-      log.info("Update number of token transactions successfully, takes: [{} ms]", executionTime);
-      log.info("Token Info Job: -------End------");
+      log.info(
+          "---TokenInfo--- Refresh job has ended, takes: [{} ms]",
+          System.currentTimeMillis() - startTime);
     } catch (Exception e) {
       log.error("Error occurred during Token Info update: {}", e.getMessage(), e);
     }

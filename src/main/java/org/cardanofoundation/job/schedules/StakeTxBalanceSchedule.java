@@ -24,10 +24,11 @@ public class StakeTxBalanceSchedule {
 
   @Scheduled(fixedDelayString = "${jobs.stake-tx-balance.fixed-delay}")
   void syncStakeTxBalance() {
-    log.info("Start job syncStakeTxBalance");
+    log.info("---StakeTxBalance--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
     stakeTxBalanceRepository.refreshMaterializedView();
     log.info(
-        "End Job sync stake tx balance, Time taken {} ms", System.currentTimeMillis() - startTime);
+        "---StakeTxBalance--- Refresh job has been completed in {}ms",
+        System.currentTimeMillis() - startTime);
   }
 }

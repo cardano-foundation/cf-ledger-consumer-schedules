@@ -35,11 +35,11 @@ public class AggregateAnalyticSchedule {
   // midnight
   public void refreshAggBalanceAddressToken() {
     long currentTime = System.currentTimeMillis();
-    log.info("Start job refreshAggBalanceAddressToken");
+    log.info("---AggregateAddressTokenBalance--- Refresh job has been started");
     aggregateAddressTokenRepository.refreshMaterializedView();
 
     log.info(
-        "End Job refreshAggBalanceAddressToken, Time taken {}ms",
+        "---AggregateAddressTokenBalance--- Refresh job has ended. Time taken {}ms",
         System.currentTimeMillis() - currentTime);
   }
 
@@ -49,68 +49,69 @@ public class AggregateAnalyticSchedule {
   // midnight
   public void refreshAggBalanceAddressTx() {
     long currentTime = System.currentTimeMillis();
-    log.info("Start job refreshAggBalanceAddressTx");
+    log.info("---AggregateAddressTxBalance--- Refresh job has been started");
     aggregateAddressTxBalanceRepository.refreshMaterializedView();
     log.info(
-        "End Job refreshAggBalanceAddressTx, Time taken {}ms",
+        "---AggregateAddressTxBalance--- Refresh job has ended. Time taken {}ms",
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestTokenBalance() {
     long currentTime = System.currentTimeMillis();
-    log.info("Start job refreshLatestTokenBalance");
+    log.info("---LatestTokenBalance--- Refresh job has been started");
     latestTokenBalanceRepository.refreshMaterializedView();
     log.info(
-        "End Job refreshLatestTokenBalance, Time taken {}ms",
+        "LatestTokenBalance - Refresh job has ended. Time taken {} ms",
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestAddressBalance() {
     long currentTime = System.currentTimeMillis();
-    log.info("Start job refreshLatestAddressBalance");
+    log.info("---LatestAddressBalance--- - Refresh job has been started");
     latestAddressBalanceRepository.refreshMaterializedView();
     log.info(
-        "End Job refreshLatestAddressBalance, Time taken {}ms",
+        "LatestAddressBalance - Refresh job ended. Time taken {} ms",
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestStakeAddressBalance() {
     long currentTime = System.currentTimeMillis();
-    log.info("Start job refreshLatestStakeAddressBalance");
+    log.info("---LatestStakeAddressBalance--- Refresh job has been started");
     latestStakeAddressBalanceRepository.refreshMaterializedView();
     log.info(
-        "End Job refreshLatestStakeAddressBalance, Time taken {}ms",
+        "---LatestStakeAddressBalance--- Refresh job has ended. Time taken {} ms",
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestStakeAddressTxCount() {
     long currentTime = System.currentTimeMillis();
-    log.info("Start job refreshLatestStakeAddressTxCount");
+    log.info("---LatestStakeAddressTxCount--- Refresh job has been started");
     stakeAddressTxCountRepository.refreshMaterializedView();
     log.info(
-        "End Job refreshLatestStakeAddressTxCount, Time taken {}ms",
+        "---LatestStakeAddressTxCount--- Refresh job has ended. Time taken {} ms",
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxCountTable() {
-    log.info("Start job to update tx count for address");
+    log.info("---LatestAddressTxCount--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
     addressTxCountRepository.refreshMaterializedView();
     long executionTime = System.currentTimeMillis() - startTime;
-    log.info("Update tx count for address successfully, takes: [{} ms]", executionTime);
+    log.info("---LatestAddressTxCount--- Refresh job has ended. Time taken {} ms", executionTime);
   }
 
-  @Scheduled(fixedDelay = 1000 * 60) // 1 minutes
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxChartData() {
-    log.info("Start job to update data for tx chart");
+    log.info("---TxChart--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
     txChartService.refreshDataForTxChart();
-    long executionTime = System.currentTimeMillis() - startTime;
-    log.info("Update tx chart data successfully, takes: [{} ms]", executionTime);
+    log.info(
+        "---TxChart--- Refresh job has ended. Time taken {} ms",
+        System.currentTimeMillis() - startTime);
   }
 }
