@@ -1,5 +1,5 @@
 ALTER TABLE gov_action_proposal_info
-    ADD index_type BIGINT, ADD type varchar(50), ADD block_time bigint, ADD spoAllowedVote boolean;
+    ADD index_type BIGINT, ADD type varchar(50), ADD block_time bigint, ADD spo_allowed_vote boolean;
 
 
 CREATE INDEX IF NOT EXISTS idx_gov_action_proposal_info_type ON gov_action_proposal_info using hash (type);
