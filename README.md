@@ -42,10 +42,6 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - API_CHECK_REWARD_URL: api url to fetch reward
 - API_CHECK_POOL_HISTORY_URL: api url to fetch pool history
 - NETWORK_NAME: cardano node network name (preprod, testnet, mainnet)
-- KAFKA_CONFIGURATION_ENABLED: enable kafka configuration, default `true`
-- KAFKA_BOOSTRAP_SERVER_URL: kafka bootstrap serve. Default `localhost:9092`
-- KAFKA_GROUP_ID: kafka group id.
-- KAFKA_REPORTS_TOPIC: kafka topic to consume report. Default `dev.explorer.api.mainnet.reports`
 
 - REPORT_S3_ACCESS_KEY: report aws s3 access key
 - REPORT_S3_SECRET_KEY: report aws s3 secret key
