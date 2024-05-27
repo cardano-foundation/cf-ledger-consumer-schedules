@@ -8,6 +8,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +19,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.cardanofoundation.explorer.common.entity.enumeration.ReportStatus;
-import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
 import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
-import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
-import org.cardanofoundation.job.repository.explorer.PoolReportHistoryRepository;
 import org.cardanofoundation.job.repository.explorer.ReportHistoryRepository;
-import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
 import org.cardanofoundation.job.service.PoolReportService;
 import org.cardanofoundation.job.service.StakeKeyReportService;
 import org.cardanofoundation.job.service.impl.StorageReportServiceImpl;
@@ -39,10 +39,9 @@ import org.cardanofoundation.job.service.impl.StorageReportServiceImpl;
     havingValue = "true")
 public class ReportHistorySchedule {
 
+  private static final Logger logger = LogManager.getLogger(ReportHistorySchedule.class);
   private final ReportHistoryRepository reportHistoryRepository;
   private final StorageReportServiceImpl storageService;
-  private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
-  private final PoolReportHistoryRepository poolReportHistoryRepository;
   private final StakeKeyReportService stakeKeyReportService;
   private final PoolReportService poolReportService;
 
@@ -74,44 +73,60 @@ public class ReportHistorySchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(cron = "3 * * * * *", initialDelay = 3000)
-  public void consume() {
+  @Scheduled(fixedDelay = 1 * 60 * 1000)
+  public void consumeReport() {
+    Thread.currentThread().setName("ConsumeReport");
     var currentTime = System.currentTimeMillis();
-    try {
-      List<ReportHistory> reportHistories =
-          reportHistoryRepository.findAllReportHistoryByStatus(ReportStatus.IN_PROGRESS);
-
-      reportHistories.forEach(
-          reportHistory -> {
-            switch (reportHistory.getType()) {
-              case STAKE_KEY:
-                StakeKeyReportHistory stakeKeyReportHistory =
-                    stakeKeyReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
-                stakeKeyReportService.exportStakeKeyReport(
-                    stakeKeyReportHistory,
-                    reportHistory.getZoneOffset(),
-                    reportHistory.getTimePattern(),
-                    reportHistory.getDateFormat());
-                break;
-              case POOL_ID:
-                PoolReportHistory poolReportHistory =
-                    poolReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
-                poolReportService.exportPoolReport(
-                    poolReportHistory,
-                    reportHistory.getZoneOffset(),
-                    reportHistory.getTimePattern(),
-                    reportHistory.getDateFormat());
-                break;
-              default:
-                break;
-            }
-          });
-    } catch (Exception e) {
-      log.error("Consume report history failure: {}", e.getMessage());
-    }
-
-    log.info(
-        "End job consume report history: {} ms",
+    AtomicLong successProcess = new AtomicLong(0);
+    List<ReportHistory> reportHistories =
+        reportHistoryRepository.findAllReportHistoryByStatus(ReportStatus.IN_PROGRESS);
+    reportHistories.parallelStream()
+        .forEach(
+            reportHistory -> {
+              switch (reportHistory.getType()) {
+                case STAKE_KEY:
+                  try {
+                    var time = System.currentTimeMillis();
+                    stakeKeyReportService.exportStakeKeyReport(reportHistory.getId());
+                    logger.info(
+                        "Time taken to generate stake key report with id {}: {} ms",
+                        reportHistory.getId(),
+                        System.currentTimeMillis() - time);
+                  } catch (Exception e) {
+                    logger.error(
+                        "Consuming report history with ID {} failed: {}",
+                        reportHistory.getId(),
+                        e.getMessage());
+                  } finally {
+                    successProcess.incrementAndGet();
+                  }
+                  break;
+                case POOL_ID:
+                  try {
+                    var time = System.currentTimeMillis();
+                    poolReportService.exportPoolReport(reportHistory.getId());
+                    logger.info(
+                        "Time taken to generate pool report with id {}: {} ms",
+                        reportHistory.getId(),
+                        System.currentTimeMillis() - time);
+                  } catch (Exception e) {
+                    logger.error(
+                        "Consuming report history with ID {} failed: {}",
+                        reportHistory.getId(),
+                        e.getMessage());
+                  } finally {
+                    successProcess.incrementAndGet();
+                  }
+                  break;
+                default:
+                  break;
+              }
+            });
+    logger.info(
+        "Consumed {} reports: {} succeeded , {} failed and taking {} ms",
+        reportHistories.size(),
+        successProcess.get(),
+        reportHistories.size() - successProcess.get(),
         System.currentTimeMillis() - currentTime);
   }
 }
