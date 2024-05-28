@@ -73,7 +73,7 @@ public class ReportHistorySchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelay = 1 * 60 * 1000)
+  @Scheduled(fixedRateString = "${jobs.report-history.fixed-delay}")
   public void consumeReport() {
     Thread.currentThread().setName("ConsumeReport");
     var currentTime = System.currentTimeMillis();
