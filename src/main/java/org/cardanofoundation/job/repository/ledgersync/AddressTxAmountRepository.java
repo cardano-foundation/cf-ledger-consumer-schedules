@@ -37,6 +37,7 @@ public interface AddressTxAmountRepository
               + " JOIN Tx tx on tx.hash = addTxAmount.txHash"
               + " WHERE addTxAmount.stakeAddress = :stakeAddress"
               + " AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate"
+              + " AND addTxAmount.unit = 'lovelace'"
               + " GROUP BY addTxAmount.txHash, addTxAmount.blockTime, tx.id")
   Page<StakeTxProjection> findTxAndAmountByStake(
       @Param("stakeAddress") String stakeAddress,

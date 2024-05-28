@@ -104,6 +104,7 @@ jobs:
     enabled: ${META_DATA_JOB_ENABLED:false}
   report-history:
     enabled: ${REPORT_HISTORY_JOB_ENABLED:false}
+    fixed-delay: ${REPORT_HISTORY_FIXED_DELAY:60000}
     expired:
       rate: ${SET_EXPIRED_REPORTS_DELAY:86400000} # 1 day
   pool-status:
