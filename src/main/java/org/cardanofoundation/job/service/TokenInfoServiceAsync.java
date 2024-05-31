@@ -68,6 +68,7 @@ public class TokenInfoServiceAsync {
     var totalVolumeMap =
         StreamUtil.toMap(totalVolumes, TokenVolume::getIdent, TokenVolume::getVolume);
     var txCountMap = StreamUtil.toMap(txCounts, TokenTxCount::getIdent, TokenTxCount::getTxCount);
+      log.info("before getMapNumberHolder took: {}ms", System.currentTimeMillis() - curTime);
     var mapNumberHolder = multiAssetService.getMapNumberHolder(startIdent, endIdent);
       log.info("multiAssetService took: {}ms", System.currentTimeMillis() - curTime);
 
