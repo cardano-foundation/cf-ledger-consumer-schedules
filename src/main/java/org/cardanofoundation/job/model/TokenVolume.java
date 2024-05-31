@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class TokenVolume {
+public class TokenVolume implements org.cardanofoundation.job.model.projection.TokenVolume {
   Long ident;
   BigInteger volume;
 
