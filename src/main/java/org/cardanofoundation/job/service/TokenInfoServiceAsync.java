@@ -52,12 +52,15 @@ public class TokenInfoServiceAsync {
         LongStream.rangeClosed(startIdent, endIdent).boxed().collect(Collectors.toList());
     List<TokenVolume> volumes24h =
         addressTxAmountRepository.sumBalanceAfterTx(startIdent, endIdent, afterTxId);
+    log.info("volumes24h took: {}ms", System.currentTimeMillis() - curTime);
 
     List<TokenVolume> totalVolumes =
         addressTxAmountRepository.getTotalVolumeByIdentInRange(startIdent, endIdent);
+      log.info("totalVolumes took: {}ms", System.currentTimeMillis() - curTime);
 
     List<TokenTxCount> txCounts =
         addressTxAmountRepository.getTotalTxCountByIdentInRange(startIdent, endIdent);
+      log.info("txCounts took: {}ms", System.currentTimeMillis() - curTime);
 
     var tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getIdent, TokenVolume::getVolume);

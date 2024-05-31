@@ -138,6 +138,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
               .buildTokenInfoList(startIndex, toIndex, maxBlockNo, txId, updateTime)
               .exceptionally(
                   e -> {
+                      log.warn("TokenInfoBatch error while executing batch", e);
                     throw new RuntimeException(
                         "Exception occurs when initializing token info list", e);
                   })
