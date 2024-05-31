@@ -56,15 +56,20 @@ public interface AddressTxAmountRepository
   @Query(
       value =
           """
-      SELECT new org.cardanofoundation.job.model.TokenVolume(ma.id, sum(ata.quantity))
-      FROM AddressTxAmount ata
-      JOIN MultiAsset ma ON ata.unit = ma.unit
-      WHERE ma.id between :startIdent AND :endIdent
-        AND ata.quantity > 0
-        AND ata.blockTime > (SELECT extract(epoch from b.time)::integer as blockTime
-                              FROM Block b INNER JOIN Tx tx ON tx.blockId = b.id 
-                              WHERE tx.id = :txId)
-      GROUP BY ma.id
+          WITH block_start AS
+                  (
+                   SELECT extract(epoch from b.time)::integer as block_time
+                   FROM block b INNER JOIN tx ON tx.block_id = b.id
+                   WHERE tx.id = :txId
+                  )
+                SELECT ma.id AS ident, sum(ata.quantity) AS volume
+                FROM address_tx_amount ata
+                JOIN multi_asset ma
+                  ON ata.unit = ma.unit
+                WHERE ma.id between :startIdent AND :endIdent
+                  AND ata.quantity > 0
+                  AND ata.block_time > (SELECT block_time FROM block_start)
+                GROUP BY ma.id
       """)
   List<TokenVolume> sumBalanceAfterTx(
       @Param("startIdent") Long startIdent,
