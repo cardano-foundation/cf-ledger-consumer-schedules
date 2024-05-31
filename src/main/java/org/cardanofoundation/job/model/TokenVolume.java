@@ -14,4 +14,9 @@ import lombok.Setter;
 public class TokenVolume {
   Long ident;
   BigInteger volume;
+
+  public static TokenVolume from(org.cardanofoundation.job.model.projection.TokenVolume tokenVolume) {
+    return new TokenVolume(tokenVolume.getIdent(), tokenVolume.getVolume());
+  }
+
 }

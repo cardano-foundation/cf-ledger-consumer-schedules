@@ -51,7 +51,8 @@ public class TokenInfoServiceAsync {
     List<Long> multiAssetIds =
         LongStream.rangeClosed(startIdent, endIdent).boxed().collect(Collectors.toList());
     List<TokenVolume> volumes24h =
-        addressTxAmountRepository.sumBalanceAfterTx(startIdent, endIdent, afterTxId);
+        addressTxAmountRepository.sumBalanceAfterTx(startIdent, endIdent, afterTxId)
+                .stream().map(TokenVolume::from).collect(Collectors.toList());
     log.info("volumes24h took: {}ms", System.currentTimeMillis() - curTime);
 
     List<TokenVolume> totalVolumes =
