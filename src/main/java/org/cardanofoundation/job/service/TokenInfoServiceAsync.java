@@ -69,6 +69,7 @@ public class TokenInfoServiceAsync {
         StreamUtil.toMap(totalVolumes, TokenVolume::getIdent, TokenVolume::getVolume);
     var txCountMap = StreamUtil.toMap(txCounts, TokenTxCount::getIdent, TokenTxCount::getTxCount);
     var mapNumberHolder = multiAssetService.getMapNumberHolder(startIdent, endIdent);
+      log.info("multiAssetService took: {}ms", System.currentTimeMillis() - curTime);
 
     // Clear unnecessary lists to free up memory to avoid OOM error
     volumes24h.clear();
