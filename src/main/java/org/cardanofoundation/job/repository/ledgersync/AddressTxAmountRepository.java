@@ -58,7 +58,7 @@ public interface AddressTxAmountRepository
           """
           WITH block_start AS
                   (
-                   SELECT extract(epoch from b.time)::integer as block_time
+                   SELECT extract(epoch from b.time)\\:\\:integer as block_time
                    FROM block b INNER JOIN tx ON tx.block_id = b.id
                    WHERE tx.id = :txId
                   )
