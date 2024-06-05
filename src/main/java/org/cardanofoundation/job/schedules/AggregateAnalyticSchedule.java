@@ -56,7 +56,8 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 3600000,
+          fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestTokenBalance() {
     long currentTime = System.currentTimeMillis();
     log.info("---LatestTokenBalance--- Refresh job has been started");
@@ -66,7 +67,8 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 7200000,
+          fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestAddressBalance() {
     long currentTime = System.currentTimeMillis();
     log.info("---LatestAddressBalance--- - Refresh job has been started");
@@ -76,7 +78,8 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 10800000,
+          fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestStakeAddressBalance() {
     long currentTime = System.currentTimeMillis();
     log.info("---LatestStakeAddressBalance--- Refresh job has been started");

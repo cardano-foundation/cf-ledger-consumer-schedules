@@ -40,7 +40,7 @@ class TokenInfoServiceAsyncTest {
     TokenVolume volume24h1 = new TokenVolume(1L, BigInteger.valueOf(100L));
     TokenVolume volume24h2 = new TokenVolume(2L, BigInteger.valueOf(200L));
     TokenVolume volume24h3 = new TokenVolume(3L, BigInteger.valueOf(300L));
-    List<TokenVolume> volume24hLst = new ArrayList<>();
+    List<org.cardanofoundation.job.model.projection.TokenVolume> volume24hLst = new ArrayList<>();
     volume24hLst.add(volume24h1);
     volume24hLst.add(volume24h2);
     volume24hLst.add(volume24h3);
