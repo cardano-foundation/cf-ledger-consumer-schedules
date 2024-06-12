@@ -34,7 +34,7 @@ import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
 import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
 import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.util.DateUtils;
 import org.cardanofoundation.job.util.report.ExcelHelper;
