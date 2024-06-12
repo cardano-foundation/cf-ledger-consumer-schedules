@@ -25,7 +25,7 @@ public class JOOQTokenInfoRepository {
 
   public JOOQTokenInfoRepository(
       @Qualifier("explorerDSLContext") DSLContext dsl,
-      @Value("${spring.jpa.properties.hibernate.default_schema}") String schema) {
+      @Value("${multi-datasource.datasourceExplorer.flyway.schemas}") String schema) {
     this.dsl = dsl;
     this.entityUtil = new EntityUtil(schema, TokenInfo.class);
   }
