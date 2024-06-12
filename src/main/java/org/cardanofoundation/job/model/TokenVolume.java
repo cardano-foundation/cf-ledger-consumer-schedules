@@ -15,8 +15,8 @@ public class TokenVolume implements org.cardanofoundation.job.model.projection.T
   Long ident;
   BigInteger volume;
 
-  public static TokenVolume from(org.cardanofoundation.job.model.projection.TokenVolume tokenVolume) {
+  public static TokenVolume from(
+      org.cardanofoundation.job.model.projection.TokenVolume tokenVolume) {
     return new TokenVolume(tokenVolume.getIdent(), tokenVolume.getVolume());
   }
-
 }

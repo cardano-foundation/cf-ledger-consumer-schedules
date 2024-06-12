@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -121,22 +120,24 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     // Process the multi-assets in batches to build token info data.
     for (int i = 0; i < multiAssetIdList.size(); i += multiAssetListSize) {
-        log.info("multiAssetIdList loop: {}", i);
+      log.info("multiAssetIdList loop: {}", i);
       int toIndex = Math.min(i + multiAssetListSize, multiAssetIdList.size());
       var subList = multiAssetIdList.subList(i, toIndex);
       Long startIdent = subList.get(0);
       Long endIdent = subList.get(subList.size() - 1);
 
-        var tokenInfoList =    tokenInfoServiceAsync
+      var tokenInfoList =
+          tokenInfoServiceAsync
               .buildTokenInfoList(startIdent, endIdent, maxBlockNo, txId, updateTime)
               .exceptionally(
                   e -> {
                     throw new RuntimeException(
                         "Exception occurs when initializing token info list", e);
-                  }).join();
+                  })
+              .join();
 
       // After every 5 batches, insert the fetched token info data into the database in batches.
-        BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
+      BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
     }
 
     multiAssetIdList.clear();

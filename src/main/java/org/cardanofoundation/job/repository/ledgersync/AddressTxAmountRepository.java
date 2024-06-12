@@ -71,7 +71,8 @@ public interface AddressTxAmountRepository
                   AND ata.quantity > 0
                   AND ata.block_time > (SELECT block_time FROM block_start)
                 GROUP BY ma.id
-      """, nativeQuery = true)
+      """,
+      nativeQuery = true)
   List<org.cardanofoundation.job.model.projection.TokenVolume> sumBalanceAfterTx(
       @Param("startIdent") Long startIdent,
       @Param("endIdent") Long endIdent,
