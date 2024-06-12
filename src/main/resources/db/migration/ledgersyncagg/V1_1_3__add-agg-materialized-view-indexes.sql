@@ -38,7 +38,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS unique_stake_address_tx_count_idx ON stake_add
 CREATE INDEX IF NOT EXISTS stake_address_tx_count_tx_count_idx ON stake_address_tx_count (tx_count);
 
 ------------------------------------------------------------------------------------------------------------------------
-CREATE UNIQUE INDEX IF NOT EXISTS unique_stake_address_idx ON stake_address_view (stake_address)
+CREATE UNIQUE INDEX IF NOT EXISTS unique_stake_address_idx ON stake_address_view (stake_address);
 ------------------------------------------------------------------------------------------------------------------------
 CREATE UNIQUE INDEX IF NOT EXISTS unique_latest_address_balance_idx ON top_address_balance (address);
 CREATE INDEX IF NOT EXISTS latest_address_balance_quantity_idx ON top_address_balance (quantity);
