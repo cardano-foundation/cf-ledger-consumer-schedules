@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import org.cardanofoundation.explorer.common.entity.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
 
 public interface ReportHistoryRepository extends JpaRepository<ReportHistory, Long> {
@@ -14,4 +15,7 @@ public interface ReportHistoryRepository extends JpaRepository<ReportHistory, Lo
   @Query("SELECT r FROM ReportHistory r WHERE r.uploadedAt < :uploadedAt AND r.status <> 'EXPIRED'")
   List<ReportHistory> findNotExpiredReportHistoryByUploadedAtLessThan(
       @Param("uploadedAt") Timestamp uploadedAt);
+
+  @Query("SELECT r FROM ReportHistory r WHERE r.status = :status")
+  List<ReportHistory> findAllReportHistoryByStatus(@Param("status") ReportStatus status);
 }

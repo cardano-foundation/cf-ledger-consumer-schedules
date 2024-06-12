@@ -63,7 +63,13 @@ public class DRepInfoSchedule {
     long startTime = System.currentTimeMillis();
     log.info("Scheduled Drep Info Job: -------Start------");
     Long currentEpoch = epochRepository.findMaxEpochNo().longValue();
-    Long dRepActivity = epochParamRepository.findDRepActivityByEpochNo(currentEpoch);
+    Long dRepActivity = epochParamRepository.findDRepActivityByEpochNo(currentEpoch).orElse(null);
+    if (Objects.isNull(dRepActivity)) {
+      log.error("DRep Activity param is null, please check the data");
+      log.info("Update DRep Info failed, takes: [{} ms]", System.currentTimeMillis() - startTime);
+      log.info("Scheduled Drep Info Job: -------End------");
+      return;
+    }
 
     Pageable pageable =
         PageRequest.of(

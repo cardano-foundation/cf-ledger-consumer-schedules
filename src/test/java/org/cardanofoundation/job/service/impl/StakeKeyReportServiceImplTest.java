@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.data.domain.Pageable;
@@ -92,8 +93,9 @@ class StakeKeyReportServiceImplTest {
                 .reportHistory(reportHistory)
                 .build());
 
-    when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString()))
+    when(stakeKeyReportHistoryRepository.findByReportHistoryId(any()))
+        .thenReturn(Optional.of(stakeKeyReportHistory));
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(any(StakeKeyReportHistory.class)))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
     when(reportHistoryServiceAsync.exportStakeRegistrations(stakeKey, condition))
@@ -121,10 +123,7 @@ class StakeKeyReportServiceImplTest {
 
     doThrow(new RuntimeException()).when(storageService).uploadFile(any(), anyString());
     Assertions.assertThrows(
-        Exception.class,
-        () ->
-            stakeKeyReportService.exportStakeKeyReport(
-                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
+        Exception.class, () -> stakeKeyReportService.exportStakeKeyReport(reportHistory.getId()));
     Assertions.assertEquals(
         ReportStatus.FAILED, stakeKeyReportHistory.getReportHistory().getStatus());
   }
@@ -145,6 +144,7 @@ class StakeKeyReportServiceImplTest {
             .reportName("reportName")
             .status(ReportStatus.IN_PROGRESS)
             .type(ReportType.STAKE_KEY)
+            .id(10L)
             .build();
     StakeKeyReportHistory stakeKeyReportHistory =
         spy(
@@ -161,8 +161,9 @@ class StakeKeyReportServiceImplTest {
                 .reportHistory(reportHistory)
                 .build());
 
-    when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString()))
+    when(stakeKeyReportHistoryRepository.findByReportHistoryId(any()))
+        .thenReturn(Optional.of(stakeKeyReportHistory));
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(any(StakeKeyReportHistory.class)))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
     when(reportHistoryServiceAsync.exportStakeRegistrations(stakeKey, condition))
@@ -185,16 +186,14 @@ class StakeKeyReportServiceImplTest {
     when(reportHistoryServiceAsync.exportStakeWalletActivitys(
             anyString(), any(StakeLifeCycleFilterRequest.class), any(Pageable.class), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
-    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+    when(excelHelper.writeContent(anyList(), any(), any()))
         .thenReturn(new ByteArrayInputStream(new byte[0]));
     doNothing().when(storageService).uploadFile(any(), anyString());
     when(stakeKeyReportHistoryRepository.save(any(StakeKeyReportHistory.class)))
         .thenReturn(new StakeKeyReportHistory());
 
     Assertions.assertDoesNotThrow(
-        () ->
-            stakeKeyReportService.exportStakeKeyReport(
-                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
+        () -> stakeKeyReportService.exportStakeKeyReport(reportHistory.getId()));
     Assertions.assertEquals(
         ReportStatus.GENERATED, stakeKeyReportHistory.getReportHistory().getStatus());
   }
