@@ -6,13 +6,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import org.cardanofoundation.job.repository.ledgersync.AddressTxCountRepository;
-import org.cardanofoundation.job.repository.ledgersync.LatestAddressBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersync.LatestStakeAddressBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersync.StakeAddressTxCountRepository;
-import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
-import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxCountRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTokenRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTxBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.LatestTokenBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressTxCountRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.TopAddressBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.TopStakeAddressBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
 
 @Component
@@ -23,11 +24,12 @@ public class AggregateAnalyticSchedule {
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
-  private final LatestAddressBalanceRepository latestAddressBalanceRepository;
-  private final LatestStakeAddressBalanceRepository latestStakeAddressBalanceRepository;
   private final AddressTxCountRepository addressTxCountRepository;
   private final StakeAddressTxCountRepository stakeAddressTxCountRepository;
   private final TxChartService txChartService;
+  private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
+  private final TopAddressBalanceRepository topAddressBalanceRepository;
+  private final TopStakeAddressBalanceRepository topStakeAddressBalanceRepository;
 
   @Scheduled(
       cron = "0 20 0 * * *",
@@ -56,7 +58,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 3600000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestTokenBalance() {
     long currentTime = System.currentTimeMillis();
     log.info("---LatestTokenBalance--- Refresh job has been started");
@@ -66,23 +68,23 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void refreshLatestAddressBalance() {
+  @Scheduled(initialDelay = 7200000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  public void refreshTopAddressBalance() {
     long currentTime = System.currentTimeMillis();
-    log.info("---LatestAddressBalance--- - Refresh job has been started");
-    latestAddressBalanceRepository.refreshMaterializedView();
+    log.info("---Top1000AddressBalance--- - Refresh job has been started");
+    topAddressBalanceRepository.refreshMaterializedView();
     log.info(
-        "LatestAddressBalance - Refresh job ended. Time taken {} ms",
+        "Top1000AddressBalance - Refresh job ended. Time taken {} ms",
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void refreshLatestStakeAddressBalance() {
+  @Scheduled(initialDelay = 10800000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  public void refreshTopStakeAddressBalance() {
     long currentTime = System.currentTimeMillis();
-    log.info("---LatestStakeAddressBalance--- Refresh job has been started");
-    latestStakeAddressBalanceRepository.refreshMaterializedView();
+    log.info("---Top1000StakeAddressBalance--- Refresh job has been started");
+    topStakeAddressBalanceRepository.refreshMaterializedView();
     log.info(
-        "---LatestStakeAddressBalance--- Refresh job has ended. Time taken {} ms",
+        "---Top1000StakeAddressBalance--- Refresh job has ended. Time taken {} ms",
         System.currentTimeMillis() - currentTime);
   }
 
@@ -97,6 +99,16 @@ public class AggregateAnalyticSchedule {
   }
 
   @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  public void refreshStakeAddressView() {
+    long currentTime = System.currentTimeMillis();
+    log.info("---StakeAddressView--- Refresh job has been started");
+    stakeAddressBalanceRepository.refreshStakeAddressMaterializedView();
+    log.info(
+        "---StakeAddressView--- Refresh job has ended. Time taken {} ms",
+        System.currentTimeMillis() - currentTime);
+  }
+
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxCountTable() {
     log.info("---LatestAddressTxCount--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
@@ -105,7 +117,8 @@ public class AggregateAnalyticSchedule {
     log.info("---LatestAddressTxCount--- Refresh job has ended. Time taken {} ms", executionTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  // 5 minutes fixed delay
+  @Scheduled(fixedDelay = 5 * 60 * 1000)
   public void updateTxChartData() {
     log.info("---TxChart--- Refresh job has been started");
     long startTime = System.currentTimeMillis();

@@ -9,7 +9,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import org.cardanofoundation.job.repository.ledgersync.TokenTxCountRepository;
 import org.cardanofoundation.job.service.TokenInfoService;
 
 @Component
@@ -24,8 +23,6 @@ public class TokenInfoSchedule {
 
   final TokenInfoService tokenInfoService;
 
-  private final TokenTxCountRepository tokenTxCountRepository;
-
   @Scheduled(fixedDelayString = "${jobs.token-info.fixed-delay}")
   public void updateTokenInfo() {
     try {
@@ -37,20 +34,6 @@ public class TokenInfoSchedule {
       long executionTime = System.currentTimeMillis() - startTime;
       log.info("Update token info successfully, takes: [{} ms]", executionTime);
       log.info("Token Info Job: -------End------");
-    } catch (Exception e) {
-      log.error("Error occurred during Token Info update: {}", e.getMessage(), e);
-    }
-  }
-
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void updateNumberOfTokenTx() {
-    try {
-      log.info("---TokenInfo--- Refresh job has been started");
-      long startTime = System.currentTimeMillis();
-      tokenTxCountRepository.refreshMaterializedView();
-      log.info(
-          "---TokenInfo--- Refresh job has ended, takes: [{} ms]",
-          System.currentTimeMillis() - startTime);
     } catch (Exception e) {
       log.error("Error occurred during Token Info update: {}", e.getMessage(), e);
     }

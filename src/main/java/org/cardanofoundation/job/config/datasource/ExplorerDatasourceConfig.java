@@ -39,7 +39,7 @@ public class ExplorerDatasourceConfig {
   }
 
   @Bean(name = "explorerDataSource")
-  public DataSource ledgerSyncDataSource() {
+  public DataSource explorerDataSource() {
     return multiDataSourceProperties.buildDataSource(
         multiDataSourceProperties.getDatasourceExplorer());
   }

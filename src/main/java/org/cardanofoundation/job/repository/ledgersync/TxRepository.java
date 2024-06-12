@@ -18,6 +18,10 @@ public interface TxRepository extends JpaRepository<Tx, Long>, JpaSpecificationE
   List<Tx> findByIdIn(@Param("ids") List<Long> ids);
 
   @Query(
+      "SELECT tx FROM Tx tx WHERE tx.hash IN :hashes ORDER BY tx.blockId DESC, tx.blockIndex DESC")
+  List<Tx> findByHashIn(@Param("hashes") List<String> hashes);
+
+  @Query(
       "SELECT min(tx.id) FROM Tx tx "
           + " INNER JOIN Block b ON b.id = tx.blockId"
           + " WHERE b.time >= :time AND b.txCount > 0")
@@ -28,18 +32,4 @@ public interface TxRepository extends JpaRepository<Tx, Long>, JpaSpecificationE
           + "JOIN Block b on b.id = tx.blockId "
           + "WHERE tx.id = (SELECT max(tx.id) FROM Tx tx)")
   TxInfoProjection findCurrentTxInfo();
-
-  @Query(
-      "SELECT min(tx.id) from Tx tx "
-          + "JOIN Block b on b.id = tx.blockId "
-          + "WHERE b.time >= :fromTime AND b.time <= :toTime")
-  Long findFirstTxIdByTxTimeBetween(
-      @Param("fromTime") Timestamp fromTime, @Param("toTime") Timestamp toTime);
-
-  @Query(
-      "SELECT max(tx.id) from Tx tx "
-          + "JOIN Block b on b.id = tx.blockId "
-          + "WHERE b.time >= :fromTime AND b.time <= :toTime")
-  Long findLastTxIdByTxTimeBetween(
-      @Param("fromTime") Timestamp fromTime, @Param("toTime") Timestamp toTime);
 }

@@ -14,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.compositeKey.LatestVotingProcedureId;
@@ -26,7 +25,7 @@ import org.cardanofoundation.job.mapper.VotingProcedureMapper;
 import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
 import org.cardanofoundation.job.repository.ledgersync.VotingProcedureRepository;
 
-@Service
+// @Service
 @RequiredArgsConstructor
 @Log4j2
 @ConditionalOnProperty(
