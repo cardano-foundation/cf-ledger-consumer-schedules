@@ -66,11 +66,7 @@ class ReportHistoryServiceAsyncTest {
   void setUp() {
     reportHistoryServiceAsync =
         new ReportHistoryServiceAsync(
-            stakeKeyLifeCycleService,
-            poolLifecycleService,
-            fetchRewardDataService,
-            stakeKeyReportHistoryRepository,
-            poolReportHistoryRepository);
+            stakeKeyLifeCycleService, poolLifecycleService, fetchRewardDataService);
     defPageableStake = PageRequest.of(0, 1000, Sort.by("time").descending());
     defPageablePool = PageRequest.of(0, 1000, Sort.by("id").descending());
     ReflectionTestUtils.setField(reportHistoryServiceAsync, "limitSize", 1000);

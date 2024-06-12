@@ -22,6 +22,8 @@ import org.cardanofoundation.explorer.common.entity.enumeration.ReportType;
 import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
 import org.cardanofoundation.job.repository.explorer.ReportHistoryRepository;
 import org.cardanofoundation.job.schedules.ReportHistorySchedule;
+import org.cardanofoundation.job.service.PoolReportService;
+import org.cardanofoundation.job.service.StakeKeyReportService;
 import org.cardanofoundation.job.service.impl.StorageReportServiceImpl;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,11 +32,15 @@ class ReportHistoryScheduleTest {
   @Mock StorageReportServiceImpl storageService;
 
   @Mock ReportHistoryRepository reportHistoryRepository;
+  @Mock StakeKeyReportService stakeKeyReportService;
+  @Mock PoolReportService poolReportService;
   ReportHistorySchedule reportHistorySchedule;
 
   @BeforeEach
   void setUp() {
-    reportHistorySchedule = new ReportHistorySchedule(reportHistoryRepository, storageService);
+    reportHistorySchedule =
+        new ReportHistorySchedule(
+            reportHistoryRepository, storageService, stakeKeyReportService, poolReportService);
   }
 
   @Test

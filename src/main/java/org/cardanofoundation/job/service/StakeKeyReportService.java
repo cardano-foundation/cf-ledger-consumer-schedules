@@ -1,7 +1,5 @@
 package org.cardanofoundation.job.service;
 
-import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
-
 public interface StakeKeyReportService {
 
   /**
@@ -9,10 +7,5 @@ public interface StakeKeyReportService {
    *
    * @param stakeKeyReportHistory stake key report history
    */
-  void exportStakeKeyReport(
-      StakeKeyReportHistory stakeKeyReportHistory,
-      Long zoneOffset,
-      String timePattern,
-      String dateFormat)
-      throws Exception;
+  void exportStakeKeyReport(Long reportId) throws Exception;
 }
