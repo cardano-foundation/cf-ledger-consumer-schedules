@@ -8,9 +8,11 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -190,9 +192,11 @@ public class TokenInfoServiceImpl implements TokenInfoService {
             epochSecondLastUpdateTime, epochSecond24hAgo);
 
     // Create a map that merges all the multi-assets that need to be processed in this update.
-    var tokenToProcessList = new ArrayList<String>();
-    tokenToProcessList.addAll(tokensInTransactionWithNewBlockRange);
-    tokenToProcessList.addAll(tokenNeedUpdateVolume24h);
+    Set<String> tokenToProcessSet = new HashSet<>();
+    tokenToProcessSet.addAll(tokensInTransactionWithNewBlockRange);
+    tokenToProcessSet.addAll(tokenNeedUpdateVolume24h);
+
+    List<String> tokenToProcessList = new ArrayList<>(tokenToProcessSet);
 
     log.info("tokenToProcess has size: {}", tokenToProcessList.size());
 

@@ -50,7 +50,7 @@ public class JOOQNativeScriptInfoRepository {
                   field(entityUtil.getColumnField(NativeScriptInfo_.NUMBER_SIG)))
               .values(
                   nativeScriptInfo.getScriptHash(),
-                  nativeScriptInfo.getType(),
+                  nativeScriptInfo.getType().getValue(),
                   nativeScriptInfo.getNumberOfAssetHolders(),
                   nativeScriptInfo.getNumberOfTokens(),
                   nativeScriptInfo.getAfterSlot(),
