@@ -87,7 +87,8 @@ public class NativeScriptInfoSchedule {
 
     List<NativeScriptInfo> nativeScriptInfos =
         nativeScriptInfoServiceAsync.buildNativeScriptInfoList(scripts).join();
-    nativeScriptInfoRepository.saveAll(nativeScriptInfos);
+
+    jooqNativeScriptInfoRepository.insertAll(nativeScriptInfos);
     log.info(
         "End update NativeScriptInfo with size = {} in {} ms",
         scriptHashList.size(),

@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.service.PoolService;
 
-@Component
+//@Component
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)

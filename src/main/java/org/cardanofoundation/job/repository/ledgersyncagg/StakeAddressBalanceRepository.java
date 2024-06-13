@@ -19,7 +19,7 @@ public interface StakeAddressBalanceRepository
   @Query(
       value =
           """
-                  SELECT sab.address, sab.quantity
+                  SELECT sab.address as stakeAddress, sab.quantity as balance
                   FROM stake_address_view sav
                   CROSS JOIN LATERAL ( SELECT tmp.address,
                                         tmp.quantity
