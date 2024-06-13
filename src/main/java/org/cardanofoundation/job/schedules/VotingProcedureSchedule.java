@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.compositeKey.LatestVotingProcedureId;
@@ -25,7 +26,7 @@ import org.cardanofoundation.job.mapper.VotingProcedureMapper;
 import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
 import org.cardanofoundation.job.repository.ledgersync.VotingProcedureRepository;
 
-// @Service
+@Service
 @RequiredArgsConstructor
 @Log4j2
 @ConditionalOnProperty(
@@ -34,12 +35,10 @@ import org.cardanofoundation.job.repository.ledgersync.VotingProcedureRepository
     havingValue = "true")
 public class VotingProcedureSchedule {
 
+  private static final int DEFAULT_PAGE_SIZE = 1000;
   private final VotingProcedureRepository votingProcedureRepository;
   private final LatestVotingProcedureRepository latestVotingProcedureRepository;
-
   private final VotingProcedureMapper votingProcedureMapper;
-
-  private static final int DEFAULT_PAGE_SIZE = 1000;
 
   @Scheduled(fixedRateString = "${jobs.governance-info.fixed-delay}")
   @Transactional
