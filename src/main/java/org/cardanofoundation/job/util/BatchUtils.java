@@ -36,6 +36,9 @@ public class BatchUtils {
         acceptCompletableFutures.clear();
       }
     }
+
+    CompletableFuture.allOf(acceptCompletableFutures.toArray(new CompletableFuture[0])).join();
+    acceptCompletableFutures.clear();
     log.info("Completed batch processing in: {} ms", (System.currentTimeMillis() - start));
   }
 }
