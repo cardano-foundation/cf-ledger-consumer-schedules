@@ -18,6 +18,9 @@ import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
 public interface AddressTxAmountRepository
     extends JpaRepository<AddressTxAmount, AddressTxAmountId> {
 
+  @Query(value = "select max(block_number) from cursor_", nativeQuery = true)
+  Long getMaxBlockNoFromCursor();
+
   @Query(
       value =
           """
