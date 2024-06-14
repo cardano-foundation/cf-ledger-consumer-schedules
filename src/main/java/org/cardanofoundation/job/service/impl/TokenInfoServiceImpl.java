@@ -74,6 +74,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     Long maxBlockNoFromLsAgg = addressTxAmountRepository.getMaxBlockNoFromCursor();
     Long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
 
+    log.info("Compare latest block no from LS_AGG: {} and latest block no from LS_MAIN: {}",
+             maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
+
     Timestamp timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
     var tokenInfoCheckpoint = tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint();
 
@@ -117,7 +120,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         LocalDateTime.now(ZoneOffset.UTC).minusDays(1).toEpochSecond(ZoneOffset.UTC);
 
     // Define the maximum batch size for processing multi-assets.
-    int multiAssetListSize = 1000;
+    int multiAssetListSize = 10000;
 
     // Process the multi-assets in batches to build token info data.
     for (int i = 0; i < multiAssetIdList.size(); i += multiAssetListSize) {
