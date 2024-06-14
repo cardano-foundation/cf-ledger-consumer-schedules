@@ -29,7 +29,6 @@ import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.MultiAsset;
-import org.cardanofoundation.job.model.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
@@ -118,7 +117,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     Long txId = txRepository.findMinTxByAfterTime(time24hAgo).orElse(Long.MAX_VALUE);
 
     // Define the maximum batch size for processing multi-assets.
-    int multiAssetListSize = 50000;
+    int multiAssetListSize = 1000;
 
     // Process the multi-assets in batches to build token info data.
     for (int i = 0; i < multiAssetIdList.size(); i += multiAssetListSize) {
@@ -221,10 +220,6 @@ public class TokenInfoServiceImpl implements TokenInfoService {
                   .collect(Collectors.toMap(TokenVolume::getIdent, TokenVolume::getVolume));
 
           var mapNumberHolder = multiAssetService.getMapNumberHolder(multiAssetIds);
-          var totalTxCountMap =
-              addressTxAmountRepository.getTotalTxCountByIdentIn(multiAssetIds).stream()
-                  .collect(Collectors.toMap(TokenTxCount::getIdent, TokenTxCount::getTxCount));
-
           var tokenInfoMap =
               tokenInfoRepository.findByMultiAssetIdIn(multiAssetIds).stream()
                   .collect(Collectors.toMap(TokenInfo::getMultiAssetId, Function.identity()));
@@ -238,13 +233,12 @@ public class TokenInfoServiceImpl implements TokenInfoService {
                 tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAssetId, 0L));
                 tokenInfo.setTotalVolume(
                     totalVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
-                tokenInfo.setTxCount(totalTxCountMap.getOrDefault(multiAssetId, 0L));
                 tokenInfo.setUpdateTime(updateTime);
                 tokenInfo.setBlockNo(maxBlockNo);
                 saveEntities.add(tokenInfo);
               });
 
-          BatchUtils.doBatching(500, saveEntities, tokenInfoRepository::saveAll);
+          BatchUtils.doBatching(1000, saveEntities, tokenInfoRepository::saveAll);
         });
 
     tokenInfoCheckpointRepository.save(

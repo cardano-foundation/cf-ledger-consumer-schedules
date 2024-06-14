@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
-import org.cardanofoundation.job.model.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.util.StreamUtil;
@@ -56,20 +55,15 @@ public class TokenInfoServiceAsync {
     List<TokenVolume> totalVolumes =
         addressTxAmountRepository.getTotalVolumeByIdentInRange(startIdent, endIdent);
 
-    List<TokenTxCount> txCounts =
-        addressTxAmountRepository.getTotalTxCountByIdentInRange(startIdent, endIdent);
-
     var tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getIdent, TokenVolume::getVolume);
     var totalVolumeMap =
         StreamUtil.toMap(totalVolumes, TokenVolume::getIdent, TokenVolume::getVolume);
-    var txCountMap = StreamUtil.toMap(txCounts, TokenTxCount::getIdent, TokenTxCount::getTxCount);
     var mapNumberHolder = multiAssetService.getMapNumberHolder(startIdent, endIdent);
 
     // Clear unnecessary lists to free up memory to avoid OOM error
     volumes24h.clear();
     totalVolumes.clear();
-    txCounts.clear();
 
     multiAssetIds.forEach(
         multiAssetId -> {
@@ -77,7 +71,6 @@ public class TokenInfoServiceAsync {
           tokenInfo.setMultiAssetId(multiAssetId);
           tokenInfo.setVolume24h(tokenVolume24hMap.getOrDefault(multiAssetId, BigInteger.ZERO));
           tokenInfo.setTotalVolume(totalVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
-          tokenInfo.setTxCount(txCountMap.getOrDefault(multiAssetId, 0L));
           tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAssetId, 0L));
           tokenInfo.setUpdateTime(updateTime);
           tokenInfo.setBlockNo(blockNo);
