@@ -68,8 +68,7 @@ class TokenInfoServiceAsyncTest {
     Long startIdent = 1L;
     Long endIdent = 3L;
 
-    when(multiAssetRepository.getTokenUnitByIdIn(List.of(1L, 2L, 3L)))
-        .thenReturn(
+    when(multiAssetRepository.getTokenUnitByIdBetween(startIdent, endIdent)).thenReturn(
             List.of(
                 new TokenUnitProjectionImpl(1L, "1L"),
                 new TokenUnitProjectionImpl(2L, "2L"),
