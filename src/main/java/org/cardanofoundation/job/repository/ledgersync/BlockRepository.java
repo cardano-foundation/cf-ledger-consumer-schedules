@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.job.projection.PoolCountProjection;
@@ -16,7 +17,7 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
   Optional<Block> findLatestBlock();
 
   @Query("select b.time from Block b where b.blockNo = :blockNo")
-  Timestamp getBlockTimeByBlockNo(Long blockNo);
+  Timestamp getBlockTimeByBlockNo(@Param("blockNo") Long blockNo);
 
   @Query(
       value =
