@@ -41,28 +41,29 @@ public class TokenInfoServiceAsync {
    * @param endIdent The ending multi-asset ID.
    * @param blockNo The maximum block number to set for the TokenInfo entities.
    * @param epochSecond24hAgo epochSecond 24 hours ago
-   * @param updateTime The timestamp to set as the update time for the TokenInfo entities.
+   * @param timeLatestBlock The timestamp to set as the update time for the TokenInfo entities.
    * @return A CompletableFuture containing the list of TokenInfo entities built from the provided
    *     MultiAsset list.
    */
   @Async
   @Transactional(readOnly = true)
   public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
-      Long startIdent, Long endIdent, Long blockNo, Long epochSecond24hAgo, Timestamp updateTime) {
+      Long startIdent, Long endIdent, Long blockNo, Long epochSecond24hAgo, Timestamp timeLatestBlock) {
 
     List<TokenInfo> saveEntities = new ArrayList<>((int) (endIdent - startIdent + 1));
     var curTime = System.currentTimeMillis();
-    List<Long> multiAssetIds =
-        LongStream.rangeClosed(startIdent, endIdent).boxed().collect(Collectors.toList());
 
     Map<String, Long> multiAssetUnitMap =
-        multiAssetRepository.getTokenUnitByIdIn(multiAssetIds).stream()
+        multiAssetRepository.getTokenUnitByIdBetween(startIdent, endIdent).stream()
             .collect(Collectors.toMap(TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
 
     List<String> multiAssetUnits = new ArrayList<>(multiAssetUnitMap.keySet());
 
-    List<TokenVolume> volumes24h =
-        addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
+    List<TokenVolume> volumes24h = new ArrayList<>();
+    // if epochSecond24hAgo > epochTime of timeLatestBlock then ignore calculation of 24h volume
+    if (epochSecond24hAgo <= timeLatestBlock.toInstant().getEpochSecond()) {
+      volumes24h = addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
+    }
 
     List<TokenVolume> totalVolumes =
         addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits);
@@ -84,12 +85,13 @@ public class TokenInfoServiceAsync {
           tokenInfo.setVolume24h(tokenVolume24hMap.getOrDefault(unit, BigInteger.ZERO));
           tokenInfo.setTotalVolume(totalVolumeMap.getOrDefault(unit, BigInteger.ZERO));
           tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(unit, 0L));
-          tokenInfo.setUpdateTime(updateTime);
+          tokenInfo.setUpdateTime(timeLatestBlock);
           tokenInfo.setBlockNo(blockNo);
           saveEntities.add(tokenInfo);
         });
 
-    log.info("getTokenInfoListNeedSave take {} ms", System.currentTimeMillis() - curTime);
+    log.info("getTokenInfoListNeedSave startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent,
+        System.currentTimeMillis() - curTime);
 
     return CompletableFuture.completedFuture(saveEntities);
   }

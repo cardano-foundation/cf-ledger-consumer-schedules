@@ -18,8 +18,10 @@ import org.cardanofoundation.job.projection.TokenUnitProjection;
 public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
 
   @Query(
-      "SELECT multiAsset.id AS ident, multiAsset.unit AS unit FROM MultiAsset multiAsset WHERE multiAsset.id IN :ids")
-  List<TokenUnitProjection> getTokenUnitByIdIn(@Param("ids") List<Long> ids);
+      "SELECT multiAsset.id AS ident, multiAsset.unit AS unit FROM MultiAsset multiAsset "
+          + "WHERE multiAsset.id >= :startIdent AND multiAsset.id <= :endIdent")
+  List<TokenUnitProjection> getTokenUnitByIdBetween(@Param("startIdent") Long startIdent,
+                                                    @Param("endIdent") Long endIdent);
 
   @Query(
       "SELECT multiAsset.id AS ident, multiAsset.unit AS unit FROM MultiAsset multiAsset WHERE multiAsset.unit IN :units")
