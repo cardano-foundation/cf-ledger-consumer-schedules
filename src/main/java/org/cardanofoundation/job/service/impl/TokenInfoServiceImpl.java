@@ -139,7 +139,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
                   }));
 
       // After every 5 batches, insert the fetched token info data into the database in batches.
-      if (tokenInfoFutures.size() % 10 == 0) {
+      if (tokenInfoFutures.size() % 5 == 0) {
         var tokenInfoList =
             tokenInfoFutures.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
         BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);

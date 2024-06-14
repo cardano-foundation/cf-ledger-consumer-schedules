@@ -99,7 +99,10 @@ public class TokenInfoServiceAsync {
   @Async
   @Transactional(readOnly = true)
   public CompletableFuture<List<TokenTxCount>> buildTokenTxCountList(List<String> units) {
+    long startTime = System.currentTimeMillis();
     List<TokenTxCount> tokenTxCounts = addressTxAmountRepository.getTotalTxCountByUnitIn(units);
+    log.info("buildTokenTxCountList size: {}, took: {}ms", tokenTxCounts.size(),
+        System.currentTimeMillis() - startTime);
     return CompletableFuture.completedFuture(tokenTxCounts);
   }
 }
