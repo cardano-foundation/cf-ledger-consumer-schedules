@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
-import org.cardanofoundation.job.model.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 
@@ -53,14 +52,6 @@ class TokenInfoServiceAsyncTest {
     tokenVolumes.add(totalVolume2);
     tokenVolumes.add(totalVolume3);
 
-    TokenTxCount tokenTxCount1 = new TokenTxCount(1L, 100L);
-    TokenTxCount tokenTxCount2 = new TokenTxCount(2L, 200L);
-    TokenTxCount tokenTxCount3 = new TokenTxCount(3L, 300L);
-    List<TokenTxCount> tokenTxCounts = new ArrayList<>();
-    tokenTxCounts.add(tokenTxCount1);
-    tokenTxCounts.add(tokenTxCount2);
-    tokenTxCounts.add(tokenTxCount3);
-
     Long startIdent = 1L;
     Long endIdent = 3L;
     when(addressTxAmountRepository.sumBalanceAfterTx(anyLong(), anyLong(), anyLong()))
@@ -68,9 +59,6 @@ class TokenInfoServiceAsyncTest {
 
     when(addressTxAmountRepository.getTotalVolumeByIdentInRange(anyLong(), anyLong()))
         .thenReturn(tokenVolumes);
-
-    when(addressTxAmountRepository.getTotalTxCountByIdentInRange(anyLong(), anyLong()))
-        .thenReturn(tokenTxCounts);
 
     when(multiAssetService.getMapNumberHolder(anyLong(), anyLong()))
         .thenReturn(Map.ofEntries(Map.entry(1L, 10L), Map.entry(2L, 20L), Map.entry(3L, 30L)));
@@ -86,30 +74,11 @@ class TokenInfoServiceAsyncTest {
             TokenInfo::getBlockNo,
             TokenInfo::getVolume24h,
             TokenInfo::getTotalVolume,
-            TokenInfo::getTxCount,
             TokenInfo::getNumberOfHolders,
             TokenInfo::getUpdateTime)
         .containsExactlyInAnyOrder(
-            tuple(
-                blockNo,
-                volume24h1.getVolume(),
-                totalVolume1.getVolume(),
-                tokenTxCount1.getTxCount(),
-                10L,
-                updateTime),
-            tuple(
-                blockNo,
-                volume24h2.getVolume(),
-                totalVolume2.getVolume(),
-                tokenTxCount2.getTxCount(),
-                20L,
-                updateTime),
-            tuple(
-                blockNo,
-                volume24h3.getVolume(),
-                totalVolume3.getVolume(),
-                tokenTxCount3.getTxCount(),
-                30L,
-                updateTime));
+            tuple(blockNo, volume24h1.getVolume(), totalVolume1.getVolume(), 10L, updateTime),
+            tuple(blockNo, volume24h2.getVolume(), totalVolume2.getVolume(), 20L, updateTime),
+            tuple(blockNo, volume24h3.getVolume(), totalVolume3.getVolume(), 30L, updateTime));
   }
 }
