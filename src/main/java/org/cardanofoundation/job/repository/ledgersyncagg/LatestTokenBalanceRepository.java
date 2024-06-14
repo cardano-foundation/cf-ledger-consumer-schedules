@@ -31,7 +31,9 @@ public interface LatestTokenBalanceRepository
 
   @Query(
       """
-          SELECT new org.cardanofoundation.job.model.TokenNumberHolders(latestTokenBalance.unit, COUNT(latestTokenBalance))
+          SELECT new org.cardanofoundation.job.model.TokenNumberHolders
+          (latestTokenBalance.unit, COUNT(DISTINCT(CASE WHEN latestTokenBalance.stakeAddress IS NULL
+           THEN latestTokenBalance.address ELSE latestTokenBalance.stakeAddress END)))
           FROM LatestTokenBalance latestTokenBalance
           WHERE latestTokenBalance.unit in :units
           AND latestTokenBalance.quantity > 0
