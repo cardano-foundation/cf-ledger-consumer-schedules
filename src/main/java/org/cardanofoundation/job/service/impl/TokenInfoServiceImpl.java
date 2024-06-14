@@ -71,18 +71,20 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     if (latestBlock.isEmpty()) {
       return;
     }
-    Long maxBlockNo = latestBlock.get().getBlockNo();
-    Timestamp timeLatestBlock = latestBlock.get().getTime();
+    Long maxBlockNoFromLsAgg = addressTxAmountRepository.getMaxBlockNoFromCursor();
+    Long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
+
+    Timestamp timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
     var tokenInfoCheckpoint = tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint();
 
     if (tokenInfoCheckpoint.isEmpty()) {
       // If no token info checkpoint found, this means it's the first update,
       // so initialize token info data for the first time.
-      initializeTokenInfoDataForFirstTime(maxBlockNo, timeLatestBlock);
+      initializeTokenInfoDataForFirstTime(latestBlockNo, timeLatestBlock);
     } else {
       // If a checkpoint exists, update the existing token info data by
       // inserting new data and updating existing ones.
-      updateExistingTokenInfo(tokenInfoCheckpoint.get(), maxBlockNo, timeLatestBlock);
+      updateExistingTokenInfo(tokenInfoCheckpoint.get(), latestBlockNo, timeLatestBlock);
     }
 
     // Save total token count into redis cache

@@ -83,13 +83,13 @@ class TokenInfoServiceImplTest {
 
   @Test
   void testUpdateTokenInfoListForFirstTime() {
+    Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(2021, 11, 5, 11, 15, 13));
     Block latestBlock = Mockito.mock(Block.class);
     when(latestBlock.getBlockNo()).thenReturn(10000L);
-    when(latestBlock.getTime())
-        .thenReturn(Timestamp.valueOf(LocalDateTime.of(2021, 11, 5, 11, 15, 13)));
+    when(latestBlock.getTime()).thenReturn(timestamp);
     when(blockRepository.findLatestBlock()).thenReturn(Optional.of(latestBlock));
-    when(tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint())
-        .thenReturn(Optional.empty());
+    when(addressTxAmountRepository.getMaxBlockNoFromCursor()).thenReturn(10000L);
+    when(blockRepository.getBlockTimeByBlockNo(any())).thenReturn(timestamp);
     long multiAssetCount = 180000;
     when(multiAssetRepository.getCurrentMaxIdent()).thenReturn(multiAssetCount);
 
@@ -143,11 +143,13 @@ class TokenInfoServiceImplTest {
   @Test
   void testUpdateTokenInfoListNonInitialUpdate() {
     Block latestBlock = Mockito.mock(Block.class);
+    Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(2023, 10, 4, 11, 0, 0));
     when(latestBlock.getBlockNo()).thenReturn(9999L);
-    when(latestBlock.getTime())
-        .thenReturn(Timestamp.valueOf(LocalDateTime.of(2023, 10, 4, 11, 0, 0)));
+    when(latestBlock.getTime()).thenReturn(timestamp);
 
     when(blockRepository.findLatestBlock()).thenReturn(Optional.of(latestBlock));
+    when(addressTxAmountRepository.getMaxBlockNoFromCursor()).thenReturn(9999L);
+    when(blockRepository.getBlockTimeByBlockNo(any())).thenReturn(timestamp);
 
     TokenInfoCheckpoint tokenInfoCheckpoint = Mockito.mock(TokenInfoCheckpoint.class);
     when(tokenInfoCheckpoint.getBlockNo()).thenReturn(9990L);
@@ -214,9 +216,11 @@ class TokenInfoServiceImplTest {
   void
       testUpdateTokenInfoLisNonInitialUpdate_WhenMaxBlockNoEqualBlockNoCheckPoint_ShouldSkipUpdatingTokenInfo() {
     Block latestBlock = Mockito.mock(Block.class);
+    Timestamp timestamp = Timestamp.valueOf(LocalDateTime.of(2023, 10, 4, 11, 0, 0));
     when(latestBlock.getBlockNo()).thenReturn(9999L);
-    when(latestBlock.getTime())
-        .thenReturn(Timestamp.valueOf(LocalDateTime.of(2023, 10, 4, 11, 0, 0)));
+
+    when(addressTxAmountRepository.getMaxBlockNoFromCursor()).thenReturn(9999L);
+    when(blockRepository.getBlockTimeByBlockNo(any())).thenReturn(timestamp);
 
     when(blockRepository.findLatestBlock()).thenReturn(Optional.of(latestBlock));
 
@@ -228,7 +232,6 @@ class TokenInfoServiceImplTest {
     tokenInfoService.updateTokenInfoList();
 
     verifyNoInteractions(tokenInfoRepository);
-    verifyNoInteractions(addressTxAmountRepository);
     verifyNoInteractions(multiAssetService);
   }
 }
