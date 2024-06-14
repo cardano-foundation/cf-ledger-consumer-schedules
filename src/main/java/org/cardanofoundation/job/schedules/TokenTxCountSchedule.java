@@ -65,24 +65,24 @@ public class TokenTxCountSchedule {
   @Transactional
   public void syncTokenTxCount() {
     final String tokenTxCountCheckPoint = getRedisKey(RedisKey.TOKEN_TX_COUNT_CHECKPOINT.name());
-    final long currentEpochSecond = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+    final long currentMaxBlockNo = addressTxAmountRepository.getMaxBlockNoFromCursor();
     final Integer checkpoint = redisTemplate.opsForValue().get(tokenTxCountCheckPoint);
     if (Objects.isNull(checkpoint)) {
       init();
-    } else if (currentEpochSecond > checkpoint.longValue()) {
-      update(checkpoint.longValue(), currentEpochSecond);
+    } else if (currentMaxBlockNo > checkpoint.longValue()) {
+      update(checkpoint.longValue(), currentMaxBlockNo);
     }
 
-    // Update the checkpoint to the current epoch second minus 5 hours.
+    // Update the checkpoint to the currentMaxBlockNo - 50 to avoid missing any data when node rollback
     redisTemplate
         .opsForValue()
-        .set(tokenTxCountCheckPoint, Math.max((int) currentEpochSecond - 18000, 0));
+        .set(tokenTxCountCheckPoint, Math.max((int) currentMaxBlockNo - 50, 0));
   }
 
   private void init() {
     log.info("Start init TokenTxCount");
     long startTime = System.currentTimeMillis();
-
+    long index = 1;
     List<CompletableFuture<List<TokenTxCount>>> tokenTxCountNeedSaveFutures = new ArrayList<>();
 
     Pageable pageable =
@@ -95,9 +95,10 @@ public class TokenTxCountSchedule {
       multiAssetSlice = multiAssetRepository.getTokenUnitSlice(multiAssetSlice.nextPageable());
       tokenTxCountNeedSaveFutures.add(
           tokenInfoServiceAsync.buildTokenTxCountList(multiAssetSlice.getContent()));
-
+      index++;
       // After every 5 batches, insert the fetched token tx count data into the database in batches.
-      if (tokenTxCountNeedSaveFutures.size() % 5 == 0) {
+      if (tokenTxCountNeedSaveFutures.size() % 10 == 0) {
+        log.info("Inserting token tx count data into the database");
         var tokenTxCountList =
             tokenTxCountNeedSaveFutures.stream()
                 .map(CompletableFuture::join)
@@ -106,6 +107,7 @@ public class TokenTxCountSchedule {
 
         BatchUtils.doBatching(1000, tokenTxCountList, jooqTokenTxCountRepository::insertAll);
         tokenTxCountNeedSaveFutures.clear();
+        log.info("Total saved token tx count: {}", index * DEFAULT_PAGE_SIZE);
       }
     }
 
@@ -120,12 +122,12 @@ public class TokenTxCountSchedule {
     log.info("End init TokenTxCount in {} ms", System.currentTimeMillis() - startTime);
   }
 
-  private void update(Long epochSecondCheckpoint, Long currentEpochSecond) {
+  private void update(Long blockNoCheckpoint, Long currentMaxBlockNo) {
     log.info("Start update TokenTxCount");
     long startTime = System.currentTimeMillis();
     List<String> units =
         addressTxAmountRepository.findUnitByBlockTimeInRange(
-            epochSecondCheckpoint, currentEpochSecond);
+            blockNoCheckpoint, currentMaxBlockNo);
 
     List<TokenTxCount> tokenTxCounts = tokenInfoServiceAsync.buildTokenTxCountList(units).join();
     BatchUtils.doBatching(1000, tokenTxCounts, jooqTokenTxCountRepository::insertAll);

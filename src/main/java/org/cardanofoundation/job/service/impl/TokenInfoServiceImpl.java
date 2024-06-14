@@ -98,9 +98,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
    * Initialize token info data for the first time.
    *
    * @param maxBlockNo The maximum block number.
-   * @param updateTime The update time.
+   * @param timeLatestBlock The update time.
    */
-  private void initializeTokenInfoDataForFirstTime(Long maxBlockNo, Timestamp updateTime) {
+  private void initializeTokenInfoDataForFirstTime(Long maxBlockNo, Timestamp timeLatestBlock) {
     log.info("Init token info data for the first time");
 
     List<CompletableFuture<List<TokenInfo>>> tokenInfoFutures = new ArrayList<>();
@@ -131,7 +131,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
       tokenInfoFutures.add(
           tokenInfoServiceAsync
-              .buildTokenInfoList(startIdent, endIdent, maxBlockNo, epochSecond24hAgo, updateTime)
+              .buildTokenInfoList(startIdent, endIdent, maxBlockNo, epochSecond24hAgo, timeLatestBlock)
               .exceptionally(
                   e -> {
                     throw new RuntimeException(
@@ -156,7 +156,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     multiAssetIdList.clear();
 
     tokenInfoCheckpointRepository.save(
-        TokenInfoCheckpoint.builder().blockNo(maxBlockNo).updateTime(updateTime).build());
+        TokenInfoCheckpoint.builder().blockNo(maxBlockNo).updateTime(timeLatestBlock).build());
   }
 
   /**
