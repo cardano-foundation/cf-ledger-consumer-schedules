@@ -51,12 +51,6 @@ public class TokenTxCountSchedule {
 
   private static final int DEFAULT_PAGE_SIZE = 10000;
 
-  @PostConstruct
-  void setup() {
-    String nativeScriptTxCheckPoint = getRedisKey(RedisKey.TOKEN_TX_COUNT_CHECKPOINT.name());
-    redisTemplate.delete(nativeScriptTxCheckPoint);
-  }
-
   private String getRedisKey(String prefix) {
     return prefix + "_" + network;
   }
