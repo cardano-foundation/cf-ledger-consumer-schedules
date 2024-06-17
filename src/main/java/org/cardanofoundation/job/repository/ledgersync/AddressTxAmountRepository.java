@@ -57,82 +57,42 @@ public interface AddressTxAmountRepository
       @Param("toDate") Long toDate);
 
   @Query(
+      "select distinct addressTxAmount.unit "
+          + " from AddressTxAmount addressTxAmount"
+          + " where addressTxAmount.blockNumber >= :fromBlockNo and addressTxAmount.blockNumber <= :toBlockNo"
+          + " and addressTxAmount.unit != 'lovelace'")
+  List<String> getTokensInTransactionInBlockRange(
+      @Param("fromBlockNo") Long fromBlockNo, @Param("toBlockNo") Long toBlockNo);
+
+  @Query(
+      "select distinct addressTxAmount.unit "
+          + " from AddressTxAmount addressTxAmount"
+          + " where addressTxAmount.blockTime >= :fromTime and addressTxAmount.blockTime <= :toTime"
+          + " and addressTxAmount.unit != 'lovelace'")
+  List<String> getTokensInTransactionInTimeRange(
+      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+
+  @Query(
       value =
           """
-      SELECT new org.cardanofoundation.job.model.TokenVolume(ma.id, sum(ata.quantity))
+      SELECT new org.cardanofoundation.job.model.TokenVolume(ata.unit, sum(ata.quantity))
       FROM AddressTxAmount ata
-      JOIN MultiAsset ma ON ata.unit = ma.unit
-      JOIN Tx tx ON tx.hash = ata.txHash
-      WHERE ma.id >= :startIdent AND ma.id <= :endIdent
-      AND tx.id >= :txId
+      WHERE ata.unit IN :units
+      AND ata.blockTime >= :blockTime
       AND ata.quantity > 0
-      GROUP BY ma.id
+      GROUP BY ata.unit
       """)
-  List<TokenVolume> sumBalanceAfterTx(
-      @Param("startIdent") Long startIdent,
-      @Param("endIdent") Long endIdent,
-      @Param("txId") Long txId);
+  List<TokenVolume> sumBalanceAfterBlockTime(
+      @Param("units") List<String> units, @Param("blockTime") Long blockTime);
 
   @Query(
       value =
           """
-      SELECT new org.cardanofoundation.job.model.TokenVolume(ma.id, sum(ata.quantity))
+      SELECT new org.cardanofoundation.job.model.TokenVolume(ata.unit, sum(ata.quantity))
       FROM AddressTxAmount ata
-      JOIN MultiAsset ma ON ata.unit = ma.unit
-      JOIN Tx tx ON tx.hash = ata.txHash
-      WHERE ma.id IN :multiAssetIds
-      AND tx.id >= :txId
+      WHERE ata.unit IN :units
       AND ata.quantity > 0
-      GROUP BY ma.id
+      GROUP BY ata.unit
       """)
-  List<TokenVolume> sumBalanceAfterTx(
-      @Param("multiAssetIds") List<Long> multiAssetIds, @Param("txId") Long txId);
-
-  @Query(
-      value =
-          """
-      SELECT new org.cardanofoundation.job.model.TokenVolume(ma.id, sum(ata.quantity))
-      FROM AddressTxAmount ata
-      JOIN MultiAsset ma ON ata.unit = ma.unit
-      WHERE ma.id >= :startIdent AND ma.id <= :endIdent
-      AND ata.quantity > 0
-      GROUP BY ma.id
-      """)
-  List<TokenVolume> getTotalVolumeByIdentInRange(
-      @Param("startIdent") Long startIdent, @Param("endIdent") Long endIdent);
-
-  @Query(
-      value =
-          """
-      SELECT new org.cardanofoundation.job.model.TokenTxCount(ma.id, count(distinct (ata.txHash)))
-      FROM AddressTxAmount ata
-      JOIN MultiAsset ma ON ata.unit = ma.unit
-      WHERE ma.id >= :startIdent AND ma.id <= :endIdent
-      GROUP BY ma.id
-      """)
-  List<TokenTxCount> getTotalTxCountByIdentInRange(
-      @Param("startIdent") Long startIdent, @Param("endIdent") Long endIdent);
-
-  @Query(
-      value =
-          """
-      SELECT new org.cardanofoundation.job.model.TokenVolume(ma.id, sum(ata.quantity))
-      FROM AddressTxAmount ata
-      JOIN MultiAsset ma ON ata.unit = ma.unit
-      WHERE ma.id IN :multiAssetIds
-      AND ata.quantity > 0
-      GROUP BY ma.id
-      """)
-  List<TokenVolume> getTotalVolumeByIdentIn(@Param("multiAssetIds") List<Long> multiAssetIds);
-
-  @Query(
-      value =
-          """
-      SELECT new org.cardanofoundation.job.model.TokenTxCount(ma.id, count(distinct (ata.txHash)))
-      FROM AddressTxAmount ata
-      JOIN MultiAsset ma ON ata.unit = ma.unit
-      WHERE ma.id IN :multiAssetIds
-      GROUP BY ma.id
-      """)
-  List<TokenTxCount> getTotalTxCountByIdentIn(@Param("multiAssetIds") List<Long> multiAssetIds);
+  List<TokenVolume> getTotalVolumeByUnits(@Param("units") List<String> units);
 }

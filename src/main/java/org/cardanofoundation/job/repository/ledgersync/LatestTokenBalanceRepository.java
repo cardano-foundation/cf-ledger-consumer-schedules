@@ -32,28 +32,15 @@ public interface LatestTokenBalanceRepository
 
   @Query(
       """
-          SELECT new org.cardanofoundation.job.model.TokenNumberHolders(multiAsset.id, COUNT(latestTokenBalance))
-          FROM MultiAsset multiAsset
-          LEFT JOIN LatestTokenBalance latestTokenBalance ON multiAsset.unit = latestTokenBalance.unit
-          WHERE multiAsset.id IN :multiAssetIds
+          SELECT new org.cardanofoundation.job.model.TokenNumberHolders
+          (latestTokenBalance.unit, COUNT(DISTINCT(CASE WHEN latestTokenBalance.stakeAddress IS NULL
+           THEN latestTokenBalance.address ELSE latestTokenBalance.stakeAddress END)))
+          FROM LatestTokenBalance latestTokenBalance
+          WHERE latestTokenBalance.unit in :units
           AND latestTokenBalance.quantity > 0
-          GROUP BY multiAsset.id
+          GROUP BY latestTokenBalance.unit
       """)
-  List<TokenNumberHolders> countHoldersByMultiAssetIdIn(
-      @Param("multiAssetIds") List<Long> multiAssetIds);
-
-  @Query(
-      """
-          SELECT new org.cardanofoundation.job.model.TokenNumberHolders(multiAsset.id,
-          COUNT(DISTINCT(CASE WHEN latestTokenBalance.stakeAddress IS NULL THEN latestTokenBalance.address ELSE latestTokenBalance.stakeAddress END)))
-          FROM MultiAsset multiAsset
-          LEFT JOIN LatestTokenBalance latestTokenBalance ON multiAsset.unit = latestTokenBalance.unit
-          WHERE multiAsset.id >= :startIdent AND multiAsset.id <= :endIdent
-          AND latestTokenBalance.quantity > 0
-          GROUP BY multiAsset.id
-      """)
-  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(
-      @Param("startIdent") Long startIdent, @Param("endIdent") Long endIdent);
+  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(@Param("units") List<String> units);
 
   @Modifying(clearAutomatically = true)
   @Transactional
