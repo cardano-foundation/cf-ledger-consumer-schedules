@@ -49,27 +49,30 @@ public class TokenInfoServiceAsync {
       Long startIdent, Long endIdent, Long blockNo, Long epochSecond24hAgo, Timestamp timeLatestBlock) {
 
     List<TokenInfo> saveEntities = new ArrayList<>((int) (endIdent - startIdent + 1));
-    var curTime = System.currentTimeMillis();
-
+    var startTime = System.currentTimeMillis();
+    var curTime = startTime;
     Map<String, Long> multiAssetUnitMap =
         multiAssetRepository.getTokenUnitByIdBetween(startIdent, endIdent).stream()
             .collect(Collectors.toMap(TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
 
     log.info("getMultiAssetUnitMap startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent, System.currentTimeMillis() - curTime);
+    curTime = System.currentTimeMillis();
 
     List<String> multiAssetUnits = new ArrayList<>(multiAssetUnitMap.keySet());
-
     List<TokenVolume> volumes24h = new ArrayList<>();
     // if epochSecond24hAgo > epochTime of timeLatestBlock then ignore calculation of 24h volume
     if (epochSecond24hAgo <= timeLatestBlock.toInstant().getEpochSecond()) {
       volumes24h = addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
     }
     log.info("get24hVolume startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent, System.currentTimeMillis() - curTime);
+    curTime = System.currentTimeMillis();
 
     List<TokenVolume> totalVolumes =
         addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits);
 
     log.info("getTotalVolume startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent, System.currentTimeMillis() - curTime);
+    curTime = System.currentTimeMillis();
+
     var tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getUnit, TokenVolume::getVolume);
     var totalVolumeMap =
@@ -97,7 +100,7 @@ public class TokenInfoServiceAsync {
         "getTokenInfoListNeedSave startIdent: {} endIdent: {} took: {}ms",
         startIdent,
         endIdent,
-        System.currentTimeMillis() - curTime);
+        System.currentTimeMillis() - startTime);
 
     return CompletableFuture.completedFuture(saveEntities);
   }
