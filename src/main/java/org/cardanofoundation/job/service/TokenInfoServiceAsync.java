@@ -77,7 +77,11 @@ public class TokenInfoServiceAsync {
           saveEntities.add(tokenInfo);
         });
 
-    log.info("getTokenInfoListNeedSave take {} ms", System.currentTimeMillis() - curTime);
+    log.info(
+        "getTokenInfoListNeedSave startIdent: {} endIdent: {} took: {}ms",
+        startIdent,
+        endIdent,
+        System.currentTimeMillis() - curTime);
 
     return CompletableFuture.completedFuture(saveEntities);
   }

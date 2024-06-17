@@ -74,6 +74,11 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     Long maxBlockNoFromLsAgg = addressTxAmountRepository.getMaxBlockNoFromCursor();
     Long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
 
+    log.info(
+        "Compare latest block no from LS_AGG: {} and latest block no from LS_MAIN: {}",
+        maxBlockNoFromLsAgg,
+        latestBlock.get().getBlockNo());
+
     Timestamp timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
     var tokenInfoCheckpoint = tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint();
 
