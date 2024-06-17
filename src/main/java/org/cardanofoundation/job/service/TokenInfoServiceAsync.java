@@ -55,6 +55,8 @@ public class TokenInfoServiceAsync {
         multiAssetRepository.getTokenUnitByIdBetween(startIdent, endIdent).stream()
             .collect(Collectors.toMap(TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
 
+    log.info("getMultiAssetUnitMap startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent, System.currentTimeMillis() - curTime);
+
     List<String> multiAssetUnits = new ArrayList<>(multiAssetUnitMap.keySet());
 
     List<TokenVolume> volumes24h = new ArrayList<>();
@@ -62,21 +64,24 @@ public class TokenInfoServiceAsync {
     if (epochSecond24hAgo <= timeLatestBlock.toInstant().getEpochSecond()) {
       volumes24h = addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
     }
+    log.info("get24hVolume startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent, System.currentTimeMillis() - curTime);
 
     List<TokenVolume> totalVolumes =
         addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits);
 
+    log.info("getTotalVolume startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent, System.currentTimeMillis() - curTime);
     var tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getUnit, TokenVolume::getVolume);
     var totalVolumeMap =
         StreamUtil.toMap(totalVolumes, TokenVolume::getUnit, TokenVolume::getVolume);
     var mapNumberHolder = multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
+    log.info("getMapNumberHolderByUnits startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent, System.currentTimeMillis() - curTime);
 
     // Clear unnecessary lists to free up memory to avoid OOM error
     volumes24h.clear();
     totalVolumes.clear();
 
-    multiAssetUnits.forEach(
+    multiAssetUnits.parallelStream().forEach(
         unit -> {
           var tokenInfo = new TokenInfo();
           tokenInfo.setMultiAssetId(multiAssetUnitMap.get(unit));
