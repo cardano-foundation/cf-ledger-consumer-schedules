@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
+import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQTokenTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
@@ -47,6 +48,7 @@ public class TokenTxCountSchedule {
   private final MultiAssetRepository multiAssetRepository;
   private final JOOQTokenTxCountRepository jooqTokenTxCountRepository;
   private final TokenInfoServiceAsync tokenInfoServiceAsync;
+  private final BlockRepository blockRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
 
   private static final int DEFAULT_PAGE_SIZE = 10000;
@@ -119,9 +121,11 @@ public class TokenTxCountSchedule {
   private void update(Long blockNoCheckpoint, Long currentMaxBlockNo) {
     log.info("Start update TokenTxCount");
     long startTime = System.currentTimeMillis();
+    Long epochBlockTimeCheckpoint = blockRepository.getBlockTimeByBlockNo(blockNoCheckpoint).toInstant().getEpochSecond();
+    Long epochBlockTimeCurrent = blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
     List<String> units =
         addressTxAmountRepository.findUnitByBlockTimeInRange(
-            blockNoCheckpoint, currentMaxBlockNo);
+            epochBlockTimeCheckpoint, epochBlockTimeCurrent);
 
     List<TokenTxCount> tokenTxCounts = tokenInfoServiceAsync.buildTokenTxCountList(units).join();
     BatchUtils.doBatching(1000, tokenTxCounts, jooqTokenTxCountRepository::insertAll);
