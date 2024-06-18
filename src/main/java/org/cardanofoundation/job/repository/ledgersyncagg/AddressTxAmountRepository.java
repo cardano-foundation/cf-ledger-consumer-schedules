@@ -90,20 +90,12 @@ public interface AddressTxAmountRepository
   List<TokenTxCount> getTotalTxCountByUnitIn(@Param("units") List<String> units);
 
   @Query(
-      "select distinct addressTxAmount.unit "
+      "select addressTxAmount.unit "
           + " from AddressTxAmount addressTxAmount"
           + " where addressTxAmount.blockTime >= :fromTime and addressTxAmount.blockTime <= :toTime"
           + " and addressTxAmount.unit != 'lovelace'")
   List<String> getTokensInTransactionInTimeRange(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
-
-  @Query(
-      "select distinct addressTxAmount.unit "
-          + " from AddressTxAmount addressTxAmount"
-          + " where addressTxAmount.blockNumber >= :fromBlockNo and addressTxAmount.blockNumber <= :toBlockNo"
-          + " and addressTxAmount.unit != 'lovelace'")
-  List<String> getTokensInTransactionInBlockRange(
-      @Param("fromBlockNo") Long fromBlockNo, @Param("toBlockNo") Long toBlockNo);
 
   @Query(
       value =

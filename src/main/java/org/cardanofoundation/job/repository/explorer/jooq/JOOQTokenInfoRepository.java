@@ -55,7 +55,20 @@ public class JOOQTokenInfoRepository {
                   tokenInfo.getVolume24h(),
                   tokenInfo.getTotalVolume(),
                   tokenInfo.getTxCount(),
-                  tokenInfo.getUpdateTime());
+                  tokenInfo.getUpdateTime())
+              .onConflict(field(entityUtil.getColumnField(TokenInfo_.MULTI_ASSET_ID)))
+              .doUpdate()
+              .set(
+                  field(entityUtil.getColumnField(TokenInfo_.NUMBER_OF_HOLDERS)),
+                  tokenInfo.getNumberOfHolders())
+              .set(
+                  field(entityUtil.getColumnField(TokenInfo_.VOLUME24H)),
+                  tokenInfo.getVolume24h())
+              .set(field(entityUtil.getColumnField(TokenInfo_.TOTAL_VOLUME)),
+                   tokenInfo.getTotalVolume())
+              .set(field(entityUtil.getColumnField(TokenInfo_.TX_COUNT)), tokenInfo.getTxCount())
+              .set(field(entityUtil.getColumnField(TokenInfo_.UPDATE_TIME)),
+                   tokenInfo.getUpdateTime());
 
       queries.add(query);
     }
