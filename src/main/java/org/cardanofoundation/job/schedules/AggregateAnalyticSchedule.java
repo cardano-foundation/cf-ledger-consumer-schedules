@@ -12,6 +12,7 @@ import org.cardanofoundation.job.repository.ledgersync.LatestAddressBalanceRepos
 import org.cardanofoundation.job.repository.ledgersync.LatestStakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.StakeAddressTxCountRepository;
+import org.cardanofoundation.job.repository.ledgersync.TokenTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
@@ -32,6 +33,7 @@ public class AggregateAnalyticSchedule {
   private final LatestStakeAddressBalanceRepository latestStakeAddressBalanceRepository;
   private final AddressTxCountRepository addressTxCountRepository;
   private final StakeAddressTxCountRepository stakeAddressTxCountRepository;
+  private final TokenTxCountRepository tokenTxCountRepository;
   private final TxChartService txChartService;
 
   @Scheduled(
@@ -118,5 +120,19 @@ public class AggregateAnalyticSchedule {
     log.info(
         "---TxChart--- Refresh job has ended. Time taken {} ms",
         System.currentTimeMillis() - startTime);
+  }
+
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  public void updateNumberOfTokenTx() {
+    try {
+      log.info("---TokenInfo--- Refresh job has been started");
+      long startTime = System.currentTimeMillis();
+      tokenTxCountRepository.refreshMaterializedView();
+      log.info(
+          "---TokenInfo--- Refresh job has ended, takes: [{} ms]",
+          System.currentTimeMillis() - startTime);
+    } catch (Exception e) {
+      log.error("Error occurred during Token Info update: {}", e.getMessage(), e);
+    }
   }
 }

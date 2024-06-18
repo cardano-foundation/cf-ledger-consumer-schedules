@@ -37,6 +37,7 @@ import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
+import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoService;
@@ -57,6 +58,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final JOOQTokenInfoRepository jooqTokenInfoRepository;
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final MultiAssetService multiAssetService;
+  private final LatestTokenBalanceRepository latestTokenBalanceRepository;
 
   private final RedisTemplate<String, String> redisTemplate;
 
@@ -74,13 +76,13 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     if (latestBlock.isEmpty()) {
       return;
     }
-    Long maxBlockNoFromLsAgg = addressTxAmountRepository.getMaxBlockNoFromCursor();
+    Long maxBLockTimeFromLsAgg = latestTokenBalanceRepository.getTheSecondLastBlockTime();
+
+    Long maxBlockNoFromLsAgg = blockRepository.getBlockNoByExtractEpochTime(maxBLockTimeFromLsAgg);
     Long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
 
-    log.info(
-        "Compare latest block no from LS_AGG: {} and latest block no from LS_MAIN: {}",
-        maxBlockNoFromLsAgg,
-        latestBlock.get().getBlockNo());
+    log.info("Compare latest block no from LS_AGG: {} and latest block no from LS_MAIN: {}",
+             maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
 
     Timestamp timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
     var tokenInfoCheckpoint = tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint();
@@ -173,7 +175,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
    */
   private void updateExistingTokenInfo(
       TokenInfoCheckpoint tokenInfoCheckpoint, Long maxBlockNo, Timestamp updateTime) {
-    if (maxBlockNo.equals(tokenInfoCheckpoint.getBlockNo())) {
+    if (maxBlockNo.compareTo(tokenInfoCheckpoint.getBlockNo()) <= 0) {
+      log.info("Stop updating token info as the latest block no is not greater than the checkpoint, {} <= {}",
+               maxBlockNo, tokenInfoCheckpoint.getBlockNo());
       return;
     }
 
@@ -212,7 +216,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     // Process the tokens to update the corresponding TokenInfo entities in batches of 10,000.
     BatchUtils.doBatching(
-        10000,
+        1000,
         tokenToProcessList,
         units -> {
           // Create a list of multi-asset IDs to process in this batch.
@@ -250,7 +254,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
                 saveEntities.add(tokenInfo);
               });
 
-          BatchUtils.doBatching(1000, saveEntities, tokenInfoRepository::saveAll);
+          tokenInfoRepository.saveAll(saveEntities);
         });
 
     tokenInfoCheckpointRepository.save(
