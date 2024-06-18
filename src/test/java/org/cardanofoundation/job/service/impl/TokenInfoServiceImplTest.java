@@ -154,9 +154,6 @@ class TokenInfoServiceImplTest {
     when(tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint())
         .thenReturn(Optional.of(tokenInfoCheckpoint));
 
-    when(addressTxAmountRepository.getTokensInTransactionInBlockRange(anyLong(), anyLong()))
-        .thenReturn(List.of("unit1"));
-
     when(addressTxAmountRepository.getTokensInTransactionInTimeRange(any(), any()))
         .thenReturn(List.of("unit2", "unit3"));
 

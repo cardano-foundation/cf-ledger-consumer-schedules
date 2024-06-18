@@ -68,7 +68,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     }
     Long maxBLockTimeFromLsAgg = latestTokenBalanceRepository.getTheSecondLastBlockTime();
 
-    Long maxBlockNoFromLsAgg = blockRepository.getMaxBlockNoByTimeGreaterThan(maxBLockTimeFromLsAgg);
+    Long maxBlockNoFromLsAgg = blockRepository.getBlockNoByExtractEpochTime(maxBLockTimeFromLsAgg);
     Long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
 
     log.info("Compare latest block no from LS_AGG: {} and latest block no from LS_MAIN: {}",
@@ -165,7 +165,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
    */
   private void updateExistingTokenInfo(
       TokenInfoCheckpoint tokenInfoCheckpoint, Long maxBlockNo, Timestamp timeLatestBlock) {
-    if (maxBlockNo.equals(tokenInfoCheckpoint.getBlockNo())) {
+    if (maxBlockNo.compareTo(tokenInfoCheckpoint.getBlockNo()) <= 0) {
+      log.info("Stop updating token info as the latest block no is not greater than the checkpoint, {} <= {}",
+               maxBlockNo, tokenInfoCheckpoint.getBlockNo());
       return;
     }
     log.info(
