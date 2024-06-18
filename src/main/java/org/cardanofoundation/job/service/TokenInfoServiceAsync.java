@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -50,7 +49,6 @@ public class TokenInfoServiceAsync {
   public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
       Long startIdent, Long endIdent, Long blockNo, Long epochSecond24hAgo, Timestamp timeLatestBlock) {
 
-    List<TokenInfo> saveEntities = new ArrayList<>((int) (endIdent - startIdent + 1));
     var curTime = System.currentTimeMillis();
 
     Map<String, Long> multiAssetUnitMap =
@@ -59,15 +57,57 @@ public class TokenInfoServiceAsync {
 
     List<String> multiAssetUnits = new ArrayList<>(multiAssetUnitMap.keySet());
 
+    List<TokenInfo> saveEntities = buildTokenInfo(blockNo, epochSecond24hAgo, timeLatestBlock, multiAssetUnits, multiAssetUnitMap);
+
+    log.info("getTokenInfoListNeedSave startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent,
+        System.currentTimeMillis() - curTime);
+
+    return CompletableFuture.completedFuture(saveEntities);
+  }
+
+  @Async
+  @Transactional(readOnly = true)
+  public CompletableFuture<List<TokenInfo>> buildTokenInfoList(List<String> units, Long blockNo,
+      Long epochSecond24hAgo, Timestamp timeLatestBlock) {
+    var curTime = System.currentTimeMillis();
+
+    Map<String, Long> multiAssetUnitMap =
+        multiAssetRepository.getTokenUnitByUnitIn(units).stream()
+            .collect(
+                Collectors.toMap(
+                    TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
+
+    List<TokenInfo> saveEntities = buildTokenInfo(blockNo, epochSecond24hAgo, timeLatestBlock, units, multiAssetUnitMap);
+
+    log.info("getTokenInfoListNeedSave size: {} took: {}ms", saveEntities.size(),
+        System.currentTimeMillis() - curTime);
+    return CompletableFuture.completedFuture(saveEntities);
+  }
+
+  @Async
+  @Transactional(readOnly = true)
+  public CompletableFuture<List<TokenTxCount>> buildTokenTxCountList(List<String> units) {
+    long startTime = System.currentTimeMillis();
+    List<TokenTxCount> tokenTxCounts = addressTxAmountRepository.getTotalTxCountByUnitIn(units);
+    log.info("buildTokenTxCountList size: {}, took: {}ms", tokenTxCounts.size(),
+        System.currentTimeMillis() - startTime);
+    return CompletableFuture.completedFuture(tokenTxCounts);
+  }
+
+  private List<TokenInfo> buildTokenInfo(Long blockNo, Long epochSecond24hAgo, Timestamp timeLatestBlock,
+                                         List<String> multiAssetUnits, Map<String, Long> multiAssetUnitMap) {
+
+    List<TokenInfo> saveEntities = new ArrayList<>();
+
     List<TokenVolume> volumes24h = new ArrayList<>();
     // if epochSecond24hAgo > epochTime of timeLatestBlock then ignore calculation of 24h volume
     if (epochSecond24hAgo <= timeLatestBlock.toInstant().getEpochSecond()) {
-      volumes24h = addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
+      volumes24h = addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits,
+                                                                      epochSecond24hAgo);
     }
 
     List<TokenVolume> totalVolumes =
         addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits);
-
     var tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getUnit, TokenVolume::getVolume);
     var totalVolumeMap =
@@ -90,19 +130,7 @@ public class TokenInfoServiceAsync {
           saveEntities.add(tokenInfo);
         });
 
-    log.info("getTokenInfoListNeedSave startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent,
-        System.currentTimeMillis() - curTime);
-
-    return CompletableFuture.completedFuture(saveEntities);
+    return saveEntities;
   }
 
-  @Async
-  @Transactional(readOnly = true)
-  public CompletableFuture<List<TokenTxCount>> buildTokenTxCountList(List<String> units) {
-    long startTime = System.currentTimeMillis();
-    List<TokenTxCount> tokenTxCounts = addressTxAmountRepository.getTotalTxCountByUnitIn(units);
-    log.info("buildTokenTxCountList size: {}, took: {}ms", tokenTxCounts.size(),
-        System.currentTimeMillis() - startTime);
-    return CompletableFuture.completedFuture(tokenTxCounts);
-  }
 }
