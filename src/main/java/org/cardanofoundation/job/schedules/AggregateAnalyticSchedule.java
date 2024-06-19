@@ -3,6 +3,7 @@ package org.cardanofoundation.job.schedules;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +20,10 @@ import org.cardanofoundation.job.service.TxChartService;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+    value = "jobs.agg-analytic.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class AggregateAnalyticSchedule {
 
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
@@ -88,7 +93,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 100000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestStakeAddressTxCount() {
     long currentTime = System.currentTimeMillis();
     log.info("---LatestStakeAddressTxCount--- Refresh job has been started");
@@ -98,7 +103,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 200000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshStakeAddressView() {
     long currentTime = System.currentTimeMillis();
     log.info("---StakeAddressView--- Refresh job has been started");
@@ -108,7 +113,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 500000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxCountTable() {
     log.info("---LatestAddressTxCount--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
@@ -117,8 +122,7 @@ public class AggregateAnalyticSchedule {
     log.info("---LatestAddressTxCount--- Refresh job has ended. Time taken {} ms", executionTime);
   }
 
-  // 5 minutes fixed delay
-  @Scheduled(fixedDelay = 5 * 60 * 1000)
+  @Scheduled(initialDelay = 50000,fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxChartData() {
     log.info("---TxChart--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
