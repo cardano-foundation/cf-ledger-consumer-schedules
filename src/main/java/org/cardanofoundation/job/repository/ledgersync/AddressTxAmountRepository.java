@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.common.entity.compositeKey.AddressTxAmountId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxAmount;
-import org.cardanofoundation.job.model.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;

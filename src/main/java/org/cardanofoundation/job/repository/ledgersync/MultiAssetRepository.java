@@ -20,8 +20,8 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
   @Query(
       "SELECT multiAsset.id AS ident, multiAsset.unit AS unit FROM MultiAsset multiAsset "
           + "WHERE multiAsset.id >= :startIdent AND multiAsset.id <= :endIdent")
-  List<TokenUnitProjection> getTokenUnitByIdBetween(@Param("startIdent") Long startIdent,
-                                                    @Param("endIdent") Long endIdent);
+  List<TokenUnitProjection> getTokenUnitByIdBetween(
+      @Param("startIdent") Long startIdent, @Param("endIdent") Long endIdent);
 
   @Query(
       "SELECT multiAsset.id AS ident, multiAsset.unit AS unit FROM MultiAsset multiAsset WHERE multiAsset.unit IN :units")

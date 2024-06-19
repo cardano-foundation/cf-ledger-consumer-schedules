@@ -19,7 +19,9 @@ public interface BlockRepository extends JpaRepository<Block, Long> {
   @Query("select b.time from Block b where b.blockNo = :blockNo")
   Timestamp getBlockTimeByBlockNo(@Param("blockNo") Long blockNo);
 
-  @Query(value = "select b.block_no from block b where extract(epoch from b.time) = :time", nativeQuery = true)
+  @Query(
+      value = "select b.block_no from block b where extract(epoch from b.time) = :time",
+      nativeQuery = true)
   Long getBlockNoByExtractEpochTime(@Param("time") Long time);
 
   @Query(
