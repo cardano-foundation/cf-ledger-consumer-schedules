@@ -39,6 +39,7 @@ public interface AddressTxAmountRepository
               + " FROM AddressTxAmount addTxAmount"
               + " WHERE addTxAmount.stakeAddress = :stakeAddress"
               + " AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate"
+              + " AND addTxAmount.unit = 'lovelace'"
               + " GROUP BY addTxAmount.txHash, addTxAmount.blockTime")
   Page<StakeTxProjection> findTxAndAmountByStake(
       @Param("stakeAddress") String stakeAddress,
@@ -49,6 +50,7 @@ public interface AddressTxAmountRepository
   @Query(
       "SELECT COUNT(DISTINCT addTxAmount.txHash) FROM AddressTxAmount addTxAmount"
           + " WHERE addTxAmount.stakeAddress = :stakeAddress"
+          + " AND addTxAmount.unit = 'lovelace'"
           + " AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate")
   Long getCountTxByStakeInDateRange(
       @Param("stakeAddress") String stakeAddress,
