@@ -47,7 +47,11 @@ public class TokenInfoServiceAsync {
   @Async
   @Transactional(readOnly = true)
   public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
-      Long startIdent, Long endIdent, Long blockNo, Long epochSecond24hAgo, Timestamp timeLatestBlock) {
+      Long startIdent,
+      Long endIdent,
+      Long blockNo,
+      Long epochSecond24hAgo,
+      Timestamp timeLatestBlock) {
 
     var curTime = System.currentTimeMillis();
 
@@ -57,9 +61,14 @@ public class TokenInfoServiceAsync {
 
     List<String> multiAssetUnits = new ArrayList<>(multiAssetUnitMap.keySet());
 
-    List<TokenInfo> saveEntities = buildTokenInfo(blockNo, epochSecond24hAgo, timeLatestBlock, multiAssetUnits, multiAssetUnitMap);
+    List<TokenInfo> saveEntities =
+        buildTokenInfo(
+            blockNo, epochSecond24hAgo, timeLatestBlock, multiAssetUnits, multiAssetUnitMap);
 
-    log.info("getTokenInfoListNeedSave startIdent: {} endIdent: {} took: {}ms", startIdent, endIdent,
+    log.info(
+        "getTokenInfoListNeedSave startIdent: {} endIdent: {} took: {}ms",
+        startIdent,
+        endIdent,
         System.currentTimeMillis() - curTime);
 
     return CompletableFuture.completedFuture(saveEntities);
@@ -67,19 +76,20 @@ public class TokenInfoServiceAsync {
 
   @Async
   @Transactional(readOnly = true)
-  public CompletableFuture<List<TokenInfo>> buildTokenInfoList(List<String> units, Long blockNo,
-      Long epochSecond24hAgo, Timestamp timeLatestBlock) {
+  public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
+      List<String> units, Long blockNo, Long epochSecond24hAgo, Timestamp timeLatestBlock) {
     var curTime = System.currentTimeMillis();
 
     Map<String, Long> multiAssetUnitMap =
         multiAssetRepository.getTokenUnitByUnitIn(units).stream()
-            .collect(
-                Collectors.toMap(
-                    TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
+            .collect(Collectors.toMap(TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
 
-    List<TokenInfo> saveEntities = buildTokenInfo(blockNo, epochSecond24hAgo, timeLatestBlock, units, multiAssetUnitMap);
+    List<TokenInfo> saveEntities =
+        buildTokenInfo(blockNo, epochSecond24hAgo, timeLatestBlock, units, multiAssetUnitMap);
 
-    log.info("getTokenInfoListNeedSave size: {} took: {}ms", saveEntities.size(),
+    log.info(
+        "getTokenInfoListNeedSave size: {} took: {}ms",
+        saveEntities.size(),
         System.currentTimeMillis() - curTime);
     return CompletableFuture.completedFuture(saveEntities);
   }
@@ -89,21 +99,27 @@ public class TokenInfoServiceAsync {
   public CompletableFuture<List<TokenTxCount>> buildTokenTxCountList(List<String> units) {
     long startTime = System.currentTimeMillis();
     List<TokenTxCount> tokenTxCounts = addressTxAmountRepository.getTotalTxCountByUnitIn(units);
-    log.info("buildTokenTxCountList size: {}, took: {}ms", tokenTxCounts.size(),
+    log.info(
+        "buildTokenTxCountList size: {}, took: {}ms",
+        tokenTxCounts.size(),
         System.currentTimeMillis() - startTime);
     return CompletableFuture.completedFuture(tokenTxCounts);
   }
 
-  private List<TokenInfo> buildTokenInfo(Long blockNo, Long epochSecond24hAgo, Timestamp timeLatestBlock,
-                                         List<String> multiAssetUnits, Map<String, Long> multiAssetUnitMap) {
+  private List<TokenInfo> buildTokenInfo(
+      Long blockNo,
+      Long epochSecond24hAgo,
+      Timestamp timeLatestBlock,
+      List<String> multiAssetUnits,
+      Map<String, Long> multiAssetUnitMap) {
 
     List<TokenInfo> saveEntities = new ArrayList<>();
 
     List<TokenVolume> volumes24h = new ArrayList<>();
     // if epochSecond24hAgo > epochTime of timeLatestBlock then ignore calculation of 24h volume
     if (epochSecond24hAgo <= timeLatestBlock.toInstant().getEpochSecond()) {
-      volumes24h = addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits,
-                                                                      epochSecond24hAgo);
+      volumes24h =
+          addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
     }
 
     List<TokenVolume> totalVolumes =
@@ -132,5 +148,4 @@ public class TokenInfoServiceAsync {
 
     return saveEntities;
   }
-
 }
