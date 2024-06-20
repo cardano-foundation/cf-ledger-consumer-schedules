@@ -1,13 +1,10 @@
 package org.cardanofoundation.job.schedules;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-
-import jakarta.annotation.PostConstruct;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
@@ -51,7 +49,7 @@ public class TokenTxCountSchedule {
   private final BlockRepository blockRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
 
-  private static final int DEFAULT_PAGE_SIZE = 10000;
+  private static final int DEFAULT_PAGE_SIZE = 100;
 
   private String getRedisKey(String prefix) {
     return prefix + "_" + network;
@@ -61,7 +59,14 @@ public class TokenTxCountSchedule {
   @Transactional
   public void syncTokenTxCount() {
     final String tokenTxCountCheckPoint = getRedisKey(RedisKey.TOKEN_TX_COUNT_CHECKPOINT.name());
-    final long currentMaxBlockNo = addressTxAmountRepository.getMaxBlockNoFromCursor();
+
+    Optional<Block> latestBlock = blockRepository.findLatestBlock();
+    if (latestBlock.isEmpty()) {
+      return;
+    }
+    final long currentMaxBlockNo =
+        Math.min(
+            addressTxAmountRepository.getMaxBlockNoFromCursor(), latestBlock.get().getBlockNo());
     final Integer checkpoint = redisTemplate.opsForValue().get(tokenTxCountCheckPoint);
     if (Objects.isNull(checkpoint)) {
       init();
@@ -69,7 +74,8 @@ public class TokenTxCountSchedule {
       update(checkpoint.longValue(), currentMaxBlockNo);
     }
 
-    // Update the checkpoint to the currentMaxBlockNo - 50 to avoid missing any data when node rollback
+    // Update the checkpoint to the currentMaxBlockNo - 50 to avoid missing any data when node
+    // rollback
     redisTemplate
         .opsForValue()
         .set(tokenTxCountCheckPoint, Math.max((int) currentMaxBlockNo - 50, 0));
@@ -121,17 +127,60 @@ public class TokenTxCountSchedule {
   private void update(Long blockNoCheckpoint, Long currentMaxBlockNo) {
     log.info("Start update TokenTxCount");
     long startTime = System.currentTimeMillis();
-    Long epochBlockTimeCheckpoint = blockRepository.getBlockTimeByBlockNo(blockNoCheckpoint).toInstant().getEpochSecond();
-    Long epochBlockTimeCurrent = blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
-    List<String> units =
+    Long epochBlockTimeCheckpoint =
+        blockRepository.getBlockTimeByBlockNo(blockNoCheckpoint).toInstant().getEpochSecond();
+    Long epochBlockTimeCurrent =
+        blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
+    List<String> unitsInBlockRange =
         addressTxAmountRepository.findUnitByBlockTimeInRange(
             epochBlockTimeCheckpoint, epochBlockTimeCurrent);
 
-    List<TokenTxCount> tokenTxCounts = tokenInfoServiceAsync.buildTokenTxCountList(units).join();
-    BatchUtils.doBatching(1000, tokenTxCounts, jooqTokenTxCountRepository::insertAll);
+    log.info(
+        "unitsInBlockRange from blockCheckpoint {} to {}, size: {}",
+        epochBlockTimeCheckpoint,
+        epochBlockTimeCurrent,
+        unitsInBlockRange.size());
+
+    List<CompletableFuture<List<TokenTxCount>>> tokenTxCountNeedSaveFutures = new ArrayList<>();
+
+    BatchUtils.doBatching(
+        100,
+        unitsInBlockRange,
+        units -> {
+          tokenTxCountNeedSaveFutures.add(
+              tokenInfoServiceAsync
+                  .buildTokenTxCountList(units)
+                  .exceptionally(
+                      e -> {
+                        throw new RuntimeException(
+                            "Failed to build token tx count list for units: " + units, e);
+                      }));
+
+          // After every 10 batches, insert the fetched token tx count data into the database in
+          // batches.
+          if (tokenTxCountNeedSaveFutures.size() % 10 == 0) {
+            var tokenTxCountList =
+                tokenTxCountNeedSaveFutures.stream()
+                    .map(CompletableFuture::join)
+                    .flatMap(List::stream)
+                    .toList();
+
+            BatchUtils.doBatching(1000, tokenTxCountList, jooqTokenTxCountRepository::insertAll);
+            tokenTxCountNeedSaveFutures.clear();
+          }
+        });
+
+    // Insert the remaining token tx count data into the database.
+    var tokenTxCountList =
+        tokenTxCountNeedSaveFutures.stream()
+            .map(CompletableFuture::join)
+            .flatMap(List::stream)
+            .toList();
+    BatchUtils.doBatching(1000, tokenTxCountList, jooqTokenTxCountRepository::insertAll);
+
     log.info(
         "End update TokenTxCount with size = {} in {} ms",
-        units.size(),
+        unitsInBlockRange.size(),
         System.currentTimeMillis() - startTime);
   }
 }

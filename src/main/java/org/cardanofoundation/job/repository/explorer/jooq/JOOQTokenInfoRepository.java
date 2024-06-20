@@ -61,14 +61,14 @@ public class JOOQTokenInfoRepository {
               .set(
                   field(entityUtil.getColumnField(TokenInfo_.NUMBER_OF_HOLDERS)),
                   tokenInfo.getNumberOfHolders())
+              .set(field(entityUtil.getColumnField(TokenInfo_.VOLUME24H)), tokenInfo.getVolume24h())
               .set(
-                  field(entityUtil.getColumnField(TokenInfo_.VOLUME24H)),
-                  tokenInfo.getVolume24h())
-              .set(field(entityUtil.getColumnField(TokenInfo_.TOTAL_VOLUME)),
-                   tokenInfo.getTotalVolume())
+                  field(entityUtil.getColumnField(TokenInfo_.TOTAL_VOLUME)),
+                  tokenInfo.getTotalVolume())
               .set(field(entityUtil.getColumnField(TokenInfo_.TX_COUNT)), tokenInfo.getTxCount())
-              .set(field(entityUtil.getColumnField(TokenInfo_.UPDATE_TIME)),
-                   tokenInfo.getUpdateTime());
+              .set(
+                  field(entityUtil.getColumnField(TokenInfo_.UPDATE_TIME)),
+                  tokenInfo.getUpdateTime());
 
       queries.add(query);
     }

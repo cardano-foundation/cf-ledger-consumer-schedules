@@ -3,18 +3,15 @@ package org.cardanofoundation.job.service.impl;
 import static org.cardanofoundation.job.common.enumeration.RedisKey.AGGREGATED_CACHE;
 import static org.cardanofoundation.job.common.enumeration.RedisKey.TOTAL_TOKEN_COUNT;
 
-import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -71,8 +68,10 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     Long maxBlockNoFromLsAgg = blockRepository.getBlockNoByExtractEpochTime(maxBLockTimeFromLsAgg);
     Long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
 
-    log.info("Compare latest block no from LS_AGG: {} and latest block no from LS_MAIN: {}",
-             maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
+    log.info(
+        "Compare latest block no from LS_AGG: {} and latest block no from LS_MAIN: {}",
+        maxBlockNoFromLsAgg,
+        latestBlock.get().getBlockNo());
 
     Timestamp timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
     var tokenInfoCheckpoint = tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint();
@@ -128,7 +127,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
       tokenInfoFutures.add(
           tokenInfoServiceAsync
-              .buildTokenInfoList(startIdent, endIdent, maxBlockNo, epochSecond24hAgo, timeLatestBlock)
+              .buildTokenInfoList(
+                  startIdent, endIdent, maxBlockNo, epochSecond24hAgo, timeLatestBlock)
               .exceptionally(
                   e -> {
                     throw new RuntimeException(
@@ -166,8 +166,10 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private void updateExistingTokenInfo(
       TokenInfoCheckpoint tokenInfoCheckpoint, Long maxBlockNo, Timestamp timeLatestBlock) {
     if (maxBlockNo.compareTo(tokenInfoCheckpoint.getBlockNo()) <= 0) {
-      log.info("Stop updating token info as the latest block no is not greater than the checkpoint, {} <= {}",
-               maxBlockNo, tokenInfoCheckpoint.getBlockNo());
+      log.info(
+          "Stop updating token info as the latest block no is not greater than the checkpoint, {} <= {}",
+          maxBlockNo,
+          tokenInfoCheckpoint.getBlockNo());
       return;
     }
     log.info(
@@ -226,7 +228,10 @@ public class TokenInfoServiceImpl implements TokenInfoService {
           // After every 5 batches, insert the fetched token info data into the database in batches.
           if (tokenInfoFutures.size() % 5 == 0) {
             var tokenInfoList =
-                tokenInfoFutures.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
+                tokenInfoFutures.stream()
+                    .map(CompletableFuture::join)
+                    .flatMap(List::stream)
+                    .toList();
             BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
             tokenInfoFutures.clear();
           }
@@ -241,7 +246,6 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     tokenInfoCheckpointRepository.save(
         TokenInfoCheckpoint.builder().blockNo(maxBlockNo).updateTime(timeLatestBlock).build());
   }
-
 
   /** Save total token count into redis cache. */
   void saveTotalTokenCount() {
