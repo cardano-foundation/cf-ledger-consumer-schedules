@@ -29,14 +29,6 @@ CREATE INDEX IF NOT EXISTS latest_token_balance_block_time_idx ON latest_token_b
 CREATE INDEX IF NOT EXISTS latest_token_balance_unit_quantity_idx ON latest_token_balance (unit, quantity);
 CREATE INDEX IF NOT EXISTS latest_token_balance_policy_quantity_idx ON latest_token_balance (policy, quantity);
 
--- ------------------------------------------------------------------------------------------------------------------------
--- CREATE UNIQUE INDEX IF NOT EXISTS unique_address_tx_count_idx ON address_tx_count (address);
--- CREATE INDEX IF NOT EXISTS address_tx_count_tx_count_idx ON address_tx_count (tx_count);
---
--- ------------------------------------------------------------------------------------------------------------------------
--- CREATE UNIQUE INDEX IF NOT EXISTS unique_stake_address_tx_count_idx ON stake_address_tx_count (stake_address);
--- CREATE INDEX IF NOT EXISTS stake_address_tx_count_tx_count_idx ON stake_address_tx_count (tx_count);
-
 ------------------------------------------------------------------------------------------------------------------------
 CREATE UNIQUE INDEX IF NOT EXISTS unique_stake_address_idx ON stake_address_view (stake_address);
 ------------------------------------------------------------------------------------------------------------------------

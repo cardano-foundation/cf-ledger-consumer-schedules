@@ -72,21 +72,6 @@ FROM full_balances ab
          JOIN address addr ON ab.address = addr.address
 WHERE ab.quantity > 0;
 
--- ------------------------------------------------------------------------------------------------------------------------
--- CREATE MATERIALIZED VIEW IF NOT EXISTS address_tx_count AS
--- SELECT ata.address                 AS address,
---        count(distinct ata.tx_hash) AS tx_count
--- FROM address_tx_amount ata
--- GROUP BY ata.address;
---
--- ------------------------------------------------------------------------------------------------------------------------
--- -- materialized view for stake_address_tx_count
--- CREATE MATERIALIZED VIEW stake_address_tx_count AS
--- SELECT ata.stake_address           AS stake_address,
---        count(distinct ata.tx_hash) AS tx_count
--- FROM address_tx_amount ata
--- WHERE ata.stake_address IS NOT NULL
--- GROUP BY ata.stake_address;
 ------------------------------------------------------------------------------------------------------------------------
 CREATE MATERIALIZED VIEW IF NOT EXISTS stake_address_view AS
 SELECT DISTINCT (addr.stake_address) as stake_address FROM address addr
