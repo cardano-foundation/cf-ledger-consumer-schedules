@@ -71,7 +71,10 @@ public class JOOQAddressTxCountRepository {
                             .on(field(name(addressTxAmountAlias, addressTxAmountEntity.getColumnField(AddressTxAmount_.ADDRESS)))
                                     .eq(field(name(addressAlias, addressEntity.getColumnField(Address_.ADDRESS)))))
                             .where(field(name(addressAlias, "id")).between(currentFrom).and(currentTo))
-                            .groupBy(field(name(addressTxAmountAlias, addressTxAmountEntity.getColumnField(AddressTxAmount_.ADDRESS)))));
+                            .groupBy(field(name(addressTxAmountAlias, addressTxAmountEntity.getColumnField(AddressTxAmount_.ADDRESS)))))
+                    .onConflict(field(name(addressTxAmountAlias, addressTxAmountEntity.getColumnField(AddressTxAmount_.ADDRESS))))
+                    .doUpdate()
+                    .set(field(name("tx_count")), excluded(field(addressTxCountEntity.getColumnField(AddressTxCount_.TX_COUNT), SQLDataType.NUMERIC)));
 
 
             TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
