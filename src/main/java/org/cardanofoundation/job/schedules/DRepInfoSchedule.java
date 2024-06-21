@@ -28,6 +28,7 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationE
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity_;
 import org.cardanofoundation.job.mapper.DRepMapper;
 import org.cardanofoundation.job.projection.DelegationVoteProjection;
+import org.cardanofoundation.job.projection.LatestDrepVotingProcedureProjection;
 import org.cardanofoundation.job.projection.LatestEpochVotingProcedureProjection;
 import org.cardanofoundation.job.projection.StakeBalanceProjection;
 import org.cardanofoundation.job.repository.explorer.DRepInfoRepository;
@@ -71,27 +72,80 @@ public class DRepInfoSchedule {
       return;
     }
 
+    Map<String, Double> governanceParticipationRateMap = getGovernanceParticipationRateMap();
+
     Pageable pageable =
         PageRequest.of(
             0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, DRepRegistrationEntity_.SLOT));
     Slice<DRepRegistrationEntity> dRepRegistrationEntitySlice =
         dRepRegistrationRepository.findAll(pageable);
-    saveDRepInfo(dRepRegistrationEntitySlice.getContent(), currentEpoch, dRepActivity);
+    saveDRepInfo(
+        dRepRegistrationEntitySlice.getContent(),
+        currentEpoch,
+        dRepActivity,
+        governanceParticipationRateMap);
 
     while (dRepRegistrationEntitySlice.hasNext()) {
       pageable = dRepRegistrationEntitySlice.nextPageable();
       dRepRegistrationEntitySlice = dRepRegistrationRepository.findAll(pageable);
-      saveDRepInfo(dRepRegistrationEntitySlice.getContent(), currentEpoch, dRepActivity);
+      saveDRepInfo(
+          dRepRegistrationEntitySlice.getContent(),
+          currentEpoch,
+          dRepActivity,
+          governanceParticipationRateMap);
     }
     log.info(
         "Update DRep Info successfully, takes: [{} ms]", System.currentTimeMillis() - startTime);
     log.info("Scheduled Drep Info Job: -------End------");
   }
 
+  private Map<String, Double> getGovernanceParticipationRateMap() {
+    List<DRepInfo> dreps = dRepInfoRepository.findAll();
+
+    Map<String, List<LatestDrepVotingProcedureProjection>> latestVotingProcedureNotFilterMap =
+        latestVotingProcedureRepository
+            .findAllByVoterHashIn(dreps.stream().map(DRepInfo::getDrepHash).toList())
+            .parallelStream()
+            .collect(Collectors.groupingBy(LatestDrepVotingProcedureProjection::getVoterHash));
+
+    Map<String, List<LatestDrepVotingProcedureProjection>> latestVotingProcedureMap =
+        latestVotingProcedureNotFilterMap.entrySet().stream()
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    entry ->
+                        entry.getValue().stream()
+                            .filter(
+                                votingProcedure ->
+                                    dreps.stream()
+                                        .anyMatch(
+                                            drep ->
+                                                drep.getDrepHash()
+                                                        .equals(votingProcedure.getVoterHash())
+                                                    && votingProcedure.getBlockTime()
+                                                        > drep.getCreatedAt()))
+                            .collect(Collectors.toList())));
+
+    Map<String, Long> countVoteMap =
+        latestVotingProcedureMap.entrySet().stream()
+            .collect(Collectors.toMap(Entry::getKey, entry -> (long) entry.getValue().size()));
+
+    return countVoteMap.entrySet().parallelStream()
+        .collect(
+            Collectors.toMap(
+                Entry::getKey,
+                entry -> {
+                  long countOfGovAction =
+                      latestVotingProcedureNotFilterMap.get(entry.getKey()).size();
+                  return (double) entry.getValue() / countOfGovAction;
+                }));
+  }
+
   private void saveDRepInfo(
       List<DRepRegistrationEntity> dRepRegistrationEntityList,
       Long currentEpoch,
-      Long dRepActivity) {
+      Long dRepActivity,
+      Map<String, Double> governanceParticipationRateMap) {
     log.info("Processing {} DRep registration entities", dRepRegistrationEntityList.size());
     Set<String> drepHashSet =
         dRepRegistrationEntityList.stream()
@@ -159,6 +213,10 @@ public class DRepInfoSchedule {
             dRepMapper.updateByDRepRegistration(dRepInfo, dRepRegistrationEntity);
             dRepInfo.setUpdatedAt(dRepRegistrationEntity.getBlockTime());
           }
+
+          dRepInfo.setGovParticipationRate(
+              governanceParticipationRateMap.getOrDefault(dRepInfo.getDrepHash(), 0.0));
+
           dRepInfo.setActiveVoteStake(
               activeStakeMap.getOrDefault(dRepInfo.getDrepHash(), BigInteger.ZERO));
           dRepInfo.setLiveStake(null);

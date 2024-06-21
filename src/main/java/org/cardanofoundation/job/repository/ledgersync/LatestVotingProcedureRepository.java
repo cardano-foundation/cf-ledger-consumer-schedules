@@ -12,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import org.cardanofoundation.explorer.common.entity.compositeKey.LatestVotingProcedureId;
 import org.cardanofoundation.explorer.common.entity.enumeration.VoterType;
 import org.cardanofoundation.explorer.common.entity.ledgersync.LatestVotingProcedure;
+import org.cardanofoundation.job.projection.LatestDrepVotingProcedureProjection;
 import org.cardanofoundation.job.projection.LatestEpochVotingProcedureProjection;
 import org.cardanofoundation.job.projection.LatestVotingProcedureProjection;
 
@@ -46,4 +47,14 @@ public interface LatestVotingProcedureRepository
               + " join PoolHash ph on lvp.voterHash = ph.hashRaw"
               + " WHERE lvp.voterType = :voterType")
   List<LatestVotingProcedureProjection> findAllByVoterType(@Param("voterType") VoterType voterType);
+
+  @Query(
+      value =
+          "SELECT lvp.voterHash as voterHash, lvp.govActionTxHash as govActionTxHash, lvp.govActionIndex as govActionIndex,"
+              + " lvp.vote as vote, gap.blockTime as blockTime"
+              + " FROM LatestVotingProcedure lvp"
+              + " join GovActionProposal gap on (gap.txHash = lvp.govActionTxHash and gap.index = lvp.govActionIndex) "
+              + " WHERE lvp.voterHash in :drepIds")
+  List<LatestDrepVotingProcedureProjection> findAllByVoterHashIn(
+      @Param("drepIds") List<String> drepIds);
 }
