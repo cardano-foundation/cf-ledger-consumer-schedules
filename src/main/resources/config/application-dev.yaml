@@ -175,6 +175,11 @@ jobs:
   agg-analytic:
     enabled: ${AGG_ANALYTIC_JOB_ENABLED:true}
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
+  address-tx-count:
+    enabled: ${ADDRESS_TX_COUNT_JOB_ENABLED:true}
+    fixed-delay: ${ADDRESS_TX_COUNT_FIXED_DELAY:60000}
+    insert-batch-size: ${ADDRESS_TX_COUNT_INSERT_BATCH_SIZE:10000}
+    number-of-threads :  ${ADDRESS_TX_COUNT_NUMBER_OF_THREADS:10}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
