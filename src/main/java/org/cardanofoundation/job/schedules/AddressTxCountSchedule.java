@@ -53,7 +53,7 @@ public class AddressTxCountSchedule {
         redisTemplate.delete(addressTxCountCheckPoint);
     }
 
-    @Scheduled(initialDelay = 500000, fixedDelayString = "${jobs.address-tx-count.fixed-delay}")
+    @Scheduled(fixedDelayString = "${jobs.address-tx-count.fixed-delay}")
     @Transactional
     public void syncAddressTxCount() {
         final String addressTxCountCheckPoint = getRedisKey(RedisKey.ADDRESS_TX_COUNT_CHECKPOINT.name());
