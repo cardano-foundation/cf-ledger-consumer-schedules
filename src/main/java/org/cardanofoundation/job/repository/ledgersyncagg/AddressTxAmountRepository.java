@@ -116,4 +116,11 @@ public interface AddressTxAmountRepository
       """)
   List<String> findUnitByBlockTimeInRange(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+
+
+  @Query(value = "SELECT max(a.id) FROM Address a")
+  Long getMaxAddressId();
+
+  @Query(value = "select max(slot) from cursor_", nativeQuery = true)
+  Long getMaxSlotNoFromCursor();
 }
