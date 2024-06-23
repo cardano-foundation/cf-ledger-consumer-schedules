@@ -4,11 +4,18 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
+import org.jooq.DSLContext;
+import org.jooq.impl.DataSourceConnectionProvider;
+import org.jooq.impl.DefaultConfiguration;
+import org.jooq.impl.DefaultDSLContext;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.jooq.JooqProperties;
+import org.springframework.boot.autoconfigure.jooq.SpringTransactionProvider;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.jdbc.datasource.TransactionAwareDataSourceProxy;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -53,5 +60,18 @@ public class LedgerSyncAggDatasourceConfig {
           LocalContainerEntityManagerFactoryBean ledgerSyncAggEntityManagerFactory) {
     return new JpaTransactionManager(
         Objects.requireNonNull(ledgerSyncAggEntityManagerFactory.getObject()));
+  }
+
+  @Bean(name = "ledgerSyncAggDSLContext")
+  public DSLContext ledgerSyncAggDSLContext(
+          @Qualifier("ledgerSyncAggDataSource") DataSource dataSource,
+          @Qualifier("ledgerSyncAggTransactionManager") PlatformTransactionManager txManager,
+          JooqProperties properties) {
+    DefaultConfiguration configuration = new DefaultConfiguration();
+    configuration.set(properties.determineSqlDialect(dataSource));
+    configuration.set(
+            new DataSourceConnectionProvider(new TransactionAwareDataSourceProxy(dataSource)));
+    configuration.set(new SpringTransactionProvider(txManager));
+    return new DefaultDSLContext(configuration);
   }
 }

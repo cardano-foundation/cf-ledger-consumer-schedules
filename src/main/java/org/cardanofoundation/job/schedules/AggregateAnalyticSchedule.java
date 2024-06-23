@@ -7,12 +7,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopStakeAddressBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
@@ -29,8 +27,6 @@ public class AggregateAnalyticSchedule {
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
-  private final AddressTxCountRepository addressTxCountRepository;
-  private final StakeAddressTxCountRepository stakeAddressTxCountRepository;
   private final TxChartService txChartService;
   private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
   private final TopAddressBalanceRepository topAddressBalanceRepository;
@@ -93,16 +89,6 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(initialDelay = 100000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void refreshLatestStakeAddressTxCount() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---LatestStakeAddressTxCount--- Refresh job has been started");
-    stakeAddressTxCountRepository.refreshMaterializedView();
-    log.info(
-        "---LatestStakeAddressTxCount--- Refresh job has ended. Time taken {} ms",
-        System.currentTimeMillis() - currentTime);
-  }
-
   @Scheduled(initialDelay = 200000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshStakeAddressView() {
     long currentTime = System.currentTimeMillis();
@@ -113,16 +99,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(initialDelay = 500000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void updateTxCountTable() {
-    log.info("---LatestAddressTxCount--- Refresh job has been started");
-    long startTime = System.currentTimeMillis();
-    addressTxCountRepository.refreshMaterializedView();
-    long executionTime = System.currentTimeMillis() - startTime;
-    log.info("---LatestAddressTxCount--- Refresh job has ended. Time taken {} ms", executionTime);
-  }
-
-  @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 50000,fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxChartData() {
     log.info("---TxChart--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
