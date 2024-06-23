@@ -26,6 +26,7 @@ import org.cardanofoundation.explorer.common.entity.enumeration.DRepStatus;
 import org.cardanofoundation.explorer.common.entity.explorer.DRepInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity_;
+import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal;
 import org.cardanofoundation.job.mapper.DRepMapper;
 import org.cardanofoundation.job.projection.DelegationVoteProjection;
 import org.cardanofoundation.job.projection.LatestDrepVotingProcedureProjection;
@@ -36,6 +37,7 @@ import org.cardanofoundation.job.repository.ledgersync.DRepRegistrationRepositor
 import org.cardanofoundation.job.repository.ledgersync.DelegationVoteRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
+import org.cardanofoundation.job.repository.ledgersync.GovActionProposalRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestVotingProcedureRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressBalanceRepository;
 
@@ -53,6 +55,7 @@ public class DRepInfoSchedule {
   private final EpochParamRepository epochParamRepository;
   private final LatestVotingProcedureRepository latestVotingProcedureRepository;
   private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
+  private final GovActionProposalRepository govActionProposalRepository;
   private final EpochRepository epochRepository;
 
   private final DRepMapper dRepMapper;
@@ -72,62 +75,59 @@ public class DRepInfoSchedule {
       return;
     }
 
-    Map<String, Double> governanceParticipationRateMap = getGovernanceParticipationRateMap();
-
     Pageable pageable =
         PageRequest.of(
             0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, DRepRegistrationEntity_.SLOT));
     Slice<DRepRegistrationEntity> dRepRegistrationEntitySlice =
         dRepRegistrationRepository.findAll(pageable);
-    saveDRepInfo(
-        dRepRegistrationEntitySlice.getContent(),
-        currentEpoch,
-        dRepActivity,
-        governanceParticipationRateMap);
+    saveDRepInfo(dRepRegistrationEntitySlice.getContent(), currentEpoch, dRepActivity);
 
     while (dRepRegistrationEntitySlice.hasNext()) {
       pageable = dRepRegistrationEntitySlice.nextPageable();
       dRepRegistrationEntitySlice = dRepRegistrationRepository.findAll(pageable);
-      saveDRepInfo(
-          dRepRegistrationEntitySlice.getContent(),
-          currentEpoch,
-          dRepActivity,
-          governanceParticipationRateMap);
+      saveDRepInfo(dRepRegistrationEntitySlice.getContent(), currentEpoch, dRepActivity);
     }
     log.info(
         "Update DRep Info successfully, takes: [{} ms]", System.currentTimeMillis() - startTime);
     log.info("Scheduled Drep Info Job: -------End------");
   }
 
-  private Map<String, Double> getGovernanceParticipationRateMap() {
-    List<DRepInfo> dreps = dRepInfoRepository.findAll();
+  private Map<String, Double> getGovernanceParticipationRateMap(
+      List<DRepRegistrationEntity> dRepRegistrationEntityList) {
+    Set<String> dRepHashes =
+        dRepRegistrationEntityList.stream()
+            .map(DRepRegistrationEntity::getDrepHash)
+            .collect(Collectors.toSet());
+
+    List<GovActionProposal> govActionProposalList = govActionProposalRepository.findAll();
 
     Map<String, List<LatestDrepVotingProcedureProjection>> latestVotingProcedureNotFilterMap =
-        latestVotingProcedureRepository
-            .findAllByVoterHashIn(dreps.stream().map(DRepInfo::getDrepHash).toList())
-            .parallelStream()
+        latestVotingProcedureRepository.findAllByVoterHashIn(dRepHashes).stream()
             .collect(Collectors.groupingBy(LatestDrepVotingProcedureProjection::getVoterHash));
 
-    Map<String, List<LatestDrepVotingProcedureProjection>> latestVotingProcedureMap =
-        latestVotingProcedureNotFilterMap.entrySet().stream()
+    Map<String, Long> drepBlockTimeMap =
+        dRepRegistrationEntityList.stream()
             .collect(
                 Collectors.toMap(
-                    Map.Entry::getKey,
-                    entry ->
-                        entry.getValue().stream()
-                            .filter(
-                                votingProcedure ->
-                                    dreps.stream()
-                                        .anyMatch(
-                                            drep ->
-                                                drep.getDrepHash()
-                                                        .equals(votingProcedure.getVoterHash())
-                                                    && votingProcedure.getBlockTime()
-                                                        > drep.getCreatedAt()))
-                            .collect(Collectors.toList())));
+                    DRepRegistrationEntity::getDrepHash,
+                    DRepRegistrationEntity::getBlockTime,
+                    (a, b) -> b));
+
+    // filter gov action that submitted before the pool had registered
+    Map<String, List<LatestDrepVotingProcedureProjection>> latestVotingProcedureMap =
+        latestVotingProcedureNotFilterMap.entrySet().parallelStream()
+            .collect(
+                Collectors.toMap(
+                    Entry::getKey,
+                    entry -> {
+                      Long blockTime = drepBlockTimeMap.getOrDefault(entry.getKey(), 0L);
+                      return entry.getValue().stream()
+                          .filter(votingProcedure -> votingProcedure.getBlockTime() >= blockTime)
+                          .collect(Collectors.toList());
+                    }));
 
     Map<String, Long> countVoteMap =
-        latestVotingProcedureMap.entrySet().stream()
+        latestVotingProcedureMap.entrySet().parallelStream()
             .collect(Collectors.toMap(Entry::getKey, entry -> (long) entry.getValue().size()));
 
     return countVoteMap.entrySet().parallelStream()
@@ -135,17 +135,20 @@ public class DRepInfoSchedule {
             Collectors.toMap(
                 Entry::getKey,
                 entry -> {
-                  long countOfGovAction =
-                      latestVotingProcedureNotFilterMap.get(entry.getKey()).size();
-                  return (double) entry.getValue() / countOfGovAction;
+                  Long blockTime = drepBlockTimeMap.getOrDefault(entry.getKey(), 0L);
+                  long countOfGovActionThatAllowedToVoteForDRep =
+                      govActionProposalList.stream()
+                          .filter(
+                              govActionProposal -> govActionProposal.getBlockTime() >= blockTime)
+                          .count();
+                  return entry.getValue() * 1.0 / (countOfGovActionThatAllowedToVoteForDRep);
                 }));
   }
 
   private void saveDRepInfo(
       List<DRepRegistrationEntity> dRepRegistrationEntityList,
       Long currentEpoch,
-      Long dRepActivity,
-      Map<String, Double> governanceParticipationRateMap) {
+      Long dRepActivity) {
     log.info("Processing {} DRep registration entities", dRepRegistrationEntityList.size());
     Set<String> drepHashSet =
         dRepRegistrationEntityList.stream()
@@ -189,6 +192,9 @@ public class DRepInfoSchedule {
     Map<String, DRepInfo> dRepInfoMap =
         dRepInfoRepository.findAllByDrepHashIn(drepHashSet).stream()
             .collect(Collectors.toMap(DRepInfo::getDrepHash, Function.identity()));
+
+    Map<String, Double> governanceParticipationRateMap =
+        getGovernanceParticipationRateMap(dRepRegistrationEntityList);
 
     dRepRegistrationEntityList.forEach(
         dRepRegistrationEntity -> {
