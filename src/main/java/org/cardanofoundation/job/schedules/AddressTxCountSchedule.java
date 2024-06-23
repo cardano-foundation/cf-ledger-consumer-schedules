@@ -27,11 +27,8 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class AddressTxCountSchedule {
 
-    private final JdbcTemplate jdbcTemplate;
-
     @Value("${application.network}")
     private String network;
-
 
     @Value("${jobs.address-tx-count.insert-batch-size}")
     private int insertBatchSize;
@@ -43,14 +40,6 @@ public class AddressTxCountSchedule {
 
     private String getRedisKey(String prefix) {
         return prefix + "_" + network;
-    }
-
-
-    @PostConstruct
-    void setup() {
-        final String addressTxCountCheckPoint = getRedisKey(RedisKey.ADDRESS_TX_COUNT_CHECKPOINT.name());
-        log.info("Start setup for AddressTxCount jobs");
-        redisTemplate.delete(addressTxCountCheckPoint);
     }
 
     @Scheduled(fixedDelayString = "${jobs.address-tx-count.fixed-delay}")
