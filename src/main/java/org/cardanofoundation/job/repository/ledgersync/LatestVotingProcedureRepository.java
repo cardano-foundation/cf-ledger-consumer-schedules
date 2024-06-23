@@ -56,5 +56,5 @@ public interface LatestVotingProcedureRepository
               + " join GovActionProposal gap on (gap.txHash = lvp.govActionTxHash and gap.index = lvp.govActionIndex) "
               + " WHERE lvp.voterHash in :drepIds")
   List<LatestDrepVotingProcedureProjection> findAllByVoterHashIn(
-      @Param("drepIds") List<String> drepIds);
+      @Param("drepIds") Collection<String> drepIds);
 }

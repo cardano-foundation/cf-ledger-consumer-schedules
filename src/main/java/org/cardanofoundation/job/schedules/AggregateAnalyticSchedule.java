@@ -122,7 +122,7 @@ public class AggregateAnalyticSchedule {
     log.info("---LatestAddressTxCount--- Refresh job has ended. Time taken {} ms", executionTime);
   }
 
-  @Scheduled(initialDelay = 50000,fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxChartData() {
     log.info("---TxChart--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
