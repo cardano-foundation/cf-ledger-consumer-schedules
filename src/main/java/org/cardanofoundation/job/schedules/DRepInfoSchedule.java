@@ -141,6 +141,11 @@ public class DRepInfoSchedule {
                           .filter(
                               govActionProposal -> govActionProposal.getBlockTime() >= blockTime)
                           .count();
+
+                  if(countOfGovActionThatAllowedToVoteForDRep == 0) {
+                    return 0.0;
+                  }
+
                   return entry.getValue() * 1.0 / (countOfGovActionThatAllowedToVoteForDRep);
                 }));
   }
