@@ -2,6 +2,8 @@ package org.cardanofoundation.job.repository.ledgersyncagg.jooq;
 
 import static org.jooq.impl.DSL.*;
 
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -9,8 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import org.jooq.DSLContext;
@@ -125,8 +125,7 @@ public class JOOQAddressTxCountRepository {
     }
   }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public int updateAddressTxCount(Long fromSlot, Long toSlot) {
+  public void updateAddressTxCount(List<String> addressList) {
     Table<?> addressTxCountTable = table("address_tx_count");
     Table<?> addressTxAmountTable = table("address_tx_amount");
 
@@ -154,9 +153,8 @@ public class JOOQAddressTxCountRepository {
                         field(
                                 name(
                                     addressTxAmountAlias,
-                                    addressTxAmountEntity.getColumnField(AddressTxAmount_.SLOT)))
-                            .between(fromSlot)
-                            .and(toSlot))
+                                    addressTxAmountEntity.getColumnField(AddressTxAmount_.ADDRESS)))
+                            .in(addressList))
                     .groupBy(
                         field(
                             name(
@@ -173,6 +171,12 @@ public class JOOQAddressTxCountRepository {
                         SQLDataType.INTEGER)
                     .add(excluded(txCountField)));
 
-    return query.execute();
+    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+    transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    transactionTemplate.execute(
+        status -> {
+          query.execute();
+          return true;
+        });
   }
 }
