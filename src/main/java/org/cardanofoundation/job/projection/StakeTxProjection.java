@@ -12,7 +12,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 public class StakeTxProjection {
 
-  Long txId;
+  String txHash;
   BigInteger amount;
   Long time;
 }

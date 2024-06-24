@@ -1,4 +1,4 @@
-package org.cardanofoundation.job.repository.ledgersync.aggregate;
+package org.cardanofoundation.job.repository.ledgersyncagg;
 
 import jakarta.transaction.Transactional;
 
@@ -6,10 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import org.cardanofoundation.explorer.common.entity.ledgersync.aggregation.AggregateAddressToken;
+import org.cardanofoundation.explorer.common.entity.compositeKey.AggAddressTokenId;
+import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AggregateAddressToken;
 
 public interface AggregateAddressTokenRepository
-    extends JpaRepository<AggregateAddressToken, Long> {
+    extends JpaRepository<AggregateAddressToken, AggAddressTokenId> {
 
   @Modifying(clearAutomatically = true)
   @Transactional

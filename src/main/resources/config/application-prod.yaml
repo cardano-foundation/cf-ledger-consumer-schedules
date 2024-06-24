@@ -2,7 +2,7 @@
 multi-datasource: #specified for HikariDataSource
   datasourceLedgerSync:
     hikariConfig:
-      jdbcUrl: jdbc:postgresql://${LEDGER_SYNC_HOST:10.4.10.112}:${LEDGER_SYNC_PORT:54321}/${LEDGER_SYNC_DB:explorer_api}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
+      jdbcUrl: jdbc:postgresql://${LEDGER_SYNC_HOST:10.4.10.112}:${LEDGER_SYNC_PORT:54321}/${LEDGER_SYNC_DB:explorer_api}?currentSchema=${LEDGER_SYNC_SCHEMA:preprod}
       username: ${LEDGER_SYNC_USER:cardano-read}
       password: ${LEDGER_SYNC_PASSWORD:1}
       driverClassName: org.postgresql.Driver
@@ -27,19 +27,58 @@ multi-datasource: #specified for HikariDataSource
         maintainTimeStats: false
     flyway:
       enabled: ${LEDGER_SYNC_FLYWAY_ENABLE:false}
-      group: true
+      group: false
       sqlMigrationPrefix: V
       sqlMigrationSeparator: __
       sqlMigrationSuffixes: .sql
       locations: db/migration/ledgersync
-      defaultSchema: ${spring.jpa.properties.hibernate.default_schema}
-      schemas: ${spring.jpa.properties.hibernate.default_schema}
-      validateOnMigrate: ${LEDGER_SYNC_FLYWAY_VALIDATE:false}
+      defaultSchema: ${LEDGER_SYNC_SCHEMA}
+      schemas: ${LEDGER_SYNC_SCHEMA}
+      validateOnMigrate: false
       outOfOrder: true
+    schema: ${LEDGER_SYNC_SCHEMA}
+
+  datasourceLedgerSyncAgg:
+    hikariConfig:
+      jdbcUrl: jdbc:postgresql://${LEDGER_SYNC_AGG_HOST:10.4.10.112}:${LEDGER_SYNC_AGG_PORT:54321}/${LEDGER_SYNC_AGG_DB:explorer_api}?currentSchema=${LEDGER_SYNC_AGG_SCHEMA:preprod}
+      username: ${LEDGER_SYNC_AGG_USER:cardano-read}
+      password: ${LEDGER_SYNC_AGG_PASSWORD:1}
+      driverClassName: org.postgresql.Driver
+      poolName: explorer-schedule-ledgersync-agg-pool
+      minimumIdle: 1 #minimum number of idle connections maintained by HikariCP in a connection pool
+      maximumPoolSize: ${MAXIMUM_POOL_SIZE:48} #maximum pool size
+      idleTimeout: 300000 #maximum idle time for connection
+      maxLifetime: 900000 #maximum lifetime in milliseconds of a connection in the pool after it is closed.
+      connectionTimeout: 50000 #maximum number of milliseconds that a client will wait for a connection
+      autoCommit: false #default auto-commit behavior.
+      connectionInitSql: SELECT 1
+      dataSourceProperties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
+        useLocalSessionState: true
+        rewriteBatchedStatements: true
+        cacheResultSetMetadata: true
+        cacheServerConfiguration: true
+        elideSetAutoCommits: true
+        maintainTimeStats: false
+    flyway:
+      enabled: ${LEDGER_SYNC_AGG_FLYWAY_ENABLE:false}
+      group: false
+      sqlMigrationPrefix: V
+      sqlMigrationSeparator: __
+      sqlMigrationSuffixes: .sql
+      locations: db/migration/ledgersyncagg
+      defaultSchema: ${LEDGER_SYNC_AGG_SCHEMA:preprod}
+      schemas: ${LEDGER_SYNC_AGG_SCHEMA:preprod}
+      validateOnMigrate: false
+      outOfOrder: true
+    schema: ${LEDGER_SYNC_AGG_SCHEMA:preprod}
 
   datasourceExplorer:
     hikariConfig:
-      jdbcUrl: jdbc:postgresql://${EXPLORER_HOST:10.4.10.112}:${EXPLORER_PORT:54323}/${EXPLORER_DB:explorer_api}?currentSchema=${spring.jpa.properties.hibernate.default_schema}
+      jdbcUrl: jdbc:postgresql://${EXPLORER_HOST:10.4.10.112}:${EXPLORER_PORT:54323}/${EXPLORER_DB:explorer_api}?currentSchema=${EXPLORER_SCHEMA:preprod}
       username: ${EXPLORER_USER:cardano-master}
       password: ${EXPLORER_PASSWORD:Y2FyZGFuby1kYXRhYmFzZS1tYXN0ZXI=}
       driverClassName: org.postgresql.Driver
@@ -64,15 +103,16 @@ multi-datasource: #specified for HikariDataSource
         maintainTimeStats: false
     flyway:
       enabled: ${EXPLORER_FLYWAY_ENABLE:false}
-      group: true
+      group: false
       sqlMigrationPrefix: V
       sqlMigrationSeparator: __
       sqlMigrationSuffixes: .sql
       locations: db/migration/explorer
-      defaultSchema: ${spring.jpa.properties.hibernate.default_schema}
-      schemas: ${spring.jpa.properties.hibernate.default_schema}
-      validateOnMigrate: ${EXPLORER_FLYWAY_VALIDATE:false}
+      defaultSchema: ${EXPLORER_SCHEMA}
+      schemas: ${EXPLORER_SCHEMA}
+      validateOnMigrate: false
       outOfOrder: true
+    schema: ${EXPLORER_SCHEMA}
 
 spring:
   # JPA specific configs
@@ -83,7 +123,6 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         jdbc.batch_size: 1000
-        default_schema: ${POSTGRES_SCHEMA:mainnet}
         show_sql: false
         format_sql: true
         order_inserts: true
@@ -133,7 +172,12 @@ jobs:
     enabled: ${GOVERNANCE_INFO_JOB_ENABLED:true}
     fixed-delay: ${GOVERNANCE_INFO_FIXED_DELAY:30000}
   agg-analytic:
+    enabled: ${AGG_ANALYTIC_JOB_ENABLED:true}
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
+  address-tx-count:
+    enabled: ${ADDRESS_TX_COUNT_JOB_ENABLED:true}
+    fixed-delay: ${ADDRESS_TX_COUNT_FIXED_DELAY:300000}
+    insert-batch-size: ${ADDRESS_TX_COUNT_INSERT_BATCH_SIZE:10000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 

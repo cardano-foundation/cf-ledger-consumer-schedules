@@ -17,8 +17,8 @@ import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.Epoch;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 
 @Slf4j
 @Component
