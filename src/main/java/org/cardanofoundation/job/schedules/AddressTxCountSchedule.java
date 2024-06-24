@@ -114,7 +114,7 @@ public class AddressTxCountSchedule {
     CompletableFuture.allOf(savingAddressTxCountFutures.toArray(new CompletableFuture[0])).join();
 
     log.info(
-        "End update StakeAddressTxCount with size = {} in {} ms",
+        "End update AddressTxCount with size = {} in {} ms",
         addressInvolvedInTx.size(),
         System.currentTimeMillis() - startTime);
   }
