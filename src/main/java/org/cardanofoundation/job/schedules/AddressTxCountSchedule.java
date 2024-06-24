@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQAddressTxCountRepository;
+import org.cardanofoundation.job.util.BatchUtils;
 
 @Slf4j
 @Component
@@ -82,12 +83,39 @@ public class AddressTxCountSchedule {
   private void update(Long slotNoCheckpoint, Long currentMaxSlotNo) {
     log.info("Start update AddressTxCount");
     long startTime = System.currentTimeMillis();
-    int rowCount =
-        jooqAddressTxCountRepository.updateAddressTxCount(slotNoCheckpoint, currentMaxSlotNo);
+    List<CompletableFuture<List<Void>>> savingAddressTxCountFutures = new ArrayList<>();
+
+    List<String> addressInvolvedInTx =
+        addressTxAmountRepository.findAddressBySlotNoBetween(slotNoCheckpoint, currentMaxSlotNo);
+
+    BatchUtils.doBatching(
+        1000,
+        addressInvolvedInTx,
+        stakeAddresses -> {
+          CompletableFuture<List<Void>> savingStakeAddressTxCountFuture =
+              CompletableFuture.supplyAsync(
+                  () -> {
+                    jooqAddressTxCountRepository.updateAddressTxCount(stakeAddresses);
+                    return null;
+                  });
+
+          savingAddressTxCountFutures.add(savingStakeAddressTxCountFuture);
+
+          // After every 5 batches, insert the fetched stake address tx count data into the database
+          // in batches.
+          if (savingAddressTxCountFutures.size() % 5 == 0) {
+            CompletableFuture.allOf(savingAddressTxCountFutures.toArray(new CompletableFuture[0]))
+                .join();
+            savingAddressTxCountFutures.clear();
+          }
+        });
+
+    // Insert the remaining stake address tx count data into the database.
+    CompletableFuture.allOf(savingAddressTxCountFutures.toArray(new CompletableFuture[0])).join();
 
     log.info(
-        "End update AddressTxCount with size = {} in {} ms",
-        rowCount,
+        "End update StakeAddressTxCount with size = {} in {} ms",
+        addressInvolvedInTx.size(),
         System.currentTimeMillis() - startTime);
   }
 
