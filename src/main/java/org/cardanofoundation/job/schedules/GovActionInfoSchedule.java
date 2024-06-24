@@ -221,7 +221,7 @@ public class GovActionInfoSchedule {
         committeeRegistrationRepository.countByExpiredEpochNo(expiredEpoch);
     CommitteeState committeeState =
         committeeTotalCount >= currentEpochParam.getCommitteeMinSize().intValue()
-            ? CommitteeState.NORMAL
+            ? CommitteeState.CONFIDENCE
             : CommitteeState.NO_CONFIDENCE;
 
     switch (govActionType) {
@@ -235,7 +235,7 @@ public class GovActionInfoSchedule {
       }
 
       case UPDATE_COMMITTEE -> {
-        if (committeeState == CommitteeState.NORMAL
+        if (committeeState == CommitteeState.CONFIDENCE
             && percentageDRepYesVotes >= getDoubleValue(epochParam.getDvtCommitteeNormal())
             && percentagePoolYesVotes >= getDoubleValue(epochParam.getPvtCommitteeNormal())) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;
