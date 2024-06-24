@@ -28,6 +28,7 @@ import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.StakeAddressRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQStakeAddressTxCountRepository;
+import org.cardanofoundation.job.util.BatchUtils;
 
 @Slf4j
 @Component
@@ -50,7 +51,6 @@ public class StakeAddressTxCountSchedule {
     return prefix + "_" + network;
   }
 
-
   @Scheduled(fixedDelayString = "30000")
   @Transactional
   public void syncStakeAddressTxCount() {
@@ -59,8 +59,10 @@ public class StakeAddressTxCountSchedule {
       return;
     }
 
-    final String stakeAddressTxCountCheckPoint = getRedisKey(RedisKey.STAKE_ADDRESS_TX_COUNT_CHECKPOINT.name());
-    final long currentMaxSlotNo = Math.min(latestBlock.get().getSlotNo(),addressTxAmountRepository.getMaxSlotNoFromCursor());
+    final String stakeAddressTxCountCheckPoint =
+        getRedisKey(RedisKey.STAKE_ADDRESS_TX_COUNT_CHECKPOINT.name());
+    final long currentMaxSlotNo =
+        Math.min(latestBlock.get().getSlotNo(), addressTxAmountRepository.getMaxSlotNoFromCursor());
     final Integer checkpoint = redisTemplate.opsForValue().get(stakeAddressTxCountCheckPoint);
     if (Objects.isNull(checkpoint)) {
       init();
@@ -68,7 +70,8 @@ public class StakeAddressTxCountSchedule {
       update(checkpoint.longValue(), currentMaxSlotNo);
     }
 
-    // Update the checkpoint to the currentMaxSlotNo - 43200 to avoid missing any data when node rollback
+    // Update the checkpoint to the currentMaxSlotNo - 43200 to avoid missing any data when node
+    // rollback
     redisTemplate
         .opsForValue()
         .set(stakeAddressTxCountCheckPoint, Math.max((int) currentMaxSlotNo - 43200, 0));
@@ -85,8 +88,8 @@ public class StakeAddressTxCountSchedule {
     Slice<String> stakeAddressSlice = stakeAddressRepository.getStakeAddressViews(pageable);
 
     while (stakeAddressSlice.hasNext()) {
-      stakeAddressSlice = stakeAddressRepository.getStakeAddressViews(
-          stakeAddressSlice.nextPageable());
+      stakeAddressSlice =
+          stakeAddressRepository.getStakeAddressViews(stakeAddressSlice.nextPageable());
       List<String> stakeAddresses = stakeAddressSlice.getContent();
 
       CompletableFuture<List<Void>> savingStakeAddressTxCountFuture =
@@ -117,12 +120,42 @@ public class StakeAddressTxCountSchedule {
   private void update(Long slotNoCheckpoint, Long currentMaxSlotNo) {
     log.info("Start update StakeAddressTxCount");
     long startTime = System.currentTimeMillis();
-    // TODO parallelize update when diff between slotNoCheckpoint and currentMaxSlotNo is large
-    int rowCount = jooqStakeAddressTxCountRepository.updateAddressTxCount(slotNoCheckpoint, currentMaxSlotNo);
+    List<String> stakeAddressInvolvedInTx =
+        addressTxAmountRepository.findStakeAddressBySlotNoBetween(
+            slotNoCheckpoint, currentMaxSlotNo);
+
+    List<CompletableFuture<List<Void>>> savingStakeAddressTxCountFutures = new ArrayList<>();
+
+    BatchUtils.doBatching(
+        1000,
+        stakeAddressInvolvedInTx,
+        stakeAddresses -> {
+          CompletableFuture<List<Void>> savingStakeAddressTxCountFuture =
+              CompletableFuture.supplyAsync(
+                  () -> {
+                    jooqStakeAddressTxCountRepository.insertStakeAddressTxCount(stakeAddresses);
+                    return null;
+                  });
+
+          savingStakeAddressTxCountFutures.add(savingStakeAddressTxCountFuture);
+
+          // After every 5 batches, insert the fetched stake address tx count data into the database
+          // in batches.
+          if (savingStakeAddressTxCountFutures.size() % 5 == 0) {
+            CompletableFuture.allOf(
+                    savingStakeAddressTxCountFutures.toArray(new CompletableFuture[0]))
+                .join();
+            savingStakeAddressTxCountFutures.clear();
+          }
+        });
+
+    // Insert the remaining stake address tx count data into the database.
+    CompletableFuture.allOf(savingStakeAddressTxCountFutures.toArray(new CompletableFuture[0]))
+        .join();
 
     log.info(
         "End update StakeAddressTxCount with size = {} in {} ms",
-        rowCount,
+        stakeAddressInvolvedInTx.size(),
         System.currentTimeMillis() - startTime);
   }
 }

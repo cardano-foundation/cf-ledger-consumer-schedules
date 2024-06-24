@@ -99,7 +99,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(initialDelay = 50000,fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxChartData() {
     log.info("---TxChart--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
