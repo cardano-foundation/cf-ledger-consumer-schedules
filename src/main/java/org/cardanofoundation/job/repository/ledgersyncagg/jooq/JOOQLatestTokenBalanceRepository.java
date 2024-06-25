@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import org.jooq.DSLContext;
@@ -49,6 +51,46 @@ public class JOOQLatestTokenBalanceRepository {
     this.latestTokenBalanceEntity = new EntityUtil(schema, LatestTokenBalance.class);
     this.addressEntity = new EntityUtil(schema, Address.class);
     this.transactionManager = platformTransactionManager;
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void createAllIndexes() {
+    long startTime = System.currentTimeMillis();
+    String index1 =
+        "create index if not exists latest_token_balance_unit_idx on latest_token_balance (unit)";
+    String index2 =
+        "create index if not exists latest_token_balance_policy_idx on latest_token_balance (policy)";
+    String index3 =
+        "create index if not exists latest_token_balance_slot_idx on latest_token_balance (slot)";
+    String index4 =
+        "create index if not exists latest_token_balance_quantity_idx on latest_token_balance (quantity)";
+    String index5 =
+        "create index if not exists latest_token_balance_block_time_idx on latest_token_balance (block_time)";
+    String index6 =
+        "create index if not exists latest_token_balance_unit_quantity_idx on latest_token_balance (unit, quantity)";
+    String index7 =
+        "create index if not exists latest_token_balance_policy_quantity_idx on latest_token_balance (policy, quantity)";
+    dsl.batch(index1, index2, index3, index4, index5, index6, index7).execute();
+    log.info(
+        "Created all indexes for latest token balance in {} ms",
+        System.currentTimeMillis() - startTime);
+  }
+
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  public void dropAllIndexes() {
+    long startTime = System.currentTimeMillis();
+    log.info("Dropping all indexes for latest token balance");
+    String index1 = "drop index if exists latest_token_balance_unit_idx";
+    String index2 = "drop index if exists latest_token_balance_policy_idx";
+    String index3 = "drop index if exists latest_token_balance_slot_idx";
+    String index4 = "drop index if exists latest_token_balance_quantity_idx";
+    String index5 = "drop index if exists latest_token_balance_block_time_idx";
+    String index6 = "drop index if exists latest_token_balance_unit_quantity_idx";
+    String index7 = "drop index if exists latest_token_balance_policy_quantity_idx";
+    dsl.batch(index1, index2, index3, index4, index5, index6, index7).execute();
+    log.info(
+        "Dropped all indexes for latest token balance in {} ms",
+        System.currentTimeMillis() - startTime);
   }
 
   public void insertLatestTokenBalanceByAddressIn(List<String> addresses) {
