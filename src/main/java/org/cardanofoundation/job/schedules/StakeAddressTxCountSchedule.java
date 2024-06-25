@@ -127,7 +127,7 @@ public class StakeAddressTxCountSchedule {
     List<CompletableFuture<List<Void>>> savingStakeAddressTxCountFutures = new ArrayList<>();
 
     BatchUtils.doBatching(
-        1000,
+        100,
         stakeAddressInvolvedInTx,
         stakeAddresses -> {
           CompletableFuture<List<Void>> savingStakeAddressTxCountFuture =

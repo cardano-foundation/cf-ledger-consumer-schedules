@@ -37,8 +37,10 @@ public class AggregateAnalyticSchedule {
   private final TopAddressBalanceRepository topAddressBalanceRepository;
   private final TopStakeAddressBalanceRepository topStakeAddressBalanceRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
+
   @Value("${application.network}")
   private String network;
+
   @Value("${jobs.agg-analytic.number-of-concurrent-tasks}")
   private Integer numberOfConcurrentTasks;
 
@@ -83,10 +85,12 @@ public class AggregateAnalyticSchedule {
     Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
     if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
-      redisTemplate.opsForValue()
-              .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
+      redisTemplate
+          .opsForValue()
+          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
       latestTokenBalanceRepository.refreshMaterializedView();
-      redisTemplate.opsForValue()
+      redisTemplate
+          .opsForValue()
           .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
     } else {
       log.info(
@@ -108,10 +112,12 @@ public class AggregateAnalyticSchedule {
     Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
     if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
-      redisTemplate.opsForValue()
+      redisTemplate
+          .opsForValue()
           .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
       topAddressBalanceRepository.refreshMaterializedView();
-      redisTemplate.opsForValue()
+      redisTemplate
+          .opsForValue()
           .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
     } else {
       log.info(
@@ -133,10 +139,12 @@ public class AggregateAnalyticSchedule {
     Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
     if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
-      redisTemplate.opsForValue()
+      redisTemplate
+          .opsForValue()
           .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
       topStakeAddressBalanceRepository.refreshMaterializedView();
-      redisTemplate.opsForValue()
+      redisTemplate
+          .opsForValue()
           .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
     } else {
       log.info(
@@ -158,10 +166,12 @@ public class AggregateAnalyticSchedule {
     Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
     if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
-      redisTemplate.opsForValue()
+      redisTemplate
+          .opsForValue()
           .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
       stakeAddressBalanceRepository.refreshStakeAddressMaterializedView();
-      redisTemplate.opsForValue()
+      redisTemplate
+          .opsForValue()
           .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
     } else {
       log.info(
@@ -178,7 +188,25 @@ public class AggregateAnalyticSchedule {
   public void updateTxChartData() {
     log.info("---TxChart--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
-    txChartService.refreshDataForTxChart();
+
+    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
+    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
+
+    if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
+      redisTemplate
+          .opsForValue()
+          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
+      txChartService.refreshDataForTxChart();
+      redisTemplate
+          .opsForValue()
+          .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+    } else {
+      log.info(
+          "TxChart - Refresh job has been skipped due to full concurrent tasks. Current concurrent tasks: {}",
+          currentConcurrentTasks);
+      return;
+    }
+
     log.info(
         "---TxChart--- Refresh job has ended. Time taken {} ms",
         System.currentTimeMillis() - startTime);
