@@ -25,7 +25,7 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.AddressRepository;
+import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQLatestTokenBalanceRepository;
 import org.cardanofoundation.job.util.BatchUtils;
@@ -41,12 +41,12 @@ public class LatestTokenBalanceSchedule {
   @Value("${application.network}")
   private String network;
 
-  private final AddressRepository addressRepository;
+  private final MultiAssetRepository multiAssetRepository;
   private final JOOQLatestTokenBalanceRepository jooqLatestTokenBalanceRepository;
   private final BlockRepository blockRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
 
-  private static final int DEFAULT_PAGE_SIZE = 10000;
+  private static final int DEFAULT_PAGE_SIZE = 1000;
 
   private String getRedisKey(String prefix) {
     return prefix + "_" + network;
@@ -89,12 +89,13 @@ public class LatestTokenBalanceSchedule {
     long index = 1;
     Pageable pageable =
         PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, BaseEntity_.ID));
-    Slice<String> addressSlice = addressRepository.getAddressBySlice(pageable);
-    addLatestTokenBalanceFutures(savingLatestTokenBalanceFutures, addressSlice.getContent());
+    Slice<String> multiAssetSlice = multiAssetRepository.getTokenUnitSlice(pageable);
 
-    while (addressSlice.hasNext()) {
-      addressSlice = addressRepository.getAddressBySlice(addressSlice.nextPageable());
-      addLatestTokenBalanceFutures(savingLatestTokenBalanceFutures, addressSlice.getContent());
+    addLatestTokenBalanceFutures(savingLatestTokenBalanceFutures, multiAssetSlice.getContent());
+
+    while (multiAssetSlice.hasNext()) {
+      multiAssetSlice = multiAssetRepository.getTokenUnitSlice(multiAssetSlice.nextPageable());
+      addLatestTokenBalanceFutures(savingLatestTokenBalanceFutures, multiAssetSlice.getContent());
       index++;
       // After every 5 batches, insert the fetched latest token balance data into the database
       // in batches.
@@ -103,7 +104,7 @@ public class LatestTokenBalanceSchedule {
         CompletableFuture.allOf(savingLatestTokenBalanceFutures.toArray(new CompletableFuture[0]))
             .join();
         savingLatestTokenBalanceFutures.clear();
-        log.info("Total latest token balance: {}", index * DEFAULT_PAGE_SIZE);
+        log.info("Total units processed: {}", index * DEFAULT_PAGE_SIZE);
       }
     }
 
@@ -117,11 +118,11 @@ public class LatestTokenBalanceSchedule {
   }
 
   private void addLatestTokenBalanceFutures(
-      List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures, List<String> addresses) {
+      List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures, List<String> units) {
     savingLatestTokenBalanceFutures.add(
         CompletableFuture.supplyAsync(
             () -> {
-              jooqLatestTokenBalanceRepository.insertLatestTokenBalanceByAddressIn(addresses);
+              jooqLatestTokenBalanceRepository.insertLatestTokenBalanceByUnitIn(units);
               return null;
             }));
   }
@@ -129,27 +130,28 @@ public class LatestTokenBalanceSchedule {
   private void update(Long blockNoCheckpoint, Long currentMaxBlockNo) {
     log.info("Start update LatestTokenBalance");
     long startTime = System.currentTimeMillis();
-    List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures = new ArrayList<>();
     Long epochBlockTimeCheckpoint =
         blockRepository.getBlockTimeByBlockNo(blockNoCheckpoint).toInstant().getEpochSecond();
     Long epochBlockTimeCurrent =
         blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
 
-    List<String> addressInvolvedInTx =
-        addressTxAmountRepository.findAddressBySlotNoBetween(
+    List<String> unitsInBlockRange =
+        addressTxAmountRepository.findUnitByBlockTimeInRange(
             epochBlockTimeCheckpoint, epochBlockTimeCurrent);
 
     log.info(
-        "addressInBlockRange from blockCheckpoint {} to {}, size: {}",
+        "unitsInBlockRange from blockCheckpoint {} to {}, size: {}",
         epochBlockTimeCheckpoint,
         epochBlockTimeCurrent,
-        addressInvolvedInTx.size());
+        unitsInBlockRange.size());
+
+    List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures = new ArrayList<>();
 
     BatchUtils.doBatching(
         100,
-        addressInvolvedInTx,
-        address -> {
-          addLatestTokenBalanceFutures(savingLatestTokenBalanceFutures, address);
+        unitsInBlockRange,
+        units -> {
+          addLatestTokenBalanceFutures(savingLatestTokenBalanceFutures, units);
 
           // After every 5 batches, insert the fetched stake address tx count data into the database
           // in batches.
@@ -167,7 +169,7 @@ public class LatestTokenBalanceSchedule {
 
     log.info(
         "End update LatestTokenBalance with address size = {} in {} ms",
-        addressInvolvedInTx.size(),
+        unitsInBlockRange.size(),
         System.currentTimeMillis() - startTime);
   }
 }
