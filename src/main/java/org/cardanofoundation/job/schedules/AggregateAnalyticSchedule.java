@@ -76,33 +76,6 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(initialDelay = 360000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void refreshLatestTokenBalance() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---LatestTokenBalance--- Refresh job has been started");
-
-    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
-    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
-
-    if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
-      redisTemplate
-          .opsForValue()
-          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
-      latestTokenBalanceRepository.refreshMaterializedView();
-      redisTemplate
-          .opsForValue()
-          .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
-    } else {
-      log.info(
-          "LatestTokenBalance - Refresh job has been skipped due to full concurrent tasks. Current concurrent tasks: {}",
-          currentConcurrentTasks);
-    }
-
-    log.info(
-        "LatestTokenBalance - Refresh job has ended. Time taken {} ms",
-        System.currentTimeMillis() - currentTime);
-  }
-
   @Scheduled(initialDelay = 40000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshTopAddressBalance() {
     long currentTime = System.currentTimeMillis();
