@@ -78,13 +78,13 @@ public class AggregateAnalyticSchedule {
   public void refreshLatestTokenBalance() {
     long currentTime = System.currentTimeMillis();
     log.info("---LatestTokenBalance--- Refresh job has been started");
-    Integer currentConcurrentTasks =
-        redisTemplate.opsForValue()
-            .get(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+
+    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
+    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
     if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
       redisTemplate.opsForValue()
-          .increment(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+              .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
       latestTokenBalanceRepository.refreshMaterializedView();
       redisTemplate.opsForValue()
           .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
@@ -104,13 +104,12 @@ public class AggregateAnalyticSchedule {
     long currentTime = System.currentTimeMillis();
     log.info("---Top1000AddressBalance--- - Refresh job has been started");
 
-    Integer currentConcurrentTasks =
-        redisTemplate.opsForValue()
-            .get(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
+    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
     if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
       redisTemplate.opsForValue()
-          .increment(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
       topAddressBalanceRepository.refreshMaterializedView();
       redisTemplate.opsForValue()
           .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
@@ -130,13 +129,12 @@ public class AggregateAnalyticSchedule {
     long currentTime = System.currentTimeMillis();
     log.info("---Top1000StakeAddressBalance--- Refresh job has been started");
 
-    Integer currentConcurrentTasks =
-        redisTemplate.opsForValue()
-            .get(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
+    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
     if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
       redisTemplate.opsForValue()
-          .increment(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
       topStakeAddressBalanceRepository.refreshMaterializedView();
       redisTemplate.opsForValue()
           .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
@@ -156,13 +154,12 @@ public class AggregateAnalyticSchedule {
     long currentTime = System.currentTimeMillis();
     log.info("---StakeAddressView--- Refresh job has been started");
 
-    Integer currentConcurrentTasks =
-        redisTemplate.opsForValue()
-            .get(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
+    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
     if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
       redisTemplate.opsForValue()
-          .increment(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
       stakeAddressBalanceRepository.refreshStakeAddressMaterializedView();
       redisTemplate.opsForValue()
           .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
