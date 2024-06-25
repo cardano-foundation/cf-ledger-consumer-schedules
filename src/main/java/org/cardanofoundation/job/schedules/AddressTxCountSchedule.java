@@ -46,7 +46,7 @@ public class AddressTxCountSchedule {
   @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.address-tx-count.fixed-delay}")
   @Transactional
   public void syncAddressTxCount() {
-    final String addressTxCountCheckPoint = getRedisKey(RedisKey.TOKEN_TX_COUNT_CHECKPOINT.name());
+    final String addressTxCountCheckPoint = getRedisKey(RedisKey.ADDRESS_TX_COUNT_CHECKPOINT.name());
 
     Optional<Block> latestBlock = blockRepository.findLatestBlock();
     if (latestBlock.isEmpty()) {
