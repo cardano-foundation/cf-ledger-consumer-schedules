@@ -53,7 +53,6 @@ public class JOOQLatestTokenBalanceRepository {
     this.transactionManager = platformTransactionManager;
   }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void createAllIndexes() {
     long startTime = System.currentTimeMillis();
     String index1 =
@@ -70,13 +69,20 @@ public class JOOQLatestTokenBalanceRepository {
         "create index if not exists latest_token_balance_unit_quantity_idx on latest_token_balance (unit, quantity)";
     String index7 =
         "create index if not exists latest_token_balance_policy_quantity_idx on latest_token_balance (policy, quantity)";
-    dsl.batch(index1, index2, index3, index4, index5, index6, index7).execute();
+
+    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+    transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    transactionTemplate.execute(
+        status -> {
+          dsl.batch(index1, index2, index3, index4, index5, index6, index7).execute();
+          return true;
+        });
+
     log.info(
         "Created all indexes for latest token balance in {} ms",
         System.currentTimeMillis() - startTime);
   }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void dropAllIndexes() {
     long startTime = System.currentTimeMillis();
     log.info("Dropping all indexes for latest token balance");
@@ -87,7 +93,14 @@ public class JOOQLatestTokenBalanceRepository {
     String index5 = "drop index if exists latest_token_balance_block_time_idx";
     String index6 = "drop index if exists latest_token_balance_unit_quantity_idx";
     String index7 = "drop index if exists latest_token_balance_policy_quantity_idx";
-    dsl.batch(index1, index2, index3, index4, index5, index6, index7).execute();
+
+    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+    transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    transactionTemplate.execute(
+        status -> {
+          dsl.batch(index1, index2, index3, index4, index5, index6, index7).execute();
+          return true;
+        });
     log.info(
         "Dropped all indexes for latest token balance in {} ms",
         System.currentTimeMillis() - startTime);
