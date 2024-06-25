@@ -131,7 +131,7 @@ public interface AddressTxAmountRepository
       value =
           """
           SELECT DISTINCT(ata.address) FROM AddressTxAmount ata
-          WHERE ata.blockTime >= :fromTime AND ata.slot <= :blockTime
+          WHERE ata.blockTime >= :fromTime AND ata.blockTime <= :toTime
       """)
   List<String> findAddressBySlotNoBetween(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
