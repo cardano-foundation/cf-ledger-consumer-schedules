@@ -46,7 +46,8 @@ public class AddressTxCountSchedule {
   @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.address-tx-count.fixed-delay}")
   @Transactional
   public void syncAddressTxCount() {
-    final String addressTxCountCheckPoint = getRedisKey(RedisKey.ADDRESS_TX_COUNT_CHECKPOINT.name());
+    final String addressTxCountCheckPoint =
+        getRedisKey(RedisKey.ADDRESS_TX_COUNT_CHECKPOINT.name());
 
     Optional<Block> latestBlock = blockRepository.findLatestBlock();
     if (latestBlock.isEmpty()) {
@@ -86,13 +87,24 @@ public class AddressTxCountSchedule {
     log.info("End init AddressTxCount in {} ms", System.currentTimeMillis() - startTime);
   }
 
-  private void update(Long blockNoCheckPoint, Long currentMaxBlockNo) {
+  private void update(Long blockNoCheckpoint, Long currentMaxBlockNo) {
     log.info("Start update AddressTxCount");
     long startTime = System.currentTimeMillis();
     List<CompletableFuture<List<Void>>> savingAddressTxCountFutures = new ArrayList<>();
+    Long epochBlockTimeCheckpoint =
+        blockRepository.getBlockTimeByBlockNo(blockNoCheckpoint).toInstant().getEpochSecond();
+    Long epochBlockTimeCurrent =
+        blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
 
     List<String> addressInvolvedInTx =
-        addressTxAmountRepository.findAddressBySlotNoBetween(blockNoCheckPoint, currentMaxBlockNo);
+        addressTxAmountRepository.findAddressBySlotNoBetween(
+            epochBlockTimeCheckpoint, epochBlockTimeCurrent);
+
+    log.info(
+        "addressInBlockRange from blockCheckpoint {} to {}, size: {}",
+        epochBlockTimeCheckpoint,
+        epochBlockTimeCurrent,
+        addressInvolvedInTx.size());
 
     BatchUtils.doBatching(
         100,
