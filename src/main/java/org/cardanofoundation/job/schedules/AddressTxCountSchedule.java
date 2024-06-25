@@ -31,9 +31,6 @@ public class AddressTxCountSchedule {
   @Value("${application.network}")
   private String network;
 
-  @Value("${jobs.address-tx-count.insert-batch-size}")
-  private int insertBatchSize;
-
   private final JOOQAddressTxCountRepository jooqAddressTxCountRepository;
   private final AddressTxAmountRepository addressTxAmountRepository;
 
@@ -43,7 +40,7 @@ public class AddressTxCountSchedule {
     return prefix + "_" + network;
   }
 
-  @Scheduled(fixedDelayString = "${jobs.address-tx-count.fixed-delay}")
+  @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.address-tx-count.fixed-delay}")
   @Transactional
   public void syncAddressTxCount() {
     final String addressTxCountCheckPoint =
@@ -74,7 +71,7 @@ public class AddressTxCountSchedule {
     }
 
     long partitionSize = totalAddresses / numberOfThreads;
-
+    int insertBatchSize = 1000;
     insertAddressTxCountParallel(partitionSize, insertBatchSize, numberOfThreads, totalAddresses);
 
     log.info("End init AddressTxCount in {} ms", System.currentTimeMillis() - startTime);
