@@ -46,16 +46,16 @@ public class LatestTokenBalanceSchedule {
   private final BlockRepository blockRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
 
-  private static final int DEFAULT_PAGE_SIZE = 1000;
+  private static final int DEFAULT_PAGE_SIZE = 10000;
 
   private String getRedisKey(String prefix) {
     return prefix + "_" + network;
   }
 
-  @Scheduled(fixedDelayString = "10000")
+  @Scheduled(fixedDelayString = "${jobs.latest-token-balance.fixed-delay}")
   @Transactional
-  public void syncTokenTxCount() {
-    final String tokenTxCountCheckPoint =
+  public void syncLatestTokenBalance() {
+    final String latestTokenBalanceCheckpoint =
         getRedisKey(RedisKey.LATEST_TOKEN_BALANCE_CHECKPOINT.name());
 
     Optional<Block> latestBlock = blockRepository.findLatestBlock();
@@ -65,7 +65,7 @@ public class LatestTokenBalanceSchedule {
     final long currentMaxBlockNo =
         Math.min(
             addressTxAmountRepository.getMaxBlockNoFromCursor(), latestBlock.get().getBlockNo());
-    final Integer checkpoint = redisTemplate.opsForValue().get(tokenTxCountCheckPoint);
+    final Integer checkpoint = redisTemplate.opsForValue().get(latestTokenBalanceCheckpoint);
     if (Objects.isNull(checkpoint)) {
       init();
     } else if (currentMaxBlockNo > checkpoint.longValue()) {
@@ -76,12 +76,15 @@ public class LatestTokenBalanceSchedule {
     // rollback
     redisTemplate
         .opsForValue()
-        .set(tokenTxCountCheckPoint, Math.max((int) currentMaxBlockNo - 2160, 0));
+        .set(latestTokenBalanceCheckpoint, Math.max((int) currentMaxBlockNo - 2160, 0));
   }
 
   private void init() {
     log.info("Start init LatestTokenBalance");
     long startTime = System.currentTimeMillis();
+
+    // Drop all indexes before inserting the latest token balance data into the database.
+    jooqLatestTokenBalanceRepository.dropAllIndexes();
     List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures = new ArrayList<>();
     long index = 1;
     Pageable pageable =
@@ -108,6 +111,8 @@ public class LatestTokenBalanceSchedule {
     CompletableFuture.allOf(savingLatestTokenBalanceFutures.toArray(new CompletableFuture[0]))
         .join();
 
+    // Create all indexes after inserting the latest token balance data into the database.
+    jooqLatestTokenBalanceRepository.createAllIndexes();
     log.info("End update LatestTokenBalance in {} ms", System.currentTimeMillis() - startTime);
   }
 
