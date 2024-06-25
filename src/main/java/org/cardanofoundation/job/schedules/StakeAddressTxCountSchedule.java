@@ -86,6 +86,13 @@ public class StakeAddressTxCountSchedule {
     Pageable pageable =
         PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, BaseEntity_.ID));
     Slice<String> stakeAddressSlice = stakeAddressRepository.getStakeAddressViews(pageable);
+    List<String> firstStakeAddresses = stakeAddressSlice.getContent();
+    savingStakeAddressTxCountFutures.add(
+        CompletableFuture.supplyAsync(
+            () -> {
+              jooqStakeAddressTxCountRepository.insertStakeAddressTxCount(firstStakeAddresses);
+              return null;
+            }));
 
     while (stakeAddressSlice.hasNext()) {
       stakeAddressSlice =

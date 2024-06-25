@@ -93,7 +93,7 @@ public class JOOQLatestTokenBalanceRepository {
         System.currentTimeMillis() - startTime);
   }
 
-  public void insertLatestTokenBalanceByAddressIn(List<String> addresses) {
+  public void insertLatestTokenBalanceByUnitIn(List<String> units) {
     long startTime = System.currentTimeMillis();
     var query =
         dsl.insertInto(table(latestTokenBalanceEntity.getTableName()))
@@ -113,7 +113,7 @@ public class JOOQLatestTokenBalanceRepository {
                             .from(table(addressBalanceEntity.getTableName()))
                             .where(
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
-                                    .notEqual("lovelace"))
+                                    .in(units))
                             .orderBy(
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
@@ -136,10 +136,7 @@ public class JOOQLatestTokenBalanceRepository {
                         table("full_balances")
                             .join(table(addressEntity.getTableName()).as("addr"))
                             .on(field("addr.address").eq(field("full_balances.address")))
-                            .where(
-                                field("full_balances.address")
-                                    .in(addresses)
-                                    .and(field("full_balances.quantity").gt(0)))))
+                            .where(field("full_balances.quantity").gt(0))))
             .onConflict(
                 field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.ADDRESS)),
                 field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.UNIT)))
@@ -171,8 +168,8 @@ public class JOOQLatestTokenBalanceRepository {
           return true;
         });
     log.info(
-        "Inserted latest token balance for {} addresses in {} ms",
-        addresses.size(),
+        "Inserted latest token balance for {} units in {} ms",
+        units.size(),
         System.currentTimeMillis() - startTime);
   }
 }
