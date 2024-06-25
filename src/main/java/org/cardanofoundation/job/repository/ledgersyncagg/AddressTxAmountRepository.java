@@ -127,6 +127,16 @@ public interface AddressTxAmountRepository
   List<String> findStakeAddressBySlotNoBetween(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
 
+  @Query(
+      value =
+          """
+          SELECT DISTINCT(ata.address) FROM AddressTxAmount ata
+          WHERE ata.slot >= :fromTime AND ata.slot <= :toTime
+          AND ata.stakeAddress IS NOT NULL
+      """)
+  List<String> findAddressBySlotNoBetween(
+      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+
   @Query(value = "SELECT max(a.id) FROM Address a")
   Long getMaxAddressId();
 
