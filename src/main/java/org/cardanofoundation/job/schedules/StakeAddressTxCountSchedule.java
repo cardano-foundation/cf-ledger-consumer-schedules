@@ -51,7 +51,7 @@ public class StakeAddressTxCountSchedule {
     return prefix + "_" + network;
   }
 
-  @Scheduled(fixedDelayString = "30000")
+  @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.address-tx-count.fixed-delay}")
   @Transactional
   public void syncStakeAddressTxCount() {
     Optional<Block> latestBlock = blockRepository.findLatestBlock();
