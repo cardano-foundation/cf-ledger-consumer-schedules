@@ -178,6 +178,8 @@ jobs:
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
   address-tx-count:
     fixed-delay: ${ADDRESS_TX_COUNT_FIXED_DELAY:300000}
+  latest-token-balance:
+    fixed-delay: ${LATEST_TOKEN_BALANCE_FIXED_DELAY:300000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 

@@ -18,6 +18,7 @@ CREATE INDEX IF NOT EXISTS address_tx_amount_slot_idx
     ON address_tx_amount (slot);
 
 CREATE INDEX IF NOT EXISTS address_balance_slot_quantity_unit_idx ON address_balance (slot, quantity, unit);
+CREATE INDEX IF NOT EXISTS address_balance_unit_address_slot_idx ON address_balance (unit, address, slot);
 CREATE INDEX IF NOT EXISTS address_balance_address_slot_lovelace_idx ON address_balance (address, slot) WHERE unit = 'lovelace';
 
 CREATE INDEX IF NOT EXISTS address_address_hash_idx ON address using hash (address);
