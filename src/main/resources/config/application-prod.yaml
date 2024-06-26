@@ -127,6 +127,7 @@ spring:
         format_sql: true
         order_inserts: true
         order_updates: true
+    show-sql: false
 
   task:
     execution:
@@ -173,6 +174,7 @@ jobs:
     fixed-delay: ${GOVERNANCE_INFO_FIXED_DELAY:30000}
   agg-analytic:
     enabled: ${AGG_ANALYTIC_JOB_ENABLED:true}
+    number-of-concurrent-tasks: ${AGG_ANALYTIC_NUMBER_OF_CONCURRENT_TASKS:2}
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
   address-tx-count:
     fixed-delay: ${ADDRESS_TX_COUNT_FIXED_DELAY:300000}
