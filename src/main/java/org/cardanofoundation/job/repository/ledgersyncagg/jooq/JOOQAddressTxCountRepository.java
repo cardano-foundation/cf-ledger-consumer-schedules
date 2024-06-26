@@ -163,13 +163,11 @@ public class JOOQAddressTxCountRepository {
             .onConflict(addressField)
             .doUpdate()
             .set(
-                txCountField,
-                field(
-                        name(
-                            "address_tx_count",
-                            addressTxCountEntity.getColumnField(AddressTxCount_.TX_COUNT)),
-                        SQLDataType.INTEGER)
-                    .add(excluded(txCountField)));
+                field(name("tx_count")),
+                excluded(
+                    field(
+                        addressTxCountEntity.getColumnField(AddressTxCount_.TX_COUNT),
+                        SQLDataType.NUMERIC)));
 
     TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
     transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
