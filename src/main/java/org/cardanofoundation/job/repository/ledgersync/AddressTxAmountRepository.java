@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.common.entity.compositeKey.AddressTxAmountId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxAmount;
+import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
@@ -19,6 +20,12 @@ public interface AddressTxAmountRepository
 
   @Query(value = "select max(block_number) from cursor_", nativeQuery = true)
   Long getMaxBlockNoFromCursor();
+
+  @Query(value = "select max(slot) from cursor_", nativeQuery = true)
+  Long getMaxSlotNoFromCursor();
+
+  @Query(value = "SELECT max(a.id) FROM Address a")
+  Long getMaxAddressId();
 
   @Query(
       value =
@@ -94,4 +101,44 @@ public interface AddressTxAmountRepository
       GROUP BY ata.unit
       """)
   List<TokenVolume> getTotalVolumeByUnits(@Param("units") List<String> units);
+
+  @Query(
+      value =
+          """
+      SELECT new org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount(ata.unit, count(distinct (ata.txHash)))
+      FROM AddressTxAmount ata
+      WHERE ata.unit in :units
+      GROUP BY ata.unit
+      """)
+  List<TokenTxCount> getTotalTxCountByUnitIn(@Param("units") List<String> units);
+
+  @Query(
+      value =
+          """
+      SELECT DISTINCT(ata.unit) FROM AddressTxAmount ata
+      WHERE ata.unit != 'lovelace'
+      AND ata.blockTime >= :fromTime AND ata.blockTime <= :toTime
+      """)
+  List<String> findUnitByBlockTimeInRange(
+      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+
+  @Query(
+      value =
+          """
+          SELECT DISTINCT(ata.stakeAddress) FROM AddressTxAmount ata
+          WHERE ata.slot >= :fromTime AND ata.slot <= :toTime
+          AND ata.stakeAddress IS NOT NULL
+      """)
+  List<String> findStakeAddressBySlotNoBetween(
+      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+
+  @Query(
+      value =
+          """
+          SELECT DISTINCT(ata.address) FROM AddressTxAmount ata
+          WHERE ata.blockTime >= :fromTime AND ata.blockTime <= :toTime
+      """)
+  List<String> findAddressBySlotNoBetween(
+      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+
 }
