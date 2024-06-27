@@ -1,5 +1,12 @@
 package org.cardanofoundation.job.repository.ledgersync.jooq;
 
+import static org.jooq.impl.DSL.countDistinct;
+import static org.jooq.impl.DSL.excluded;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.name;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.table;
+
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +18,11 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Table;
+import org.jooq.impl.SQLDataType;
+
 import org.cardanofoundation.explorer.common.entity.ledgersync.Address;
 import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxAmount;
 import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxAmount_;
@@ -18,17 +30,6 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxCount;
 import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxCount_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Address_;
 import org.cardanofoundation.explorer.common.utils.EntityUtil;
-import org.jooq.DSLContext;
-import org.jooq.Field;
-import org.jooq.Table;
-import org.jooq.impl.SQLDataType;
-
-import static org.jooq.impl.DSL.countDistinct;
-import static org.jooq.impl.DSL.excluded;
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.name;
-import static org.jooq.impl.DSL.select;
-import static org.jooq.impl.DSL.table;
 
 @Repository
 @Slf4j
@@ -43,7 +44,8 @@ public class JOOQAddressTxCountRepository {
   public JOOQAddressTxCountRepository(
       @Qualifier("ledgerSyncDSLContext") DSLContext dsl,
       @Value("${multi-datasource.datasourceLedgerSync.flyway.schemas}") String schema,
-      @Qualifier("ledgerSyncTransactionManager") PlatformTransactionManager platformTransactionManager) {
+      @Qualifier("ledgerSyncTransactionManager")
+          PlatformTransactionManager platformTransactionManager) {
     this.dsl = dsl;
     this.addressTxCountEntity = new EntityUtil(schema, AddressTxCount.class);
     this.addressTxAmountEntity = new EntityUtil(schema, AddressTxAmount.class);

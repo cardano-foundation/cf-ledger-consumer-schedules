@@ -1,9 +1,5 @@
 package org.cardanofoundation.job.schedules;
 
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import jakarta.annotation.PostConstruct;
 
 import lombok.RequiredArgsConstructor;
@@ -88,20 +84,18 @@ public class AggregateAnalyticSchedule {
   @Scheduled(initialDelay = 40000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestAddressBalance() {
     refreshMaterializedView(
-        latestAddressBalanceRepository::refreshMaterializedView,
-        "LatestAddressBalance");
+        latestAddressBalanceRepository::refreshMaterializedView, "LatestAddressBalance");
   }
 
   @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestStakeAddressBalance() {
     refreshMaterializedView(
-        latestStakeAddressBalanceRepository::refreshMaterializedView,
-        "LatestStakeAddressBalance");
+        latestStakeAddressBalanceRepository::refreshMaterializedView, "LatestStakeAddressBalance");
   }
 
   @Scheduled(initialDelay = 30000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxChartData() {
-     refreshMaterializedView(txChartService::refreshDataForTxChart, "TxChartData");
+    refreshMaterializedView(txChartService::refreshDataForTxChart, "TxChartData");
   }
 
   private String getRedisKey(String prefix) {

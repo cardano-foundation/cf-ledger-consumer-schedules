@@ -140,5 +140,4 @@ public interface AddressTxAmountRepository
       """)
   List<String> findAddressBySlotNoBetween(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
-
 }

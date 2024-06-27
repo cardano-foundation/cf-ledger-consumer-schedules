@@ -1,5 +1,8 @@
 package org.cardanofoundation.job.repository.ledgersync.jooq;
 
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.table;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,14 +10,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
-import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
-import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount_;
-import org.cardanofoundation.explorer.common.utils.EntityUtil;
 import org.jooq.DSLContext;
 import org.jooq.Query;
 
-import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.table;
+import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
+import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount_;
+import org.cardanofoundation.explorer.common.utils.EntityUtil;
 
 @Repository
 public class JOOQTokenTxCountRepository {
