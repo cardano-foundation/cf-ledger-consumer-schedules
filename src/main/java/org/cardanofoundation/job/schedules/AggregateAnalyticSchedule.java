@@ -1,16 +1,23 @@
 package org.cardanofoundation.job.schedules;
 
+import jakarta.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersync.AddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestStakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersync.StakeAddressTxCountRepository;
+import org.cardanofoundation.job.repository.ledgersync.TokenTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersync.aggregate.AggregateAddressTxBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
@@ -18,6 +25,10 @@ import org.cardanofoundation.job.service.TxChartService;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+    value = "jobs.agg-analytic.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class AggregateAnalyticSchedule {
 
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
@@ -27,7 +38,21 @@ public class AggregateAnalyticSchedule {
   private final LatestStakeAddressBalanceRepository latestStakeAddressBalanceRepository;
   private final AddressTxCountRepository addressTxCountRepository;
   private final StakeAddressTxCountRepository stakeAddressTxCountRepository;
+  private final TokenTxCountRepository tokenTxCountRepository;
   private final TxChartService txChartService;
+
+  private final RedisTemplate<String, Integer> redisTemplate;
+
+  @Value("${application.network}")
+  private String network;
+
+  @Value("${jobs.agg-analytic.number-of-concurrent-tasks}")
+  private Integer numberOfConcurrentTasks;
+
+  @PostConstruct
+  public void init() {
+    redisTemplate.delete(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+  }
 
   @Scheduled(
       cron = "0 20 0 * * *",
@@ -56,62 +81,52 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void refreshLatestTokenBalance() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---LatestTokenBalance--- Refresh job has been started");
-    latestTokenBalanceRepository.refreshMaterializedView();
-    log.info(
-        "LatestTokenBalance - Refresh job has ended. Time taken {} ms",
-        System.currentTimeMillis() - currentTime);
-  }
-
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 40000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestAddressBalance() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---LatestAddressBalance--- - Refresh job has been started");
-    latestAddressBalanceRepository.refreshMaterializedView();
-    log.info(
-        "LatestAddressBalance - Refresh job ended. Time taken {} ms",
-        System.currentTimeMillis() - currentTime);
+    refreshMaterializedView(
+        latestAddressBalanceRepository::refreshMaterializedView, "LatestAddressBalance");
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshLatestStakeAddressBalance() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---LatestStakeAddressBalance--- Refresh job has been started");
-    latestStakeAddressBalanceRepository.refreshMaterializedView();
-    log.info(
-        "---LatestStakeAddressBalance--- Refresh job has ended. Time taken {} ms",
-        System.currentTimeMillis() - currentTime);
+    refreshMaterializedView(
+        latestStakeAddressBalanceRepository::refreshMaterializedView, "LatestStakeAddressBalance");
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void refreshLatestStakeAddressTxCount() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---LatestStakeAddressTxCount--- Refresh job has been started");
-    stakeAddressTxCountRepository.refreshMaterializedView();
-    log.info(
-        "---LatestStakeAddressTxCount--- Refresh job has ended. Time taken {} ms",
-        System.currentTimeMillis() - currentTime);
-  }
-
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void updateTxCountTable() {
-    log.info("---LatestAddressTxCount--- Refresh job has been started");
-    long startTime = System.currentTimeMillis();
-    addressTxCountRepository.refreshMaterializedView();
-    long executionTime = System.currentTimeMillis() - startTime;
-    log.info("---LatestAddressTxCount--- Refresh job has ended. Time taken {} ms", executionTime);
-  }
-
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 30000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxChartData() {
-    log.info("---TxChart--- Refresh job has been started");
-    long startTime = System.currentTimeMillis();
-    txChartService.refreshDataForTxChart();
+    refreshMaterializedView(txChartService::refreshDataForTxChart, "TxChartData");
+  }
+
+  private String getRedisKey(String prefix) {
+    return prefix + "_" + network;
+  }
+
+  public void refreshMaterializedView(Runnable refreshViewRunnable, String matViewName) {
+    long currentTime = System.currentTimeMillis();
+    log.info("---{}---- Refresh job has been started", matViewName);
+    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
+    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
+
+    if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
+      redisTemplate
+          .opsForValue()
+          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
+      refreshViewRunnable.run();
+      redisTemplate
+          .opsForValue()
+          .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+    } else {
+      log.info(
+          "---{}---- Refresh job has been skipped due to full of concurrent tasks. Current concurrent tasks: {}",
+          matViewName,
+          currentConcurrentTasks);
+      return;
+    }
+
     log.info(
-        "---TxChart--- Refresh job has ended. Time taken {} ms",
-        System.currentTimeMillis() - startTime);
+        "---{}---- Refresh job has ended. Time taken {}ms",
+        matViewName,
+        System.currentTimeMillis() - currentTime);
   }
 }
