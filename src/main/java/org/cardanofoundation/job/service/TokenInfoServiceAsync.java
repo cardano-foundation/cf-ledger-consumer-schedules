@@ -54,8 +54,8 @@ public class TokenInfoServiceAsync {
       Timestamp timeLatestBlock) {
 
     List<TokenInfo> saveEntities = new ArrayList<>((int) (endIdent - startIdent + 1));
-    var startTime = System.currentTimeMillis();
-    var curTime = startTime;
+    long startTime = System.currentTimeMillis();
+    long curTime = startTime;
     Map<String, Long> multiAssetUnitMap =
         multiAssetRepository.getTokenUnitByIdBetween(startIdent, endIdent).stream()
             .collect(Collectors.toMap(TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
@@ -91,11 +91,12 @@ public class TokenInfoServiceAsync {
         System.currentTimeMillis() - curTime);
     curTime = System.currentTimeMillis();
 
-    var tokenVolume24hMap =
+    Map<String, BigInteger> tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getUnit, TokenVolume::getVolume);
-    var totalVolumeMap =
+    Map<String, BigInteger> totalVolumeMap =
         StreamUtil.toMap(totalVolumes, TokenVolume::getUnit, TokenVolume::getVolume);
-    var mapNumberHolder = multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
+    Map<String, Long> mapNumberHolder =
+        multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
     log.info(
         "getMapNumberHolderByUnits startIdent: {} endIdent: {} took: {}ms",
         startIdent,
@@ -146,7 +147,7 @@ public class TokenInfoServiceAsync {
       Long blockNo,
       Long epochSecond24hAgo,
       Timestamp timeLatestBlock) {
-    var curTime = System.currentTimeMillis();
+    long curTime = System.currentTimeMillis();
     List<TokenInfo> saveEntities = new ArrayList<>();
 
     Map<String, Long> multiAssetUnitMap =
@@ -163,11 +164,12 @@ public class TokenInfoServiceAsync {
     List<TokenVolume> totalVolumes =
         addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits);
 
-    var tokenVolume24hMap =
+    Map<String, BigInteger> tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getUnit, TokenVolume::getVolume);
-    var totalVolumeMap =
+    Map<String, BigInteger> totalVolumeMap =
         StreamUtil.toMap(totalVolumes, TokenVolume::getUnit, TokenVolume::getVolume);
-    var mapNumberHolder = multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
+    Map<String, Long> mapNumberHolder =
+        multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
     // Clear unnecessary lists to free up memory to avoid OOM error
     volumes24h.clear();
     totalVolumes.clear();
@@ -185,7 +187,7 @@ public class TokenInfoServiceAsync {
               saveEntities.add(tokenInfo);
             });
 
-    log.info("getTokenInfoListNeedSave : {} took: {}ms", System.currentTimeMillis() - curTime);
+    log.info("getTokenInfoListNeedSave : {} took: {} ms", System.currentTimeMillis() - curTime);
 
     return CompletableFuture.completedFuture(saveEntities);
   }
