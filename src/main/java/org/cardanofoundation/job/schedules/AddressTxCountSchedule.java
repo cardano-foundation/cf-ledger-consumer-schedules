@@ -97,7 +97,7 @@ public class AddressTxCountSchedule {
         blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
 
     List<String> addressInvolvedInTx =
-        addressTxAmountRepository.findAddressBySlotNoBetween(
+        addressTxAmountRepository.findAddressByBlockTimeBetween(
             epochBlockTimeCheckpoint, epochBlockTimeCurrent);
 
     log.info(

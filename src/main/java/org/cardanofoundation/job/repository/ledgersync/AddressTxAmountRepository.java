@@ -40,13 +40,14 @@ public interface AddressTxAmountRepository
   List<UniqueAccountTxCountProjection> findUniqueAccountsInEpoch(@Param("epochNo") Integer epochNo);
 
   @Query(
-      value =
-          "SELECT new org.cardanofoundation.job.projection.StakeTxProjection(tx.id, sum(addTxAmount.quantity), addTxAmount.blockTime)"
-              + " FROM AddressTxAmount addTxAmount"
-              + " JOIN Tx tx on tx.hash = addTxAmount.txHash"
-              + " WHERE addTxAmount.stakeAddress = :stakeAddress"
-              + " AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate"
-              + " GROUP BY addTxAmount.txHash, addTxAmount.blockTime, tx.id")
+      """
+      SELECT new org.cardanofoundation.job.projection.StakeTxProjection(tx.id, sum(addTxAmount.quantity), addTxAmount.blockTime)
+         FROM AddressTxAmount addTxAmount
+         JOIN Tx tx on tx.hash = addTxAmount.txHash
+         WHERE addTxAmount.stakeAddress = :stakeAddress
+         AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate
+         GROUP BY addTxAmount.txHash, addTxAmount.blockTime, tx.id
+    """)
   Page<StakeTxProjection> findTxAndAmountByStake(
       @Param("stakeAddress") String stakeAddress,
       @Param("fromDate") Long fromDate,
@@ -54,27 +55,24 @@ public interface AddressTxAmountRepository
       Pageable pageable);
 
   @Query(
-      "SELECT COUNT(DISTINCT addTxAmount.txHash) FROM AddressTxAmount addTxAmount"
-          + " WHERE addTxAmount.stakeAddress = :stakeAddress"
-          + " AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate")
+      """
+       SELECT COUNT(DISTINCT addTxAmount.txHash)
+           FROM AddressTxAmount addTxAmount
+           WHERE addTxAmount.stakeAddress = :stakeAddress
+           AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate
+       """)
   Long getCountTxByStakeInDateRange(
       @Param("stakeAddress") String stakeAddress,
       @Param("fromDate") Long fromDate,
       @Param("toDate") Long toDate);
 
   @Query(
-      "select distinct addressTxAmount.unit "
-          + " from AddressTxAmount addressTxAmount"
-          + " where addressTxAmount.blockNumber >= :fromBlockNo and addressTxAmount.blockNumber <= :toBlockNo"
-          + " and addressTxAmount.unit != 'lovelace'")
-  List<String> getTokensInTransactionInBlockRange(
-      @Param("fromBlockNo") Long fromBlockNo, @Param("toBlockNo") Long toBlockNo);
-
-  @Query(
-      "select distinct addressTxAmount.unit "
-          + " from AddressTxAmount addressTxAmount"
-          + " where addressTxAmount.blockTime >= :fromTime and addressTxAmount.blockTime <= :toTime"
-          + " and addressTxAmount.unit != 'lovelace'")
+      """
+        SELECT DISTINCT (addressTxAmount.unit)
+           FROM AddressTxAmount addressTxAmount
+           WHERE addressTxAmount.blockTime >= :fromTime AND addressTxAmount.blockTime <= :toTime
+           AND addressTxAmount.unit != 'lovelace'
+      """)
   List<String> getTokensInTransactionInTimeRange(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
 
@@ -138,6 +136,6 @@ public interface AddressTxAmountRepository
           SELECT DISTINCT(ata.address) FROM AddressTxAmount ata
           WHERE ata.blockTime >= :fromTime AND ata.blockTime <= :toTime
       """)
-  List<String> findAddressBySlotNoBetween(
+  List<String> findAddressByBlockTimeBetween(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
 }
