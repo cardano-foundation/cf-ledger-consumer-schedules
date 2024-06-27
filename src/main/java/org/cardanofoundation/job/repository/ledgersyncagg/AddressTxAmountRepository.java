@@ -112,7 +112,8 @@ public interface AddressTxAmountRepository
       value =
           """
           SELECT DISTINCT(ata.unit) FROM AddressTxAmount ata
-          WHERE ata.blockTime >= :fromTime AND ata.blockTime <= :toTime
+          WHERE ata.unit != 'lovelace'
+          AND ata.blockTime >= :fromTime AND ata.blockTime <= :toTime
       """)
   List<String> findUnitByBlockTimeInRange(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
