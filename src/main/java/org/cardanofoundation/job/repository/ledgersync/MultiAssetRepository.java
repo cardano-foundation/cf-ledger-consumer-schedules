@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -52,4 +54,7 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
 
   @Query("SELECT max(multiAsset.id) FROM MultiAsset multiAsset")
   Long getCurrentMaxIdent();
+
+  @Query("SELECT multiAsset.unit AS unit FROM MultiAsset multiAsset")
+  Slice<String> getTokenUnitSlice(Pageable pageable);
 }

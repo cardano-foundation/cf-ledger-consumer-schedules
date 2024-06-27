@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
+import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.projection.TokenUnitProjection;
 import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
@@ -187,5 +188,17 @@ public class TokenInfoServiceAsync {
     log.info("getTokenInfoListNeedSave : {} took: {}ms", System.currentTimeMillis() - curTime);
 
     return CompletableFuture.completedFuture(saveEntities);
+  }
+
+  @Async
+  @Transactional(readOnly = true)
+  public CompletableFuture<List<TokenTxCount>> buildTokenTxCountList(List<String> units) {
+    long startTime = System.currentTimeMillis();
+    List<TokenTxCount> tokenTxCounts = addressTxAmountRepository.getTotalTxCountByUnitIn(units);
+    log.info(
+        "buildTokenTxCountList size: {}, took: {}ms",
+        tokenTxCounts.size(),
+        System.currentTimeMillis() - startTime);
+    return CompletableFuture.completedFuture(tokenTxCounts);
   }
 }
