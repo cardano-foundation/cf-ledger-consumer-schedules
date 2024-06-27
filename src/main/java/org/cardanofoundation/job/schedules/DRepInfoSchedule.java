@@ -142,7 +142,7 @@ public class DRepInfoSchedule {
                               govActionProposal -> govActionProposal.getBlockTime() >= blockTime)
                           .count();
 
-                  if(countOfGovActionThatAllowedToVoteForDRep == 0) {
+                  if (countOfGovActionThatAllowedToVoteForDRep == 0) {
                     return 0.0;
                   }
 

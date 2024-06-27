@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTxBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopStakeAddressBalanceRepository;
@@ -31,7 +30,6 @@ public class AggregateAnalyticSchedule {
 
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
-  private final LatestTokenBalanceRepository latestTokenBalanceRepository;
   private final TxChartService txChartService;
   private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
   private final TopAddressBalanceRepository topAddressBalanceRepository;
