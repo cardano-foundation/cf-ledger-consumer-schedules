@@ -108,7 +108,7 @@ public class JOOQLatestTokenBalanceRepository {
         System.currentTimeMillis() - startTime);
   }
 
-  public void insertLatestTokenBalanceByUnitIn(List<String> units) {
+  public void insertLatestTokenBalanceByUnitIn(List<String> units, Long blockTimeCheckpoint) {
     long startTime = System.currentTimeMillis();
     var query =
         dsl.insertInto(table(latestTokenBalanceEntity.getTableName()))
@@ -122,7 +122,8 @@ public class JOOQLatestTokenBalanceRepository {
                             .from(table(addressTxAmountEntity.getTableName()))
                             .where(
                                 field(addressTxAmountEntity.getColumnField(AddressBalance_.UNIT))
-                                    .in(units))
+                                    .in(units),
+                                field("block_time").gt(blockTimeCheckpoint))
                             .groupBy(
                                 field(
                                     addressTxAmountEntity.getColumnField(AddressBalance_.ADDRESS)),
@@ -168,6 +169,7 @@ public class JOOQLatestTokenBalanceRepository {
                                                             "address_unit_distinct.unit",
                                                             addressBalanceEntity.getColumnField(
                                                                 AddressBalance_.UNIT))),
+                                                field("block_time").gt(blockTimeCheckpoint),
                                                 field(
                                                         addressBalanceEntity.getColumnField(
                                                             AddressBalance_.QUANTITY))
