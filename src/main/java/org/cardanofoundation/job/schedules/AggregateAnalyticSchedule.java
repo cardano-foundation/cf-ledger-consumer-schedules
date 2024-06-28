@@ -76,90 +76,34 @@ public class AggregateAnalyticSchedule {
 
   @Scheduled(initialDelay = 40000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshTopAddressBalance() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---Top1000AddressBalance--- - Refresh job has been started");
-
-    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
-    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
-
-    if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
-      redisTemplate
-          .opsForValue()
-          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
-      topAddressBalanceRepository.refreshMaterializedView();
-      redisTemplate
-          .opsForValue()
-          .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
-    } else {
-      log.info(
-          "Top1000AddressBalance - Refresh job has been skipped due to full concurrent tasks. Current concurrent tasks: {}",
-          currentConcurrentTasks);
-    }
-
-    log.info(
-        "Top1000AddressBalance - Refresh job ended. Time taken {} ms",
-        System.currentTimeMillis() - currentTime);
+    refreshMaterializedView(
+        topAddressBalanceRepository::refreshMaterializedView, "TopAddressBalance");
   }
 
   @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshTopStakeAddressBalance() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---Top1000StakeAddressBalance--- Refresh job has been started");
-
-    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
-    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
-
-    if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
-      redisTemplate
-          .opsForValue()
-          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
-      topStakeAddressBalanceRepository.refreshMaterializedView();
-      redisTemplate
-          .opsForValue()
-          .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
-    } else {
-      log.info(
-          "Top1000StakeAddressBalance - Refresh job has been skipped due to full concurrent tasks. Current concurrent tasks: {}",
-          currentConcurrentTasks);
-    }
-
-    log.info(
-        "---Top1000StakeAddressBalance--- Refresh job has ended. Time taken {} ms",
-        System.currentTimeMillis() - currentTime);
+    refreshMaterializedView(
+        topStakeAddressBalanceRepository::refreshMaterializedView, "TopStakeAddressBalance");
   }
 
   @Scheduled(initialDelay = 20000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshStakeAddressView() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---StakeAddressView--- Refresh job has been started");
-
-    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
-    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
-
-    if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
-      redisTemplate
-          .opsForValue()
-          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
-      stakeAddressBalanceRepository.refreshStakeAddressMaterializedView();
-      redisTemplate
-          .opsForValue()
-          .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
-    } else {
-      log.info(
-          "StakeAddressView - Refresh job has been skipped due to full concurrent tasks. Current concurrent tasks: {}",
-          currentConcurrentTasks);
-    }
-
-    log.info(
-        "---StakeAddressView--- Refresh job has ended. Time taken {} ms",
-        System.currentTimeMillis() - currentTime);
+    refreshMaterializedView(
+        stakeAddressBalanceRepository::refreshStakeAddressMaterializedView, "StakeAddressBalance");
   }
 
   @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxChartData() {
-    log.info("---TxChart--- Refresh job has been started");
-    long startTime = System.currentTimeMillis();
+    refreshMaterializedView(txChartService::refreshDataForTxChart, "TxChartData");
+  }
 
+  private String getRedisKey(String prefix) {
+    return prefix + "_" + network;
+  }
+
+  public void refreshMaterializedView(Runnable refreshViewRunnable, String matViewName) {
+    long currentTime = System.currentTimeMillis();
+    log.info("---{}---- Refresh job has been started", matViewName);
     String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
     Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
@@ -167,23 +111,21 @@ public class AggregateAnalyticSchedule {
       redisTemplate
           .opsForValue()
           .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
-      txChartService.refreshDataForTxChart();
+      refreshViewRunnable.run();
       redisTemplate
           .opsForValue()
           .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
     } else {
       log.info(
-          "TxChart - Refresh job has been skipped due to full concurrent tasks. Current concurrent tasks: {}",
+          "---{}---- Refresh job has been skipped due to full of concurrent tasks. Current concurrent tasks: {}",
+          matViewName,
           currentConcurrentTasks);
       return;
     }
 
     log.info(
-        "---TxChart--- Refresh job has ended. Time taken {} ms",
-        System.currentTimeMillis() - startTime);
-  }
-
-  private String getRedisKey(String prefix) {
-    return prefix + "_" + network;
+        "---{}---- Refresh job has ended. Time taken {}ms",
+        matViewName,
+        System.currentTimeMillis() - currentTime);
   }
 }

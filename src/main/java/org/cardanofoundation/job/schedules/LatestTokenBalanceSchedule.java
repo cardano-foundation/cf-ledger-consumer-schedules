@@ -46,7 +46,7 @@ public class LatestTokenBalanceSchedule {
   private final BlockRepository blockRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
 
-  private static final int DEFAULT_PAGE_SIZE = 1000;
+  private static final int DEFAULT_PAGE_SIZE = 50;
 
   private String getRedisKey(String prefix) {
     return prefix + "_" + network;
@@ -148,7 +148,7 @@ public class LatestTokenBalanceSchedule {
     List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures = new ArrayList<>();
 
     BatchUtils.doBatching(
-        100,
+        DEFAULT_PAGE_SIZE,
         unitsInBlockRange,
         units -> {
           addLatestTokenBalanceFutures(savingLatestTokenBalanceFutures, units);
