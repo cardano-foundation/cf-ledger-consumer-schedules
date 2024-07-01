@@ -2,6 +2,7 @@ package org.cardanofoundation.job.repository.ledgersyncagg.jooq;
 
 import static org.jooq.impl.DSL.excluded;
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.lateral;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.substring;
 import static org.jooq.impl.DSL.table;
@@ -24,6 +25,7 @@ import org.jooq.impl.SQLDataType;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.Address;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressBalance;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressBalance_;
+import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxAmount;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.Address_;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.LatestTokenBalance;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.LatestTokenBalance_;
@@ -35,6 +37,7 @@ public class JOOQLatestTokenBalanceRepository {
 
   private final DSLContext dsl;
   private final EntityUtil addressBalanceEntity;
+  private final EntityUtil addressTxAmountEntity;
   private final EntityUtil latestTokenBalanceEntity;
   private final EntityUtil addressEntity;
   private final PlatformTransactionManager transactionManager;
@@ -48,6 +51,7 @@ public class JOOQLatestTokenBalanceRepository {
     this.addressBalanceEntity = new EntityUtil(schema, AddressBalance.class);
     this.latestTokenBalanceEntity = new EntityUtil(schema, LatestTokenBalance.class);
     this.addressEntity = new EntityUtil(schema, Address.class);
+    this.addressTxAmountEntity = new EntityUtil(schema, AddressTxAmount.class);
     this.transactionManager = platformTransactionManager;
   }
 
@@ -104,50 +108,79 @@ public class JOOQLatestTokenBalanceRepository {
         System.currentTimeMillis() - startTime);
   }
 
-  public void insertLatestTokenBalanceByUnitIn(List<String> units) {
+  public void insertLatestTokenBalanceByUnitIn(List<String> units, Long blockTimeCheckpoint) {
     long startTime = System.currentTimeMillis();
     var query =
         dsl.insertInto(table(latestTokenBalanceEntity.getTableName()))
             .select(
-                with("full_balances")
+                with("address_unit_distinct")
                     .as(
                         select(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.SLOT)),
                                 field(
-                                    addressBalanceEntity.getColumnField(AddressBalance_.QUANTITY)),
-                                field("block_time"))
-                            .distinctOn(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)))
-                            .from(table(addressBalanceEntity.getTableName()))
+                                    addressTxAmountEntity.getColumnField(AddressBalance_.ADDRESS)),
+                                field(addressTxAmountEntity.getColumnField(AddressBalance_.UNIT)))
+                            .from(table(addressTxAmountEntity.getTableName()))
                             .where(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
-                                    .in(units))
-                            .orderBy(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.SLOT))
-                                    .desc()))
+                                field(addressTxAmountEntity.getColumnField(AddressBalance_.UNIT))
+                                    .in(units),
+                                field("block_time").gt(blockTimeCheckpoint))
+                            .groupBy(
+                                field(
+                                    addressTxAmountEntity.getColumnField(AddressBalance_.ADDRESS)),
+                                field(addressTxAmountEntity.getColumnField(AddressBalance_.UNIT))))
                     .select(
-                        field("addr.address"),
+                        field("address_unit_distinct.address"),
                         field(addressEntity.getColumnField(Address_.STAKE_ADDRESS)),
-                        substring(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
-                                    .cast(String.class),
-                                1,
-                                56)
+                        substring(field("address_unit_distinct.unit").cast(String.class), 1, 56)
                             .as("policy"),
-                        field(addressBalanceEntity.getColumnField(AddressBalance_.SLOT)),
-                        field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
-                        field(addressBalanceEntity.getColumnField(AddressBalance_.QUANTITY)),
-                        field("block_time"))
+                        field("token_holder_balance.slot"),
+                        field("address_unit_distinct.unit"),
+                        field("token_holder_balance.quantity"),
+                        field("token_holder_balance.block_time"))
                     .from(
-                        table("full_balances")
+                        table("address_unit_distinct")
                             .join(table(addressEntity.getTableName()).as("addr"))
-                            .on(field("addr.address").eq(field("full_balances.address")))
-                            .where(field("full_balances.quantity").gt(0))))
+                            .on(field("address_unit_distinct.address").eq(field("addr.address"))),
+                        lateral(
+                                select(
+                                        field(
+                                            addressBalanceEntity.getColumnField(
+                                                AddressBalance_.SLOT)),
+                                        field(
+                                            addressBalanceEntity.getColumnField(
+                                                AddressBalance_.QUANTITY)),
+                                        field("block_time"))
+                                    .from(
+                                        table(addressBalanceEntity.getTableName())
+                                            .where(
+                                                field(
+                                                        addressBalanceEntity.getColumnField(
+                                                            AddressBalance_.ADDRESS))
+                                                    .eq(
+                                                        field(
+                                                            "address_unit_distinct.address",
+                                                            addressBalanceEntity.getColumnField(
+                                                                AddressBalance_.ADDRESS))),
+                                                field(
+                                                        addressBalanceEntity.getColumnField(
+                                                            AddressBalance_.UNIT))
+                                                    .eq(
+                                                        field(
+                                                            "address_unit_distinct.unit",
+                                                            addressBalanceEntity.getColumnField(
+                                                                AddressBalance_.UNIT))),
+                                                field("block_time").gt(blockTimeCheckpoint),
+                                                field(
+                                                        addressBalanceEntity.getColumnField(
+                                                            AddressBalance_.QUANTITY))
+                                                    .gt(0)))
+                                    .orderBy(
+                                        field(
+                                                addressBalanceEntity.getColumnField(
+                                                    AddressBalance_.SLOT))
+                                            .desc())
+                                    .limit(1))
+                            .as("token_holder_balance")))
             .onConflict(
                 field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.ADDRESS)),
                 field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.UNIT)))
