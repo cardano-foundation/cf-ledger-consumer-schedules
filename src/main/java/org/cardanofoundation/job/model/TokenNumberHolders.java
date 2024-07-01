@@ -10,6 +10,12 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TokenNumberHolders {
+  String unit;
   Long ident;
   Long numberOfHolders;
+
+  public TokenNumberHolders(String unit, Long numberOfHolders) {
+    this.unit = unit;
+    this.numberOfHolders = numberOfHolders;
+  }
 }

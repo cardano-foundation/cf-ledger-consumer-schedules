@@ -34,7 +34,6 @@ import org.cardanofoundation.job.dto.report.stake.StakeWalletActivityResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWithdrawalFilterResponse;
 import org.cardanofoundation.job.projection.StakeHistoryProjection;
 import org.cardanofoundation.job.projection.StakeTxProjection;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.cardanofoundation.job.repository.ledgersync.RewardRepository;
@@ -43,6 +42,7 @@ import org.cardanofoundation.job.repository.ledgersync.StakeDeRegistrationReposi
 import org.cardanofoundation.job.repository.ledgersync.StakeRegistrationRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 import org.cardanofoundation.job.repository.ledgersync.WithdrawalRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 import org.cardanofoundation.job.service.StakeKeyLifeCycleService;
 import org.cardanofoundation.job.util.DataUtil;
@@ -80,8 +80,8 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
                 pageable)
             .getContent();
 
-    List<Long> txIds =
-        txAmountList.stream().map(StakeTxProjection::getTxId).collect(Collectors.toList());
+    List<String> txHashes =
+        txAmountList.stream().map(StakeTxProjection::getTxHash).collect(Collectors.toList());
 
     /**
      * Due to txAmountList may be very large, we need to split it into sub list then get txList,
@@ -91,26 +91,27 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
     List<CompletableFuture<List<Tx>>> txFutureList = new ArrayList<>();
 
     int subListSize = 50000;
-    for (int i = 0; i < txIds.size(); i += subListSize) {
-      List<Long> subTxList = txIds.subList(i, Math.min(txIds.size(), i + subListSize));
-      txFutureList.add(CompletableFuture.supplyAsync(() -> txRepository.findByIdIn(subTxList)));
+    for (int i = 0; i < txHashes.size(); i += subListSize) {
+      List<String> subTxList = txHashes.subList(i, Math.min(txHashes.size(), i + subListSize));
+      txFutureList.add(CompletableFuture.supplyAsync(() -> txRepository.findByHashIn(subTxList)));
     }
 
     var txList = txFutureList.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
 
-    Map<Long, Tx> txMap = txList.stream().collect(Collectors.toMap(Tx::getId, Function.identity()));
+    Map<String, Tx> txMap =
+        txList.stream().collect(Collectors.toMap(Tx::getHash, Function.identity()));
 
     return txAmountList.stream()
         .parallel()
         .map(
             item -> {
               StakeWalletActivityResponse stakeWalletActivity = new StakeWalletActivityResponse();
-              stakeWalletActivity.setTxHash(txMap.get(item.getTxId()).getHash());
+              stakeWalletActivity.setTxHash(item.getTxHash());
               stakeWalletActivity.setAmount(item.getAmount());
               stakeWalletActivity.setRawAmount(item.getAmount().doubleValue() / 1000000);
               stakeWalletActivity.setTime(DateUtils.epochSecondToLocalDateTime(item.getTime()));
-              stakeWalletActivity.setFee(txMap.get(item.getTxId()).getFee());
-              if (Boolean.TRUE.equals(txMap.get(item.getTxId()).getValidContract())) {
+              stakeWalletActivity.setFee(txMap.get(item.getTxHash()).getFee());
+              if (Boolean.TRUE.equals(txMap.get(item.getTxHash()).getValidContract())) {
                 stakeWalletActivity.setStatus(TxStatus.SUCCESS);
               } else {
                 stakeWalletActivity.setStatus(TxStatus.FAIL);

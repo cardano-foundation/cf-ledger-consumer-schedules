@@ -10,4 +10,6 @@ import org.cardanofoundation.explorer.common.entity.explorer.DRepInfo;
 public interface DRepInfoRepository extends JpaRepository<DRepInfo, Long> {
 
   List<DRepInfo> findAllByDrepHashIn(Collection<String> drepHashes);
+
+  List<DRepInfo> findAll();
 }

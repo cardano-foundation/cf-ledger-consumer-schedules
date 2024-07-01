@@ -32,13 +32,12 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.Script;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
 import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
-import org.cardanofoundation.job.projection.TxInfoProjection;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
-import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
+import org.cardanofoundation.job.repository.explorer.jooq.JOOQNativeScriptInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
-import org.cardanofoundation.job.repository.ledgersync.TxRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.schedules.NativeScriptInfoSchedule;
+import org.cardanofoundation.job.service.NativeScriptInfoServiceAsync;
 
 @ExtendWith(MockitoExtension.class)
 public class NativeScriptInfoScheduleTest {
@@ -47,9 +46,9 @@ public class NativeScriptInfoScheduleTest {
   @Mock ValueOperations valueOperations;
   @Mock NativeScriptInfoRepository nativeScriptInfoRepository;
   @Mock ScriptRepository scriptRepository;
-  @Mock LatestTokenBalanceRepository latestTokenBalanceRepository;
-  @Mock MultiAssetRepository multiAssetRepository;
-  @Mock TxRepository txRepository;
+  @Mock AddressTxAmountRepository addressTxAmountRepository;
+  @Mock JOOQNativeScriptInfoRepository jooqNativeScriptInfoRepository;
+  @Mock NativeScriptInfoServiceAsync nativeScriptInfoServiceAsync;
 
   @Captor ArgumentCaptor<List<NativeScriptInfo>> argumentCaptorNativeScriptInfo;
 
@@ -61,9 +60,9 @@ public class NativeScriptInfoScheduleTest {
         new NativeScriptInfoSchedule(
             nativeScriptInfoRepository,
             scriptRepository,
-            multiAssetRepository,
-            latestTokenBalanceRepository,
-            txRepository,
+            addressTxAmountRepository,
+            jooqNativeScriptInfoRepository,
+            nativeScriptInfoServiceAsync,
             redisTemplate);
     when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     ReflectionTestUtils.setField(nativeScriptInfoSchedule, "network", "mainnet");
@@ -71,9 +70,6 @@ public class NativeScriptInfoScheduleTest {
 
   @Test
   void syncNativeScriptInfo_shouldInitDataWhenSyncDataFirstTime() {
-    TxInfoProjection txInfoProjection = Mockito.mock(TxInfoProjection.class);
-    when(txInfoProjection.getTxId()).thenReturn(10L);
-    when(txRepository.findCurrentTxInfo()).thenReturn(txInfoProjection);
     when(redisTemplate.opsForValue().get(getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name())))
         .thenReturn(null);
     String scriptHash = "3a9241cd79895e3a8d65261b40077d4437ce71e9d7c8c6c00e3f658e";
@@ -95,15 +91,15 @@ public class NativeScriptInfoScheduleTest {
         Mockito.mock(ScriptNumberTokenProjection.class);
     when(scriptNumberTokenProjection.getScriptHash()).thenReturn(scriptHash);
     when(scriptNumberTokenProjection.getNumberOfTokens()).thenReturn(1L);
-    when(multiAssetRepository.countByPolicyIn(Set.of(scriptHash)))
-        .thenReturn(List.of(scriptNumberTokenProjection));
+    //    when(multiAssetRepository.countByPolicyIn(Set.of(scriptHash)))
+    //        .thenReturn(List.of(scriptNumberTokenProjection));
 
     ScriptNumberHolderProjection scriptNumberHolderProjection =
         Mockito.mock(ScriptNumberHolderProjection.class);
     when(scriptNumberHolderProjection.getScriptHash()).thenReturn(scriptHash);
     when(scriptNumberHolderProjection.getNumberOfHolders()).thenReturn(1L);
-    when(latestTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
-        .thenReturn(List.of(scriptNumberHolderProjection));
+    //    when(latestTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
+    //        .thenReturn(List.of(scriptNumberHolderProjection));
 
     nativeScriptInfoSchedule.syncNativeScriptInfo();
     verify(nativeScriptInfoRepository, Mockito.times(1))
@@ -121,9 +117,6 @@ public class NativeScriptInfoScheduleTest {
 
   @Test
   void syncSmartContractInfo_shouldUpdateDataWhenSyncDataNotFirstTime() {
-    TxInfoProjection txInfoProjection = Mockito.mock(TxInfoProjection.class);
-    when(txInfoProjection.getTxId()).thenReturn(10L);
-    when(txRepository.findCurrentTxInfo()).thenReturn(txInfoProjection);
     when(redisTemplate.opsForValue().get(getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name())))
         .thenReturn(3);
     when(nativeScriptInfoRepository.count()).thenReturn(1L);
@@ -137,27 +130,26 @@ public class NativeScriptInfoScheduleTest {
                 "{\"type\":\"sig\",\"keyHash\":\"89d555c7a028bc560ea44e52a81c866088566f3a99c9989a5a183940\"}")
             .build();
 
-    when(scriptRepository.findAllByHashIn(List.of(scriptHash))).thenReturn(List.of(script));
+    when(addressTxAmountRepository.findPolicyByBlockTimeInRange(any(), any()))
+        .thenReturn(List.of(scriptHash));
+    when(scriptRepository.findAllByHashInAndTypeIn(anyList(), anyList()))
+        .thenReturn(List.of(script));
     when(nativeScriptInfoRepository.findAllByScriptHashIn(Set.of(scriptHash)))
         .thenReturn(Collections.emptyList());
-
-    when(multiAssetRepository.findPolicyByTxIn(
-            3L, 10L, List.of(ScriptType.TIMELOCK, ScriptType.MULTISIG)))
-        .thenReturn(Set.of(scriptHash));
 
     ScriptNumberTokenProjection scriptNumberTokenProjection =
         Mockito.mock(ScriptNumberTokenProjection.class);
     when(scriptNumberTokenProjection.getScriptHash()).thenReturn(scriptHash);
     when(scriptNumberTokenProjection.getNumberOfTokens()).thenReturn(3L);
-    when(multiAssetRepository.countByPolicyIn(Set.of(scriptHash)))
-        .thenReturn(List.of(scriptNumberTokenProjection));
+    //    when(multiAssetRepository.countByPolicyIn(Set.of(scriptHash)))
+    //        .thenReturn(List.of(scriptNumberTokenProjection));
 
     ScriptNumberHolderProjection scriptNumberHolderProjection =
         Mockito.mock(ScriptNumberHolderProjection.class);
     when(scriptNumberHolderProjection.getScriptHash()).thenReturn(scriptHash);
     when(scriptNumberHolderProjection.getNumberOfHolders()).thenReturn(15L);
-    when(latestTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
-        .thenReturn(List.of(scriptNumberHolderProjection));
+    //    when(latestTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
+    //        .thenReturn(List.of(scriptNumberHolderProjection));
 
     nativeScriptInfoSchedule.syncNativeScriptInfo();
     verify(nativeScriptInfoRepository, Mockito.times(1))

@@ -4,12 +4,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.mockito.InjectMocks;
@@ -50,6 +52,7 @@ class PoolReportServiceImplTest {
             .reportName("reportName")
             .status(ReportStatus.IN_PROGRESS)
             .type(ReportType.STAKE_KEY)
+            .id(10L)
             .build();
     PoolReportHistory poolReportHistory =
         spy(
@@ -64,8 +67,9 @@ class PoolReportServiceImplTest {
                 .isPoolSize(Boolean.TRUE)
                 .build());
 
-    when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString()))
+    when(poolReportRepository.findByReportHistoryId(anyLong()))
+        .thenReturn(Optional.of(poolReportHistory));
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(any(PoolReportHistory.class)))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
@@ -78,14 +82,11 @@ class PoolReportServiceImplTest {
     when(reportHistoryServiceAsync.exportEpochSize(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
-    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+    when(excelHelper.writeContent(anyList(), isNull(), isNull()))
         .thenReturn(new ByteArrayInputStream(new byte[0]));
     doThrow(new RuntimeException()).when(storageService).uploadFile(any(), anyString());
     Assertions.assertThrows(
-        Exception.class,
-        () ->
-            poolReportService.exportPoolReport(
-                poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
+        Exception.class, () -> poolReportService.exportPoolReport(reportHistory.getId()));
     Assertions.assertEquals(ReportStatus.FAILED, poolReportHistory.getReportHistory().getStatus());
   }
 
@@ -97,6 +98,7 @@ class PoolReportServiceImplTest {
             .reportName("reportName")
             .status(ReportStatus.IN_PROGRESS)
             .type(ReportType.STAKE_KEY)
+            .id(10L)
             .build();
     PoolReportHistory poolReportHistory =
         spy(
@@ -110,8 +112,9 @@ class PoolReportServiceImplTest {
                 .eventReward(Boolean.TRUE)
                 .isPoolSize(Boolean.TRUE)
                 .build());
-    when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString()))
+    when(poolReportRepository.findByReportHistoryId(anyLong()))
+        .thenReturn(Optional.of(poolReportHistory));
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(any(PoolReportHistory.class)))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
     when(reportHistoryServiceAsync.exportPoolRegistration(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
@@ -124,15 +127,12 @@ class PoolReportServiceImplTest {
     when(reportHistoryServiceAsync.exportEpochSize(poolReportHistory))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
-    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+    when(excelHelper.writeContent(anyList(), isNull(), isNull()))
         .thenReturn(new ByteArrayInputStream(new byte[0]));
     doNothing().when(storageService).uploadFile(any(), anyString());
     when(poolReportRepository.save(any())).thenReturn(new PoolReportHistory());
 
-    Assertions.assertDoesNotThrow(
-        () ->
-            poolReportService.exportPoolReport(
-                poolReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
+    Assertions.assertDoesNotThrow(() -> poolReportService.exportPoolReport(reportHistory.getId()));
     Assertions.assertEquals(
         ReportStatus.GENERATED, poolReportHistory.getReportHistory().getStatus());
   }

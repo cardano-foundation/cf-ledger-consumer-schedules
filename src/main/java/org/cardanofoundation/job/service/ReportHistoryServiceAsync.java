@@ -21,9 +21,7 @@ import org.springframework.stereotype.Component;
 
 import org.apache.logging.log4j.util.Strings;
 
-import org.cardanofoundation.explorer.common.entity.enumeration.ReportType;
 import org.cardanofoundation.explorer.common.entity.explorer.PoolReportHistory;
-import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
 import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
 import org.cardanofoundation.job.common.enumeration.EventType;
 import org.cardanofoundation.job.dto.report.pool.EpochSize;
@@ -38,8 +36,6 @@ import org.cardanofoundation.job.dto.report.stake.StakeRegistrationLifeCycle;
 import org.cardanofoundation.job.dto.report.stake.StakeRewardResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWalletActivityResponse;
 import org.cardanofoundation.job.dto.report.stake.StakeWithdrawalFilterResponse;
-import org.cardanofoundation.job.repository.explorer.PoolReportHistoryRepository;
-import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
 import org.cardanofoundation.job.util.DataUtil;
 import org.cardanofoundation.job.util.report.ExportContent;
 
@@ -64,9 +60,6 @@ public class ReportHistoryServiceAsync {
 
   private final PoolLifecycleService poolLifecycleService;
   private final FetchRewardDataService fetchRewardDataService;
-  private final StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
-
-  private final PoolReportHistoryRepository poolReportHistoryRepository;
 
   @Value("${jobs.limit-content}")
   private int limitSize;
@@ -344,34 +337,35 @@ public class ReportHistoryServiceAsync {
 
   @Async
   public CompletableFuture<ExportContent> exportInformationOnTheReport(
-      ReportHistory reportHistory, Long zoneOffset, String timePattern, String dateFormat) {
-    boolean isPoolReport = ReportType.POOL_ID.equals(reportHistory.getType());
-    InformationReport informationReport =
-        buildInformationReport(reportHistory, zoneOffset, timePattern, dateFormat);
+      PoolReportHistory poolReportHistory) {
+    InformationReport informationReport = buildPoolReport(poolReportHistory);
 
     List<InformationReport> list = new ArrayList<>(List.of(informationReport));
     return CompletableFuture.completedFuture(
         ExportContent.builder()
             .clazz(InformationReport.class)
             .headerTitle(INFORMATION_ON_THE_REPORT_TITLE)
-            .lstColumn(InformationReport.buildExportColumn(isPoolReport))
+            .lstColumn(InformationReport.buildExportColumn(true))
             .lstData(list)
             .build());
   }
 
-  private InformationReport buildInformationReport(
-      ReportHistory reportHistory, Long zoneOffset, String timePattern, String dateFormat) {
-    boolean isPoolReport = ReportType.POOL_ID.equals(reportHistory.getType());
-    if (isPoolReport) {
-      return buildPoolReport(reportHistory, dateFormat);
-    } else {
-      return buildStakeReport(reportHistory, zoneOffset, timePattern, dateFormat);
-    }
+  @Async
+  public CompletableFuture<ExportContent> exportInformationOnTheReport(
+      StakeKeyReportHistory stakeKeyReportHistory) {
+    InformationReport informationReport = buildStakeReport(stakeKeyReportHistory);
+
+    List<InformationReport> list = new ArrayList<>(List.of(informationReport));
+    return CompletableFuture.completedFuture(
+        ExportContent.builder()
+            .clazz(InformationReport.class)
+            .headerTitle(INFORMATION_ON_THE_REPORT_TITLE)
+            .lstColumn(InformationReport.buildExportColumn(false))
+            .lstData(list)
+            .build());
   }
 
-  private InformationReport buildPoolReport(ReportHistory reportHistory, String dateFormat) {
-    PoolReportHistory poolReportHistory =
-        poolReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
+  private InformationReport buildPoolReport(PoolReportHistory poolReportHistory) {
     Integer epochBegin = poolReportHistory.getBeginEpoch();
     Integer epochEnd = poolReportHistory.getEndEpoch();
 
@@ -398,24 +392,25 @@ public class ReportHistoryServiceAsync {
 
     String eventsString = events.isEmpty() ? null : String.join(", ", events);
     return InformationReport.builder()
-        .createdAt(reportHistory.getCreatedAt())
+        .createdAt(poolReportHistory.getReportHistory().getCreatedAt())
         .reportType("Pool Report")
         .poolId(poolReportHistory.getPoolView())
-        .reportName(reportHistory.getReportName())
+        .reportName(poolReportHistory.getReportHistory().getReportName())
         .epochRange(epochRange)
-        .dateTimeFormat(dateFormat)
+        .dateTimeFormat(poolReportHistory.getReportHistory().getDateFormat())
         .events(eventsString)
         .isPoolSize(Boolean.TRUE.equals(poolReportHistory.getIsPoolSize()) ? "Yes" : "No")
         .build();
   }
 
-  private InformationReport buildStakeReport(
-      ReportHistory reportHistory, Long zoneOffset, String timePattern, String dateFormat) {
-    StakeKeyReportHistory stakeKeyReportHistory =
-        stakeKeyReportHistoryRepository.findByReportHistoryId(reportHistory.getId());
+  private InformationReport buildStakeReport(StakeKeyReportHistory stakeKeyReportHistory) {
 
     Timestamp fromDate = stakeKeyReportHistory.getFromDate();
     Timestamp toDate = stakeKeyReportHistory.getToDate();
+
+    String timePattern = stakeKeyReportHistory.getReportHistory().getTimePattern();
+    Long zoneOffset = stakeKeyReportHistory.getReportHistory().getZoneOffset();
+    String dateFormat = stakeKeyReportHistory.getReportHistory().getDateFormat();
 
     String datePattern = timePattern.substring(0, timePattern.indexOf(','));
 
@@ -446,10 +441,10 @@ public class ReportHistoryServiceAsync {
     String eventsString = stakeEvents.isEmpty() ? null : String.join(", ", stakeEvents);
 
     return InformationReport.builder()
-        .createdAt(reportHistory.getCreatedAt())
+        .createdAt(stakeKeyReportHistory.getReportHistory().getCreatedAt())
         .reportType("Stake Address Report")
         .stakeAddress(stakeKeyReportHistory.getStakeKey())
-        .reportName(reportHistory.getReportName())
+        .reportName(stakeKeyReportHistory.getReportHistory().getReportName())
         .dateRange(dateRange)
         .dateTimeFormat(dateFormat)
         .events(eventsString)

@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.cardanofoundation.job.model.TokenNumberHolders;
-import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.LatestTokenBalanceRepository;
 
 @ExtendWith(MockitoExtension.class)
 class MultiAssetServiceImplTest {
@@ -25,28 +25,15 @@ class MultiAssetServiceImplTest {
   @InjectMocks private MultiAssetServiceImpl multiAssetService;
 
   @Test
-  void testGetMapNumberHolder_1() {
-    List<Long> multiAssetIds = Arrays.asList(6L, 7L);
-    Mockito.when(latestTokenBalanceRepository.countHoldersByMultiAssetIdIn(multiAssetIds))
+  void testGetMapNumberHolder() {
+    List<String> multiAssetUnitIds = Arrays.asList("unit6", "unit7");
+    Mockito.when(latestTokenBalanceRepository.countHoldersByMultiAssetIdInRange(multiAssetUnitIds))
         .thenReturn(
-            Arrays.asList(new TokenNumberHolders(6L, 20L), new TokenNumberHolders(7L, 25L)));
+            Arrays.asList(
+                new TokenNumberHolders("unit6", 20L), new TokenNumberHolders("unit7", 25L)));
 
-    Map<Long, Long> result = multiAssetService.getMapNumberHolder(multiAssetIds);
-    assertEquals(20, result.get(6L).longValue());
-    assertEquals(25, result.get(7L).longValue());
-  }
-
-  @Test
-  void testGetMapNumberHolder_2() {
-    Long startIdent = 6L;
-    Long endIdent = 7L;
-    Mockito.when(
-            latestTokenBalanceRepository.countHoldersByMultiAssetIdInRange(startIdent, endIdent))
-        .thenReturn(
-            Arrays.asList(new TokenNumberHolders(6L, 20L), new TokenNumberHolders(7L, 25L)));
-
-    Map<Long, Long> result = multiAssetService.getMapNumberHolder(startIdent, endIdent);
-    assertEquals(20, result.get(6L).longValue());
-    assertEquals(25, result.get(7L).longValue());
+    Map<String, Long> result = multiAssetService.getMapNumberHolderByUnits(multiAssetUnitIds);
+    assertEquals(20, result.get("unit6").longValue());
+    assertEquals(25, result.get("unit7").longValue());
   }
 }

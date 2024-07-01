@@ -3,6 +3,8 @@ package org.cardanofoundation.job.repository.ledgersync;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,4 +22,7 @@ public interface StakeAddressRepository extends JpaRepository<StakeAddress, Long
       where sa.view in :addresses and not exists (select true from StakeAddress sa2 where sa2.view = sa.view and sa2.id > sa.id)
   """)
   List<StakeAddress> findStakeAddressesByViewIn(@Param("addresses") Set<String> addresses);
+
+  @Query("SELECT sa.view from StakeAddress sa")
+  Slice<String> getStakeAddressViews(Pageable pageable);
 }

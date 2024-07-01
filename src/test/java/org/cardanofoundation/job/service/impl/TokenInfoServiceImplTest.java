@@ -44,15 +44,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
-import org.cardanofoundation.explorer.common.entity.ledgersync.MultiAsset;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
 
@@ -93,7 +92,6 @@ class TokenInfoServiceImplTest {
     long multiAssetCount = 180000;
     when(multiAssetRepository.getCurrentMaxIdent()).thenReturn(multiAssetCount);
 
-    when(txRepository.findMinTxByAfterTime(any())).thenReturn(Optional.of(200000L));
     when(tokenInfoServiceAsync.buildTokenInfoList(
             anyLong(), anyLong(), anyLong(), anyLong(), any(Timestamp.class)))
         .thenAnswer(
@@ -132,7 +130,6 @@ class TokenInfoServiceImplTest {
     long multiAssetCount = 180000;
     when(multiAssetRepository.getCurrentMaxIdent()).thenReturn(multiAssetCount);
 
-    when(txRepository.findMinTxByAfterTime(any())).thenReturn(Optional.of(200000L));
     when(tokenInfoServiceAsync.buildTokenInfoList(
             anyLong(), anyLong(), anyLong(), anyLong(), any(Timestamp.class)))
         .thenThrow(RuntimeException.class);
@@ -156,29 +153,21 @@ class TokenInfoServiceImplTest {
 
     when(tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint())
         .thenReturn(Optional.of(tokenInfoCheckpoint));
-    Long txId = 10000L;
-    when(txRepository.findMinTxByAfterTime(any())).thenReturn(Optional.of(txId));
 
-    MultiAsset tokensInTransactionWithNewBlockRange = Mockito.mock(MultiAsset.class);
-    when(tokensInTransactionWithNewBlockRange.getId()).thenReturn(1L);
-    when(multiAssetRepository.getTokensInTransactionInBlockRange(anyLong(), anyLong()))
-        .thenReturn(List.of(tokensInTransactionWithNewBlockRange));
+    when(addressTxAmountRepository.getTokensInTransactionInTimeRange(any(), any()))
+        .thenReturn(List.of("unit2", "unit3"));
 
-    MultiAsset tokenNeedUpdateVolume24h = Mockito.mock(MultiAsset.class);
-    when(tokenNeedUpdateVolume24h.getId()).thenReturn(3L);
-
-    when(multiAssetRepository.getTokensInTransactionInTimeRange(any(), any()))
-        .thenReturn(List.of(tokenNeedUpdateVolume24h));
-
-    final TokenVolume tokenVolume1 = new TokenVolume(1L, BigInteger.valueOf(100L));
-    final TokenVolume tokenVolume2 = new TokenVolume(2L, BigInteger.valueOf(200L));
-    final TokenVolume tokenVolume3 = new TokenVolume(3L, BigInteger.valueOf(300L));
+    final TokenVolume tokenVolume1 = new TokenVolume("unit1", BigInteger.valueOf(100L));
+    final TokenVolume tokenVolume2 = new TokenVolume("unit2", BigInteger.valueOf(200L));
+    final TokenVolume tokenVolume3 = new TokenVolume("unit3", BigInteger.valueOf(300L));
     final List<TokenVolume> tokenVolumes = List.of(tokenVolume1, tokenVolume2, tokenVolume3);
-    when(addressTxAmountRepository.sumBalanceAfterTx(anyList(), anyLong()))
+    when(addressTxAmountRepository.sumBalanceAfterBlockTime(anyList(), anyLong()))
         .thenReturn(tokenVolumes);
 
-    when(multiAssetService.getMapNumberHolder(anyList()))
-        .thenReturn(Map.ofEntries(Map.entry(1L, 10L), Map.entry(2L, 20L), Map.entry(3L, 30L)));
+    when(multiAssetService.getMapNumberHolderByUnits(anyList()))
+        .thenReturn(
+            Map.ofEntries(
+                Map.entry("unit1", 10L), Map.entry("unit2", 20L), Map.entry("unit3", 30L)));
 
     TokenInfo tokenInfo1 = spy(TokenInfo.class);
     when(tokenInfo1.getMultiAssetId()).thenReturn(1L);
@@ -194,7 +183,7 @@ class TokenInfoServiceImplTest {
     verify(tokenInfoRepository).saveAll(tokenInfosCaptor.capture());
     List<TokenInfo> tokenInfosSaved = tokenInfosCaptor.getValue();
     assertThat(tokenInfosSaved)
-        .hasSize(2)
+        .hasSize(3)
         .extracting(
             TokenInfo::getBlockNo,
             TokenInfo::getVolume24h,
@@ -202,6 +191,7 @@ class TokenInfoServiceImplTest {
             TokenInfo::getUpdateTime)
         .containsExactlyInAnyOrder(
             tuple(latestBlock.getBlockNo(), tokenVolume1.getVolume(), 10L, latestBlock.getTime()),
+            tuple(latestBlock.getBlockNo(), tokenVolume2.getVolume(), 20L, latestBlock.getTime()),
             tuple(latestBlock.getBlockNo(), tokenVolume3.getVolume(), 30L, latestBlock.getTime()));
 
     verify(tokenInfoCheckpointRepository).save(tokenInfoCheckpointCaptor.capture());

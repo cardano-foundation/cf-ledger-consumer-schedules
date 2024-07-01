@@ -12,6 +12,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TokenVolume {
-  Long ident;
+  String unit;
   BigInteger volume;
 }

@@ -35,7 +35,6 @@ import org.cardanofoundation.job.projection.StakeHistoryProjection;
 import org.cardanofoundation.job.projection.StakeRewardProjection;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.projection.StakeWithdrawalProjection;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
 import org.cardanofoundation.job.repository.ledgersync.RewardRepository;
@@ -44,6 +43,7 @@ import org.cardanofoundation.job.repository.ledgersync.StakeDeRegistrationReposi
 import org.cardanofoundation.job.repository.ledgersync.StakeRegistrationRepository;
 import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 import org.cardanofoundation.job.repository.ledgersync.WithdrawalRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.FetchRewardDataService;
 import org.cardanofoundation.job.util.DateUtils;
 
@@ -109,32 +109,32 @@ class StakeKeyLifeCycleServiceImplTest {
   void getStakeWalletActivities_whenGetStakeWalletActivities_showReturnWalletActivities() {
     Pageable pageable = PageRequest.of(0, 6);
     StakeTxProjection projection = Mockito.mock(StakeTxProjection.class);
-    when(projection.getTxId()).thenReturn(100L);
+    when(projection.getTxHash()).thenReturn("txhash");
     when(projection.getAmount()).thenReturn(BigInteger.valueOf(-500174301));
     when(projection.getTime())
         .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection1 = Mockito.mock(StakeTxProjection.class);
-    when(projection1.getTxId()).thenReturn(101L);
+    when(projection1.getTxHash()).thenReturn("txhash1");
     when(projection1.getAmount()).thenReturn(BigInteger.valueOf(72960943));
     when(projection1.getTime())
         .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection2 = Mockito.mock(StakeTxProjection.class);
-    when(projection2.getTxId()).thenReturn(102L);
+    when(projection2.getTxHash()).thenReturn("txhash2");
     when(projection2.getAmount()).thenReturn(BigInteger.valueOf(-2174301));
     when(projection2.getTime())
         .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection3 = Mockito.mock(StakeTxProjection.class);
-    when(projection3.getTxId()).thenReturn(103L);
+    when(projection3.getTxHash()).thenReturn("txhash3");
     when(projection3.getAmount()).thenReturn(BigInteger.valueOf(-181385));
     when(projection3.getTime())
         .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection4 = Mockito.mock(StakeTxProjection.class);
-    when(projection4.getTxId()).thenReturn(104L);
+    when(projection4.getTxHash()).thenReturn("txhash4");
     when(projection4.getAmount()).thenReturn(BigInteger.valueOf(-172761));
     when(projection4.getTime())
         .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
     StakeTxProjection projection5 = Mockito.mock(StakeTxProjection.class);
-    when(projection5.getTxId()).thenReturn(105L);
+    when(projection5.getTxHash()).thenReturn("txhash5");
     when(projection5.getAmount()).thenReturn(BigInteger.valueOf(-2174301));
     when(projection5.getTime())
         .thenReturn(DateUtils.timestampToEpochSecond(Timestamp.valueOf(LocalDateTime.now())));
@@ -147,7 +147,7 @@ class StakeKeyLifeCycleServiceImplTest {
     txList.add(
         Tx.builder()
             .id(100L)
-            .hash("11ae03377b31c749d2d549674100986ec4ee68ac72e211404647f5ae0ce8686b")
+            .hash("txhash")
             .fee(BigInteger.valueOf(174301))
             .deposit(0L)
             .validContract(true)
@@ -155,7 +155,7 @@ class StakeKeyLifeCycleServiceImplTest {
     txList.add(
         Tx.builder()
             .id(101L)
-            .hash("3a4de98d4652281ff2c747bbe0582c985d590ca57bc783fa3e5e0c23b126d6ca")
+            .hash("txhash1")
             .fee(BigInteger.valueOf(175093))
             .deposit(0L)
             .validContract(true)
@@ -163,7 +163,7 @@ class StakeKeyLifeCycleServiceImplTest {
     txList.add(
         Tx.builder()
             .id(102L)
-            .hash("17c5b738f4de8a67882791d261f7fcbd6671e4eae29936171ac48307c18d191e")
+            .hash("txhash2")
             .fee(BigInteger.valueOf(174301))
             .validContract(true)
             .deposit(2000000L)
@@ -171,7 +171,7 @@ class StakeKeyLifeCycleServiceImplTest {
     txList.add(
         Tx.builder()
             .id(103L)
-            .hash("5b995ad32ba2c0bb86e224441845d8adc71a03be932360b93e1a04bd459b02da")
+            .hash("txhash3")
             .fee(BigInteger.valueOf(-181385))
             .deposit(0L)
             .validContract(false)
@@ -179,7 +179,7 @@ class StakeKeyLifeCycleServiceImplTest {
     txList.add(
         Tx.builder()
             .id(104L)
-            .hash("e985489b135b68add6f0f13a3e3b7f513f9e56e4710faee8b0c5065afb4419d1")
+            .hash("txhash4")
             .fee(BigInteger.valueOf(172761))
             .deposit(0L)
             .validContract(false)
@@ -187,7 +187,7 @@ class StakeKeyLifeCycleServiceImplTest {
     txList.add(
         Tx.builder()
             .id(105L)
-            .hash("817c26fc41a840f640c83ddda096a51406649402fc7dde0739131b209e9432b6")
+            .hash("txhash5")
             .fee(BigInteger.valueOf(24027))
             .deposit(-2000000L)
             .validContract(false)
@@ -207,31 +207,19 @@ class StakeKeyLifeCycleServiceImplTest {
             pageable))
         .thenReturn(page);
 
-    when(txRepository.findByIdIn(any())).thenReturn(txList);
+    when(txRepository.findByHashIn(any())).thenReturn(txList);
 
     var response =
         stakeKeyLifeCycleService.getStakeWalletActivities(
             stakeAddress.getView(), pageable, condition);
 
     Assertions.assertEquals(6, response.size());
-    Assertions.assertEquals(
-        response.get(0).getTxHash(),
-        "11ae03377b31c749d2d549674100986ec4ee68ac72e211404647f5ae0ce8686b");
-    Assertions.assertEquals(
-        response.get(1).getTxHash(),
-        "3a4de98d4652281ff2c747bbe0582c985d590ca57bc783fa3e5e0c23b126d6ca");
-    Assertions.assertEquals(
-        response.get(2).getTxHash(),
-        "17c5b738f4de8a67882791d261f7fcbd6671e4eae29936171ac48307c18d191e");
-    Assertions.assertEquals(
-        response.get(3).getTxHash(),
-        "5b995ad32ba2c0bb86e224441845d8adc71a03be932360b93e1a04bd459b02da");
-    Assertions.assertEquals(
-        response.get(4).getTxHash(),
-        "e985489b135b68add6f0f13a3e3b7f513f9e56e4710faee8b0c5065afb4419d1");
-    Assertions.assertEquals(
-        response.get(5).getTxHash(),
-        "817c26fc41a840f640c83ddda096a51406649402fc7dde0739131b209e9432b6");
+    Assertions.assertEquals(response.get(0).getTxHash(), "txhash");
+    Assertions.assertEquals(response.get(1).getTxHash(), "txhash1");
+    Assertions.assertEquals(response.get(2).getTxHash(), "txhash2");
+    Assertions.assertEquals(response.get(3).getTxHash(), "txhash3");
+    Assertions.assertEquals(response.get(4).getTxHash(), "txhash4");
+    Assertions.assertEquals(response.get(5).getTxHash(), "txhash5");
   }
 
   @Test
