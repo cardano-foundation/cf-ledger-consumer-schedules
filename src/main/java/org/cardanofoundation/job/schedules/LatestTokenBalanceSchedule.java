@@ -89,8 +89,7 @@ public class LatestTokenBalanceSchedule {
 
     // Drop all indexes before inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.dropAllIndexes();
-    List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures = new ArrayList<>();
-    long index = 1;
+
     Pageable pageable =
         PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, BaseEntity_.ID));
     Slice<String> multiAssetSlice = multiAssetRepository.getTokenUnitSlice(pageable);
@@ -187,16 +186,7 @@ public class LatestTokenBalanceSchedule {
     List<String> currentProcessingUnits = new ArrayList<>();
 
     for (TokenTxCount tokenTxCount : tokenTxCounts) {
-      if (currentSumTxCount == 0 && tokenTxCount.getTxCount() > sumTxCountThreshold) {
-        currentProcessingUnits.add(tokenTxCount.getUnit());
-        addLatestTokenBalanceFutures(
-            savingLatestTokenBalanceFutures,
-            new ArrayList<>(currentProcessingUnits),
-            epochBlockTimeCheckpoint,
-            includeZeroHolders);
-        currentProcessingUnits.clear();
-        continue;
-      }
+      currentProcessingUnits.add(tokenTxCount.getUnit());
 
       // If the cumulative transaction count exceeds the threshold, insert the fetched latest token
       if (currentSumTxCount + tokenTxCount.getTxCount() > sumTxCountThreshold) {
@@ -209,7 +199,6 @@ public class LatestTokenBalanceSchedule {
         currentSumTxCount = 0;
       } else {
         currentSumTxCount += tokenTxCount.getTxCount();
-        currentProcessingUnits.add(tokenTxCount.getUnit());
       }
 
       // After every 10 batches, insert the fetched latest token balance data into the database
