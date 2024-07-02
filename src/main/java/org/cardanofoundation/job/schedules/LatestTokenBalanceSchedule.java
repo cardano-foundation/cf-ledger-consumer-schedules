@@ -89,16 +89,17 @@ public class LatestTokenBalanceSchedule {
 
     // Drop all indexes before inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.dropAllIndexes();
-
+    long index = 1;
     Pageable pageable =
         PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, BaseEntity_.ID));
     Slice<String> multiAssetSlice = multiAssetRepository.getTokenUnitSlice(pageable);
-
     processingLatestTokenBalance(multiAssetSlice.getContent(), 0L, false);
 
     while (multiAssetSlice.hasNext()) {
       multiAssetSlice = multiAssetRepository.getTokenUnitSlice(multiAssetSlice.nextPageable());
       processingLatestTokenBalance(multiAssetSlice.getContent(), 0L, false);
+      index ++;
+      log.info("Total processed units: {}", index * DEFAULT_PAGE_SIZE);
     }
 
     // Create all indexes after inserting the latest token balance data into the database.
