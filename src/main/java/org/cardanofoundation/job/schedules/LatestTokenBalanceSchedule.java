@@ -93,12 +93,13 @@ public class LatestTokenBalanceSchedule {
         PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, BaseEntity_.ID));
     Slice<String> multiAssetSlice = multiAssetRepository.getTokenUnitSlice(pageable);
 
-    addLatestTokenBalanceFutures(savingLatestTokenBalanceFutures, multiAssetSlice.getContent(), 0L);
+    addLatestTokenBalanceFutures(
+        savingLatestTokenBalanceFutures, multiAssetSlice.getContent(), 0L, false);
 
     while (multiAssetSlice.hasNext()) {
       multiAssetSlice = multiAssetRepository.getTokenUnitSlice(multiAssetSlice.nextPageable());
       addLatestTokenBalanceFutures(
-          savingLatestTokenBalanceFutures, multiAssetSlice.getContent(), 0L);
+          savingLatestTokenBalanceFutures, multiAssetSlice.getContent(), 0L, false);
       index++;
       // After every 5 batches, insert the fetched latest token balance data into the database
       // in batches.
@@ -124,12 +125,13 @@ public class LatestTokenBalanceSchedule {
   private void addLatestTokenBalanceFutures(
       List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures,
       List<String> units,
-      Long slotCheckpoint) {
+      Long slotCheckpoint,
+      boolean includeZeroHolders) {
     savingLatestTokenBalanceFutures.add(
         CompletableFuture.supplyAsync(
             () -> {
               jooqLatestTokenBalanceRepository.insertLatestTokenBalanceByUnitIn(
-                  units, slotCheckpoint);
+                  units, slotCheckpoint, includeZeroHolders);
               return null;
             }));
   }
@@ -159,7 +161,7 @@ public class LatestTokenBalanceSchedule {
         unitsInBlockRange,
         units -> {
           addLatestTokenBalanceFutures(
-              savingLatestTokenBalanceFutures, units, epochBlockTimeCheckpoint);
+              savingLatestTokenBalanceFutures, units, epochBlockTimeCheckpoint, true);
 
           // After every 5 batches, insert the fetched stake address tx count data into the database
           // in batches.
