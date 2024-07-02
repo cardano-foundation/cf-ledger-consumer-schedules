@@ -108,6 +108,22 @@ public class JOOQLatestTokenBalanceRepository {
         System.currentTimeMillis() - startTime);
   }
 
+  public void deleteAllZeroHolders() {
+    log.info("Deleting all zero holders from latest token balance");
+    long startTime = System.currentTimeMillis();
+    var query =
+        dsl.deleteFrom(table(latestTokenBalanceEntity.getTableName()))
+            .where(
+                field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.QUANTITY)).eq(0));
+    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+    transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    int totalDeleted = transactionTemplate.execute(status -> query.execute());
+    log.info(
+        "Deleted all zero holders from latest token balance: {} record deleted in {} ms",
+        totalDeleted,
+        System.currentTimeMillis() - startTime);
+  }
+
   public void insertLatestTokenBalanceByUnitIn(List<String> units, Long blockTimeCheckpoint) {
     long startTime = System.currentTimeMillis();
     var query =
@@ -169,11 +185,7 @@ public class JOOQLatestTokenBalanceRepository {
                                                             "address_unit_distinct.unit",
                                                             addressBalanceEntity.getColumnField(
                                                                 AddressBalance_.UNIT))),
-                                                field("block_time").gt(blockTimeCheckpoint),
-                                                field(
-                                                        addressBalanceEntity.getColumnField(
-                                                            AddressBalance_.QUANTITY))
-                                                    .gt(0)))
+                                                field("block_time").gt(blockTimeCheckpoint)))
                                     .orderBy(
                                         field(
                                                 addressBalanceEntity.getColumnField(
