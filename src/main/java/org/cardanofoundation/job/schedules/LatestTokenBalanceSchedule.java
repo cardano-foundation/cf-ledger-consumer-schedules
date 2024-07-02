@@ -27,6 +27,7 @@ import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.LatestTokenBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQLatestTokenBalanceRepository;
 import org.cardanofoundation.job.util.BatchUtils;
 
@@ -43,6 +44,7 @@ public class LatestTokenBalanceSchedule {
 
   private final MultiAssetRepository multiAssetRepository;
   private final JOOQLatestTokenBalanceRepository jooqLatestTokenBalanceRepository;
+  private final LatestTokenBalanceRepository latestTokenBalanceRepository;
   private final BlockRepository blockRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
 
@@ -66,13 +68,13 @@ public class LatestTokenBalanceSchedule {
         Math.min(
             addressTxAmountRepository.getMaxBlockNoFromCursor(), latestBlock.get().getBlockNo());
     final Integer checkpoint = redisTemplate.opsForValue().get(latestTokenBalanceCheckpoint);
-    if (Objects.isNull(checkpoint)) {
+    if (Objects.isNull(checkpoint) || latestTokenBalanceRepository.count() == 0) {
       init();
     } else if (currentMaxBlockNo > checkpoint.longValue()) {
       update(checkpoint.longValue(), currentMaxBlockNo);
     }
 
-    // Update the checkpoint to the currentMaxBlockNo - 50 to avoid missing any data when node
+    // Update the checkpoint to the currentMaxBlockNo - 2160 to avoid missing any data when node
     // rollback
     redisTemplate
         .opsForValue()
