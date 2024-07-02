@@ -6,6 +6,7 @@ import static org.jooq.impl.DSL.lateral;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.substring;
 import static org.jooq.impl.DSL.table;
+import static org.jooq.impl.DSL.trueCondition;
 import static org.jooq.impl.DSL.with;
 
 import java.util.List;
@@ -124,7 +125,8 @@ public class JOOQLatestTokenBalanceRepository {
         System.currentTimeMillis() - startTime);
   }
 
-  public void insertLatestTokenBalanceByUnitIn(List<String> units, Long blockTimeCheckpoint) {
+  public void insertLatestTokenBalanceByUnitIn(
+      List<String> units, Long blockTimeCheckpoint, boolean includeZeroHolders) {
     long startTime = System.currentTimeMillis();
     var query =
         dsl.insertInto(table(latestTokenBalanceEntity.getTableName()))
@@ -185,7 +187,13 @@ public class JOOQLatestTokenBalanceRepository {
                                                             "address_unit_distinct.unit",
                                                             addressBalanceEntity.getColumnField(
                                                                 AddressBalance_.UNIT))),
-                                                field("block_time").gt(blockTimeCheckpoint)))
+                                                field("block_time").gt(blockTimeCheckpoint),
+                                                includeZeroHolders
+                                                    ? trueCondition()
+                                                    : field(
+                                                            addressBalanceEntity.getColumnField(
+                                                                AddressBalance_.QUANTITY))
+                                                        .gt(0)))
                                     .orderBy(
                                         field(
                                                 addressBalanceEntity.getColumnField(
