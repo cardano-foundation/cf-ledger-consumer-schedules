@@ -40,7 +40,7 @@ import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQLatestTokenBa
 @RequiredArgsConstructor
 public class LatestTokenBalanceSchedule {
 
-  private static final int DEFAULT_PAGE_SIZE = 500;
+  private static final int DEFAULT_PAGE_SIZE = 1000;
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final TokenTxCountRepository tokenTxCountRepository;
   private final MultiAssetRepository multiAssetRepository;
@@ -98,7 +98,7 @@ public class LatestTokenBalanceSchedule {
     while (multiAssetSlice.hasNext()) {
       multiAssetSlice = multiAssetRepository.getTokenUnitSlice(multiAssetSlice.nextPageable());
       processingLatestTokenBalance(multiAssetSlice.getContent(), 0L, false);
-      index ++;
+      index++;
       log.info("Total processed units: {}", index * DEFAULT_PAGE_SIZE);
     }
 
