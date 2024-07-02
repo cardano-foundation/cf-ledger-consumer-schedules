@@ -146,7 +146,9 @@ public class JOOQLatestTokenBalanceRepository {
                             .where(
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
                                     .in(units),
-                                field("block_time").gt(blockTimeCheckpoint))
+                                blockTimeCheckpoint > 0
+                                    ? field("block_time").gt(blockTimeCheckpoint)
+                                    : trueCondition())
                             .orderBy(
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
