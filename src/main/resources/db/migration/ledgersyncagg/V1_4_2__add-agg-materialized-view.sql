@@ -25,7 +25,7 @@ WHERE to_timestamp(ata.block_time) > now() - INTERVAL '3' MONTH - INTERVAL '1' D
 GROUP BY ata.address, ata.stake_address, day
 ORDER BY day;
 ------------------------------------------------------------------------------------------------------------------------
-DROP MATERIALIZED VIEW IF EXISTS stake_tx_balance;
+DROP TABLE IF EXISTS stake_tx_balance;
 CREATE MATERIALIZED VIEW IF NOT EXISTS stake_tx_balance AS
 SELECT ata.tx_hash       AS tx_hash,
        ata.stake_address AS stake_address,
