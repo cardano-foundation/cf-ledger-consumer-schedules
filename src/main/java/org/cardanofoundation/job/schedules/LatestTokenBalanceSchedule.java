@@ -115,7 +115,8 @@ public class LatestTokenBalanceSchedule {
 
     // Create all indexes after inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.createAllIndexes();
-    log.info("End update LatestTokenBalance in {} ms", System.currentTimeMillis() - startTime);
+    jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
+    log.info("End init LatestTokenBalance in {} ms", System.currentTimeMillis() - startTime);
   }
 
   private void addLatestTokenBalanceFutures(
@@ -171,6 +172,8 @@ public class LatestTokenBalanceSchedule {
     // Insert the remaining stake address tx count data into the database.
     CompletableFuture.allOf(savingLatestTokenBalanceFutures.toArray(new CompletableFuture[0]))
         .join();
+
+    jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
 
     log.info(
         "End update LatestTokenBalance with address size = {} in {} ms",
