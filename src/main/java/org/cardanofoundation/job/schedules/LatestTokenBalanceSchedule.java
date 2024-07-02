@@ -40,7 +40,7 @@ import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQLatestTokenBa
 @RequiredArgsConstructor
 public class LatestTokenBalanceSchedule {
 
-  private static final int DEFAULT_PAGE_SIZE = 50;
+  private static final int DEFAULT_PAGE_SIZE = 500;
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final TokenTxCountRepository tokenTxCountRepository;
   private final MultiAssetRepository multiAssetRepository;
@@ -177,7 +177,7 @@ public class LatestTokenBalanceSchedule {
 
     // This variable holds the threshold value for the total transaction count before batching
     // starts.
-    int sumTxCountThreshold = 1000;
+    int sumTxCountThreshold = 5000;
 
     // Keeps track of the cumulative transaction count for the current batch being processed.
     int currentSumTxCount = 0;
@@ -191,7 +191,7 @@ public class LatestTokenBalanceSchedule {
         currentProcessingUnits.add(tokenTxCount.getUnit());
         addLatestTokenBalanceFutures(
             savingLatestTokenBalanceFutures,
-            currentProcessingUnits,
+            new ArrayList<>(currentProcessingUnits),
             epochBlockTimeCheckpoint,
             includeZeroHolders);
         currentProcessingUnits.clear();
@@ -202,7 +202,7 @@ public class LatestTokenBalanceSchedule {
       if (currentSumTxCount + tokenTxCount.getTxCount() > sumTxCountThreshold) {
         addLatestTokenBalanceFutures(
             savingLatestTokenBalanceFutures,
-            currentProcessingUnits,
+            new ArrayList<>(currentProcessingUnits),
             epochBlockTimeCheckpoint,
             includeZeroHolders);
         currentProcessingUnits.clear();
@@ -212,9 +212,10 @@ public class LatestTokenBalanceSchedule {
         currentProcessingUnits.add(tokenTxCount.getUnit());
       }
 
-      // After every 5 batches, insert the fetched latest token balance data into the database
+      // After every 10 batches, insert the fetched latest token balance data into the database
       // in batches.
-      if (savingLatestTokenBalanceFutures.size() % 5 == 0) {
+      if (!savingLatestTokenBalanceFutures.isEmpty()
+          && savingLatestTokenBalanceFutures.size() % 10 == 0) {
         CompletableFuture.allOf(savingLatestTokenBalanceFutures.toArray(new CompletableFuture[0]))
             .join();
         savingLatestTokenBalanceFutures.clear();
@@ -225,7 +226,7 @@ public class LatestTokenBalanceSchedule {
     if (!currentProcessingUnits.isEmpty()) {
       addLatestTokenBalanceFutures(
           savingLatestTokenBalanceFutures,
-          currentProcessingUnits,
+          new ArrayList<>(currentProcessingUnits),
           epochBlockTimeCheckpoint,
           includeZeroHolders);
     }
