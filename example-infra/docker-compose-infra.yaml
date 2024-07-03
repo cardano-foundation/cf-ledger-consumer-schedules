@@ -1,0 +1,214 @@
+version: '3.9'
+
+volumes:
+  postgres-data-new:
+  redis-master-data-new:
+  redis-slave-data-new:
+  zookeeper-data-new:
+  zookeeper-logs-new:
+  zookeeper-secrets-new:
+  kafka-data:
+
+
+services:
+  postgres:
+    restart: unless-stopped
+    image: postgres:${POSTGRES_VERSION:-15-alpine}
+    shm_size: 32gb
+    environment:
+      - POSTGRES_LOGGING=true
+      - POSTGRES_DB=${POSTGRES_DB:-explorer_api}
+      - POSTGRES_USER=${POSTGRES_USER:-cardano-master}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-dbpass}
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    volumes:
+      - /opt/explorer/postgres-data:/var/lib/postgresql/data
+    command: >
+      postgres
+        -c max_locks_per_transaction=256
+        -c shared_buffers=12GB
+        -c effective_cache_size=31GB
+        -c maintenance_work_mem=2GB
+        -c checkpoint_completion_target=0.9
+        -c checkpoint_timeout=1h
+        -c synchronous_commit=off
+        -c wal_buffers=16MB
+        -c default_statistics_target=500
+        -c random_page_cost=1.1
+        -c effective_io_concurrency=500
+        -c work_mem=1024GB
+        -c min_wal_size=1GB
+        -c max_wal_size=2GB
+        -c max_parallel_workers_per_gather=4
+        -c max_parallel_maintenance_workers=4
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "100"
+
+  redis-master:
+    restart: unless-stopped
+    hostname: cardano.redis.master
+    image: redis:7.0.5
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - REDIS_PASSWORD=${REDIS_MASTER_PASS:-redis_master_pass}
+    command: redis-server
+    ports:
+      - "26301:6379"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "100"
+    volumes:
+      - /opt/explorer/redis-master-data:/data
+
+  redis-slave:
+    restart: unless-stopped
+    hostname: cardano.redis.slave
+    image: redis:7.0.5
+    environment:
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+      - REDIS_MASTER_PASSWORD=${REDIS_MASTER_PASS:-redis_master_pass}
+      - REDIS_PASSWORD=${REDIS_SLAVE_PASS:-redis_slave_pass}
+    command: redis-server --slaveof redis-master 6379
+    ports:
+      - "26302:6379"
+    links:
+      - redis-master
+    volumes:
+      - /opt/explorer/redis-slave-data:/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "100"
+
+  redis-sentinel:
+    restart: unless-stopped
+    hostname: ${REDIS_SENTINEL_HOST:-cardano.redis.sentinel}
+    image: 'bitnami/redis-sentinel'
+    environment:
+      - REDIS_MASTER_HOST=127.0.0.1
+      - REDIS_MASTER_PORT_NUMBER=26301
+      - REDIS_MASTER_PASSWORD=${REDIS_MASTER_PASS:-redis_master_pass}
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=5000
+      - REDIS_SENTINEL_FAILOVER_TIMEOUT=500
+      - REDIS_SENTINEL_QUORUM=2
+      - REDIS_SENTINEL_PASSWORD=${REDIS_SENTINEL_PASS:-redis_sentinel_pass}
+    ports:
+      - "26379:26379"
+    depends_on:
+      - redis-master
+      - redis-slave
+    links:
+      - redis-master
+      - redis-slave
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "100"
+
+  minio:
+    image: minio/minio:latest
+    restart: "no"
+    ports:
+      - 9099:9000
+      - 9091:9091
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minio_access_key}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minio_secret_key}
+    volumes:
+      - /opt/explorer/minio-data:/data
+    command: server /data --console-address ":9091"
+
+  zookeeper:
+    restart: unless-stopped
+    image: confluentinc/cp-zookeeper:5.1.2
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: "2181"
+      ZOOKEEPER_TICK_TIME: "2000"
+      ZOOKEEPER_SERVERS: "zookeeper:22888:23888"
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: nc -z localhost 2181 || exit -1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "100"
+    volumes:
+      - /opt/explorer/zookeeper-secrets:/etc/zookeeper/secrets
+      - /opt/explorer/zookeeper-data:/var/lib/zookeeper/data
+      - /opt/explorer/zookeeper-logs:/var/lib/zookeeper/log
+
+  kafka:
+    restart: unless-stopped
+    image: confluentinc/cp-kafka:7.0.0
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "29092:29092"
+    links:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_BROKER_ID: 1
+      KAFKA_BROKER_RACK: "r1"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_SCHEMA_REGISTRY_URL: "schemaregistry:8085"
+      KAFKA_JMX_PORT: 9991
+      KAFKA_LOG_RETENTION_BYTES: -1
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 604800000
+    healthcheck:
+      test: nc -z localhost 9092 || exit -1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    volumes:
+      - /opt/explorer/kafka-secrets:/etc/kafka/secrets
+      - kafka-data:/var/lib/kafka/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "100"
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    restart: "no"
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:9092"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    links:
+      - kafka
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "100"
