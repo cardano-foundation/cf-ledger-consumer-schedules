@@ -21,15 +21,15 @@ public interface LatestTokenBalanceRepository
   @Query(
       value =
           """
-          select max(ltb.block_time) from latest_token_balance ltb
-          where ltb.block_time != (select max(ltb2.block_time) from latest_token_balance ltb2)
-      """,
+          SELECT max(ltb.block_time) FROM latest_token_balance ltb
+          WHERE ltb.block_time != (select max(ltb2.block_time) FROM latest_token_balance ltb2)
+          """,
       nativeQuery = true)
   Long getTheSecondLastBlockTime();
 
   @Query(
       """
-          SELECT multiAsset.policy as scriptHash, COALESCE(COUNT(latestTokenBalance), 0) as numberOfHolders
+          SELECT multiAsset.policy AS scriptHash, COALESCE(COUNT(latestTokenBalance), 0) AS numberOfHolders
           FROM MultiAsset multiAsset
           LEFT JOIN LatestTokenBalance latestTokenBalance ON multiAsset.unit = latestTokenBalance.unit
           WHERE multiAsset.policy IN :policies
