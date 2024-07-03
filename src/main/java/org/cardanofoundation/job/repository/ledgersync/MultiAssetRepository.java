@@ -17,7 +17,9 @@ import org.cardanofoundation.job.projection.TokenUnitProjection;
 @Repository
 public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
 
-  @Query( value = """
+  @Query(
+      value =
+          """
           SELECT multiAsset.id AS ident, multiAsset.unit AS unit FROM MultiAsset multiAsset
           WHERE multiAsset.id >= :startIdent AND multiAsset.id <= :endIdent
           """)
@@ -28,7 +30,9 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
       "SELECT multiAsset.id AS ident, multiAsset.unit AS unit FROM MultiAsset multiAsset WHERE multiAsset.unit IN :units")
   List<TokenUnitProjection> getTokenUnitByUnitIn(@Param("units") List<String> units);
 
-  @Query( value = """
+  @Query(
+      value =
+          """
           SELECT count(multiAsset) as numberOfTokens, multiAsset.policy as scriptHash
           FROM MultiAsset multiAsset
           WHERE multiAsset.policy IN :policyIds
