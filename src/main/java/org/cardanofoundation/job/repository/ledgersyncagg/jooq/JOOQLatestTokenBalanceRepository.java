@@ -2,6 +2,7 @@ package org.cardanofoundation.job.repository.ledgersyncagg.jooq;
 
 import static org.jooq.impl.DSL.excluded;
 import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.lateral;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.substring;
 import static org.jooq.impl.DSL.table;
@@ -130,51 +131,78 @@ public class JOOQLatestTokenBalanceRepository {
     var query =
         dsl.insertInto(table(latestTokenBalanceEntity.getTableName()))
             .select(
-                with("full_balances")
+                with("address_unit_distinct")
                     .as(
                         select(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.SLOT)),
                                 field(
-                                    addressBalanceEntity.getColumnField(AddressBalance_.QUANTITY)),
-                                field("block_time"))
-                            .distinctOn(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)))
-                            .from(table(addressBalanceEntity.getTableName()))
+                                    addressTxAmountEntity.getColumnField(AddressBalance_.ADDRESS)),
+                                field(addressTxAmountEntity.getColumnField(AddressBalance_.UNIT)))
+                            .from(table(addressTxAmountEntity.getTableName()))
                             .where(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
+                                field(addressTxAmountEntity.getColumnField(AddressBalance_.UNIT))
                                     .in(units),
                                 blockTimeCheckpoint > 0
                                     ? field("block_time").gt(blockTimeCheckpoint)
                                     : trueCondition())
-                            .orderBy(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.SLOT))
-                                    .desc()))
+                            .groupBy(
+                                field(
+                                    addressTxAmountEntity.getColumnField(AddressBalance_.ADDRESS)),
+                                field(addressTxAmountEntity.getColumnField(AddressBalance_.UNIT))))
                     .select(
-                        field("addr.address"),
+                        field("address_unit_distinct.address"),
                         field(addressEntity.getColumnField(Address_.STAKE_ADDRESS)),
-                        substring(
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
-                                    .cast(String.class),
-                                1,
-                                56)
+                        substring(field("address_unit_distinct.unit").cast(String.class), 1, 56)
                             .as("policy"),
-                        field(addressBalanceEntity.getColumnField(AddressBalance_.SLOT)),
-                        field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
-                        field(addressBalanceEntity.getColumnField(AddressBalance_.QUANTITY)),
-                        field("block_time"))
+                        field("token_holder_balance.slot"),
+                        field("address_unit_distinct.unit"),
+                        field("token_holder_balance.quantity"),
+                        field("token_holder_balance.block_time"))
                     .from(
-                        table("full_balances")
+                        table("address_unit_distinct")
                             .join(table(addressEntity.getTableName()).as("addr"))
-                            .on(field("addr.address").eq(field("full_balances.address")))
-                            .where(
-                                includeZeroHolders
-                                    ? trueCondition()
-                                    : field("full_balances.quantity").gt(0))))
+                            .on(field("address_unit_distinct.address").eq(field("addr.address"))),
+                        lateral(
+                                select(
+                                        field(
+                                            addressBalanceEntity.getColumnField(
+                                                AddressBalance_.SLOT)),
+                                        field(
+                                            addressBalanceEntity.getColumnField(
+                                                AddressBalance_.QUANTITY)),
+                                        field("block_time"))
+                                    .from(
+                                        table(addressBalanceEntity.getTableName())
+                                            .where(
+                                                field(
+                                                        addressBalanceEntity.getColumnField(
+                                                            AddressBalance_.ADDRESS))
+                                                    .eq(
+                                                        field(
+                                                            "address_unit_distinct.address",
+                                                            addressBalanceEntity.getColumnField(
+                                                                AddressBalance_.ADDRESS))),
+                                                field(
+                                                        addressBalanceEntity.getColumnField(
+                                                            AddressBalance_.UNIT))
+                                                    .eq(
+                                                        field(
+                                                            "address_unit_distinct.unit",
+                                                            addressBalanceEntity.getColumnField(
+                                                                AddressBalance_.UNIT))),
+                                                field("block_time").gt(blockTimeCheckpoint),
+                                                includeZeroHolders
+                                                    ? trueCondition()
+                                                    : field(
+                                                            addressBalanceEntity.getColumnField(
+                                                                AddressBalance_.QUANTITY))
+                                                        .gt(0)))
+                                    .orderBy(
+                                        field(
+                                                addressBalanceEntity.getColumnField(
+                                                    AddressBalance_.SLOT))
+                                            .desc())
+                                    .limit(1))
+                            .as("token_holder_balance")))
             .onConflict(
                 field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.ADDRESS)),
                 field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.UNIT)))
