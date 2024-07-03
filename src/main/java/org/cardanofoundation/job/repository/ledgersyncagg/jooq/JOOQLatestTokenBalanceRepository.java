@@ -6,6 +6,7 @@ import static org.jooq.impl.DSL.lateral;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.substring;
 import static org.jooq.impl.DSL.table;
+import static org.jooq.impl.DSL.trueCondition;
 import static org.jooq.impl.DSL.with;
 
 import java.util.List;
@@ -108,7 +109,24 @@ public class JOOQLatestTokenBalanceRepository {
         System.currentTimeMillis() - startTime);
   }
 
-  public void insertLatestTokenBalanceByUnitIn(List<String> units, Long blockTimeCheckpoint) {
+  public void deleteAllZeroHolders() {
+    log.info("Deleting all zero holders from latest token balance");
+    long startTime = System.currentTimeMillis();
+    var query =
+        dsl.deleteFrom(table(latestTokenBalanceEntity.getTableName()))
+            .where(
+                field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.QUANTITY)).eq(0));
+    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+    transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    int totalDeleted = transactionTemplate.execute(status -> query.execute());
+    log.info(
+        "Deleted all zero holders from latest token balance: {} record deleted in {} ms",
+        totalDeleted,
+        System.currentTimeMillis() - startTime);
+  }
+
+  public void insertLatestTokenBalanceByUnitIn(
+      List<String> units, Long blockTimeCheckpoint, boolean includeZeroHolders) {
     long startTime = System.currentTimeMillis();
     var query =
         dsl.insertInto(table(latestTokenBalanceEntity.getTableName()))
@@ -123,7 +141,9 @@ public class JOOQLatestTokenBalanceRepository {
                             .where(
                                 field(addressTxAmountEntity.getColumnField(AddressBalance_.UNIT))
                                     .in(units),
-                                field("block_time").gt(blockTimeCheckpoint))
+                                blockTimeCheckpoint > 0
+                                    ? field("block_time").gt(blockTimeCheckpoint)
+                                    : trueCondition())
                             .groupBy(
                                 field(
                                     addressTxAmountEntity.getColumnField(AddressBalance_.ADDRESS)),
@@ -170,10 +190,12 @@ public class JOOQLatestTokenBalanceRepository {
                                                             addressBalanceEntity.getColumnField(
                                                                 AddressBalance_.UNIT))),
                                                 field("block_time").gt(blockTimeCheckpoint),
-                                                field(
-                                                        addressBalanceEntity.getColumnField(
-                                                            AddressBalance_.QUANTITY))
-                                                    .gt(0)))
+                                                includeZeroHolders
+                                                    ? trueCondition()
+                                                    : field(
+                                                            addressBalanceEntity.getColumnField(
+                                                                AddressBalance_.QUANTITY))
+                                                        .gt(0)))
                                     .orderBy(
                                         field(
                                                 addressBalanceEntity.getColumnField(
