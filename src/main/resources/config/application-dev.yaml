@@ -27,7 +27,7 @@ multi-datasource: #specified for HikariDataSource
         maintainTimeStats: false
     flyway:
       enabled: ${LEDGER_SYNC_FLYWAY_ENABLE:false}
-      group: true
+      group: false
       sqlMigrationPrefix: V
       sqlMigrationSeparator: __
       sqlMigrationSuffixes: .sql
@@ -64,7 +64,7 @@ multi-datasource: #specified for HikariDataSource
         maintainTimeStats: false
     flyway:
       enabled: ${EXPLORER_FLYWAY_ENABLE:false}
-      group: true
+      group: false
       sqlMigrationPrefix: V
       sqlMigrationSeparator: __
       sqlMigrationSuffixes: .sql
