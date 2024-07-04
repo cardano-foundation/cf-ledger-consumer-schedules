@@ -26,6 +26,21 @@ An example docker-compose script is provided in the `example-infra` directory.
 
 This can be used right away with the provided `.env.example` and adjusted as needed.
 
+To start the needed Infrastructure, run:
+```shell
+# Start Kafka, Redis and Postgres
+docker-compose -f example-infra/docker-compose.yml up
+# Additionally start Ledger Sync according to the docs in the ledger-sync repository 
+```
+To run the application via command line:
+```shell
+# Copy the .env.example to .env and adjust as needed
+cp .env.example .env
+# Build the application
+source .env
+mvn clean package
+mvn spring-boot:run
+```
 
 ## 🧪 Test Reports
 
