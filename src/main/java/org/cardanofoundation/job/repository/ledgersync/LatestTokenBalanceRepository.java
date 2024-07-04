@@ -19,8 +19,17 @@ public interface LatestTokenBalanceRepository
     extends JpaRepository<LatestTokenBalance, AddressBalanceId> {
 
   @Query(
+      value =
+          """
+          SELECT max(ltb.block_time) FROM latest_token_balance ltb
+          WHERE ltb.block_time != (select max(ltb2.block_time) FROM latest_token_balance ltb2)
+          """,
+      nativeQuery = true)
+  Long getTheSecondLastBlockTime();
+
+  @Query(
       """
-          SELECT multiAsset.policy as scriptHash, COALESCE(COUNT(latestTokenBalance), 0) as numberOfHolders
+          SELECT multiAsset.policy AS scriptHash, COALESCE(COUNT(latestTokenBalance), 0) AS numberOfHolders
           FROM MultiAsset multiAsset
           LEFT JOIN LatestTokenBalance latestTokenBalance ON multiAsset.unit = latestTokenBalance.unit
           WHERE multiAsset.policy IN :policies
@@ -32,27 +41,15 @@ public interface LatestTokenBalanceRepository
 
   @Query(
       """
-          SELECT new org.cardanofoundation.job.model.TokenNumberHolders(multiAsset.id, COUNT(latestTokenBalance))
-          FROM MultiAsset multiAsset
-          LEFT JOIN LatestTokenBalance latestTokenBalance ON multiAsset.unit = latestTokenBalance.unit
-          WHERE multiAsset.id IN :multiAssetIds
+          SELECT new org.cardanofoundation.job.model.TokenNumberHolders
+          (latestTokenBalance.unit, COUNT(DISTINCT(CASE WHEN latestTokenBalance.stakeAddress IS NULL
+           THEN latestTokenBalance.address ELSE latestTokenBalance.stakeAddress END)))
+          FROM LatestTokenBalance latestTokenBalance
+          WHERE latestTokenBalance.unit in :units
           AND latestTokenBalance.quantity > 0
-          GROUP BY multiAsset.id
+          GROUP BY latestTokenBalance.unit
       """)
-  List<TokenNumberHolders> countHoldersByMultiAssetIdIn(
-      @Param("multiAssetIds") List<Long> multiAssetIds);
-
-  @Query(
-      """
-          SELECT new org.cardanofoundation.job.model.TokenNumberHolders(multiAsset.id, COUNT(latestTokenBalance))
-          FROM MultiAsset multiAsset
-          LEFT JOIN LatestTokenBalance latestTokenBalance ON multiAsset.unit = latestTokenBalance.unit
-          WHERE multiAsset.id >= :startIdent AND multiAsset.id <= :endIdent
-          AND latestTokenBalance.quantity > 0
-          GROUP BY multiAsset.id
-      """)
-  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(
-      @Param("startIdent") Long startIdent, @Param("endIdent") Long endIdent);
+  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(@Param("units") List<String> units);
 
   @Modifying(clearAutomatically = true)
   @Transactional

@@ -27,7 +27,7 @@ multi-datasource: #specified for HikariDataSource
         maintainTimeStats: false
     flyway:
       enabled: ${LEDGER_SYNC_FLYWAY_ENABLE:false}
-      group: true
+      group: false
       sqlMigrationPrefix: V
       sqlMigrationSeparator: __
       sqlMigrationSuffixes: .sql
@@ -64,7 +64,7 @@ multi-datasource: #specified for HikariDataSource
         maintainTimeStats: false
     flyway:
       enabled: ${EXPLORER_FLYWAY_ENABLE:false}
-      group: true
+      group: false
       sqlMigrationPrefix: V
       sqlMigrationSeparator: __
       sqlMigrationSuffixes: .sql
@@ -121,6 +121,7 @@ jobs:
   token-info:
     enabled: ${TOKEN_INFO_JOB_ENABLED:true}
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
+    batch-size: ${TOKEN_INFO_BATCH_SIZE:1000}
   smart-contract-info:
     fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:30000}
   native-script-info:
@@ -132,6 +133,7 @@ jobs:
     enabled: ${GOVERNANCE_INFO_JOB_ENABLED:true}
     fixed-delay: ${GOVERNANCE_INFO_FIXED_DELAY:30000}
   agg-analytic:
+    enabled: ${AGG_ANALYTIC_JOB_ENABLED:false}
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}

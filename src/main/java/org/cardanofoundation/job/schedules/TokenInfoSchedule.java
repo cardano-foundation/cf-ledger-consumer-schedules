@@ -41,18 +41,4 @@ public class TokenInfoSchedule {
       log.error("Error occurred during Token Info update: {}", e.getMessage(), e);
     }
   }
-
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void updateNumberOfTokenTx() {
-    try {
-      log.info("---TokenInfo--- Refresh job has been started");
-      long startTime = System.currentTimeMillis();
-      tokenTxCountRepository.refreshMaterializedView();
-      log.info(
-          "---TokenInfo--- Refresh job has ended, takes: [{} ms]",
-          System.currentTimeMillis() - startTime);
-    } catch (Exception e) {
-      log.error("Error occurred during Token Info update: {}", e.getMessage(), e);
-    }
-  }
 }
