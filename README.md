@@ -13,13 +13,43 @@ This repository executes tasks in a periodic sequence to precompute computationa
 
 👉 Check the [Explorer repository](https://github.com/cardano-foundation/cf-explorer) to understand how the microservices work together
 
+## How to run
+Following prerequisites are required to run the application:
+- Java 17
+- Kafka (will be removed soon)
+- Redis 
+- Postgres (ledger-sync and explorer database)
+- Ledger-sync (Ledgersync + Aggregate app + Postgres)
+
+An example docker-compose script is provided in the `example-infra` directory. 
+(This script only sets up Kafka, Redis and Postgres, for a ledger-sync setup, please refer to the [ledger-sync repository](https://github.com/cardano-foundation/cf-ledger-sync))
+
+This can be used right away with the provided `.env.example` and adjusted as needed.
+
+To start the needed Infrastructure, run:
+```shell
+# Start Kafka, Redis and Postgres
+docker-compose -f example-infra/docker-compose.yml up
+# Additionally start Ledger Sync according to the docs in the ledger-sync repository 
+```
+To run the application via command line:
+```shell
+# Copy the .env.example to .env and adjust as needed
+cp .env.example .env
+# Build the application
+source .env
+mvn clean package
+mvn spring-boot:run
+```
+
 ## 🧪 Test Reports
 
 To ensure the stability and reliability of this project, unit and mutation tests have been implemented. By clicking on the links below, you can access the detailed test reports and review the outcomes of the tests performed.
 
 📊 [Mutation report](https://cardano-foundation.github.io/cf-ledger-consumer-schedules/mutation-report/)
+<details>
+<summary> 🌱 Environment Variables</summary>
 
-## 🌱 Environment Variables
 - LEDGER_SYNC_HOST: Ledger-sync database host.
 - LEDGER_SYNC_PORT: Ledger-sync database port
 - LEDGER_SYNC_USER: Ledger-sync database username
@@ -84,3 +114,4 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - GOVERNANCE_INFO_JOB_ENABLED: enable governance info job
 - GOVERNANCE_INFO_FIXED_DELAY: fixed delay for job governance info
 - AGG_ANALYTIC_FIXED_DELAY: fixed delay for job aggregate analytic that related to address and token
+</details>
