@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
+import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
@@ -50,7 +51,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
 
-  private final RedisTemplate<String, String> redisTemplate;
+  private final RedisTemplate<String, Integer> redisTemplate;
 
   @Value("${application.network}")
   private String network;
@@ -66,7 +67,18 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     Long maxBLockTimeFromLsAgg = latestTokenBalanceRepository.getTheSecondLastBlockTime();
 
     Long maxBlockNoFromLsAgg = blockRepository.getBlockNoByExtractEpochTime(maxBLockTimeFromLsAgg);
-    Long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
+    final String latestTokenBalanceCheckpoint =
+        RedisKey.LATEST_TOKEN_BALANCE_CHECKPOINT.name() + "_" + network;
+    final Integer latestTokenBalanceCheckpointValue =
+        redisTemplate.opsForValue().get(latestTokenBalanceCheckpoint);
+
+    if (latestTokenBalanceCheckpointValue == null) {
+      log.info("No latest token balance checkpoint found >>> Skip token info scheduled");
+      return;
+    }
+
+    long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
+    latestBlockNo = Math.min(latestBlockNo, latestTokenBalanceCheckpointValue + 2160);
 
     log.info(
         "Compare latest block no from LS_AGG: {} and latest block no from LS_MAIN: {}",

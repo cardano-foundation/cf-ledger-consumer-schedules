@@ -15,6 +15,7 @@ import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.StakeTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopStakeAddressBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
@@ -34,6 +35,7 @@ public class AggregateAnalyticSchedule {
   private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
   private final TopAddressBalanceRepository topAddressBalanceRepository;
   private final TopStakeAddressBalanceRepository topStakeAddressBalanceRepository;
+  private final StakeTxBalanceRepository stakeTxBalanceRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
 
   @Value("${application.network}")
@@ -80,7 +82,7 @@ public class AggregateAnalyticSchedule {
         topAddressBalanceRepository::refreshMaterializedView, "TopAddressBalance");
   }
 
-  @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 30000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshTopStakeAddressBalance() {
     refreshMaterializedView(
         topStakeAddressBalanceRepository::refreshMaterializedView, "TopStakeAddressBalance");
@@ -95,6 +97,11 @@ public class AggregateAnalyticSchedule {
   @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateTxChartData() {
     refreshMaterializedView(txChartService::refreshDataForTxChart, "TxChartData");
+  }
+
+  @Scheduled(initialDelay = 60000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  public void refreshStakeTxBalance() {
+    refreshMaterializedView(stakeTxBalanceRepository::refreshMaterializedView, "StakeTxBalance");
   }
 
   private String getRedisKey(String prefix) {
