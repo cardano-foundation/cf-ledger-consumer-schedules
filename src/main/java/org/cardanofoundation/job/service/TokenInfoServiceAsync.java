@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,8 @@ import org.cardanofoundation.job.util.StreamUtil;
 @RequiredArgsConstructor
 @Log4j2
 public class TokenInfoServiceAsync {
+
+  @Autowired @Lazy TokenInfoServiceAsync selfProxyService;
 
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final MultiAssetRepository multiAssetRepository;
@@ -106,6 +110,33 @@ public class TokenInfoServiceAsync {
     return CompletableFuture.completedFuture(tokenTxCounts);
   }
 
+  @Async
+  public CompletableFuture<List<TokenVolume>> getVolume24h(
+      List<String> multiAssetUnits, Long epochSecond24hAgo, Long epochSecondLastTimeBlock) {
+    List<TokenVolume> tokenVolumes = new ArrayList<>();
+
+    if (epochSecond24hAgo <= epochSecondLastTimeBlock) {
+      tokenVolumes =
+          addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
+    }
+    return CompletableFuture.completedFuture(tokenVolumes);
+  }
+
+  @Async
+  public CompletableFuture<List<TokenVolume>> getTotalVolume(List<String> multiAssetUnits) {
+    List<TokenVolume> tokenVolumes =
+        addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits);
+    return CompletableFuture.completedFuture(tokenVolumes);
+  }
+
+  @Async
+  public CompletableFuture<Map<String, Long>> getMapNumberHolderByUnits(
+      List<String> multiAssetUnits) {
+    Map<String, Long> mapNumberHolder =
+        multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
+    return CompletableFuture.completedFuture(mapNumberHolder);
+  }
+
   private List<TokenInfo> buildTokenInfo(
       Long blockNo,
       Long epochSecond24hAgo,
@@ -115,24 +146,30 @@ public class TokenInfoServiceAsync {
 
     List<TokenInfo> saveEntities = new ArrayList<>();
 
-    List<TokenVolume> volumes24h = new ArrayList<>();
-    // if epochSecond24hAgo > epochTime of timeLatestBlock then ignore calculation of 24h volume
-    if (epochSecond24hAgo <= timeLatestBlock.toInstant().getEpochSecond()) {
-      volumes24h =
-          addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
-    }
+    // Get the volume 24h, total volume, and number of holders for each multi-asset unit
+    // Should be call by selfProxyService to make it async
+    CompletableFuture<List<TokenVolume>> volumes24hFuture =
+        selfProxyService.getVolume24h(
+            multiAssetUnits, epochSecond24hAgo, timeLatestBlock.toInstant().getEpochSecond());
 
-    List<TokenVolume> totalVolumes =
-        addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits);
+    CompletableFuture<List<TokenVolume>> totalVolumesFuture =
+        selfProxyService.getTotalVolume(multiAssetUnits);
+
+    CompletableFuture<Map<String, Long>> mapNumberHolderFuture =
+        selfProxyService.getMapNumberHolderByUnits(multiAssetUnits);
+
+    // Wait for all the async calls to complete
+    CompletableFuture.allOf(volumes24hFuture, totalVolumesFuture, mapNumberHolderFuture).join();
+
+    // Get the results of the async calls
+    List<TokenVolume> volumes24h = volumes24hFuture.join();
+    List<TokenVolume> totalVolumes = totalVolumesFuture.join();
+    Map<String, Long> mapNumberHolder = mapNumberHolderFuture.join();
+
     var tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getUnit, TokenVolume::getVolume);
     var totalVolumeMap =
         StreamUtil.toMap(totalVolumes, TokenVolume::getUnit, TokenVolume::getVolume);
-    var mapNumberHolder = multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
-
-    // Clear unnecessary lists to free up memory to avoid OOM error
-    volumes24h.clear();
-    totalVolumes.clear();
 
     multiAssetUnits.forEach(
         unit -> {
