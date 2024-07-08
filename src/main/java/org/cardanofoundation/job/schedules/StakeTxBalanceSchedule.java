@@ -22,7 +22,7 @@ import org.cardanofoundation.job.repository.ledgersync.StakeTxBalanceRepository;
 public class StakeTxBalanceSchedule {
   private final StakeTxBalanceRepository stakeTxBalanceRepository;
 
-  @Scheduled(fixedDelayString = "${jobs.stake-tx-balance.fixed-delay}")
+  @Scheduled(cron = "-")
   void syncStakeTxBalance() {
     log.info("---StakeTxBalance--- Refresh job has been started");
     long startTime = System.currentTimeMillis();
