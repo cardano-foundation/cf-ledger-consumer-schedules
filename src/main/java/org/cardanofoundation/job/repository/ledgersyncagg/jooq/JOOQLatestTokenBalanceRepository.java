@@ -25,7 +25,6 @@ import org.jooq.impl.SQLDataType;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.Address;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressBalance;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressBalance_;
-import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxAmount;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.Address_;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.LatestTokenBalance;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.LatestTokenBalance_;
