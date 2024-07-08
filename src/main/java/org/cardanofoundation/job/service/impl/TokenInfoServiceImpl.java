@@ -88,6 +88,12 @@ public class TokenInfoServiceImpl implements TokenInfoService {
       // so initialize token info data for the first time.
       initializeTokenInfoDataForFirstTime(latestBlockNo, timeLatestBlock);
     } else {
+
+      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 1000) {
+        latestBlockNo = tokenInfoCheckpoint.get().getBlockNo() + 1000;
+        timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
+      }
+
       // If a checkpoint exists, update the existing token info data by
       // inserting new data and updating existing ones.
       updateExistingTokenInfo(tokenInfoCheckpoint.get(), latestBlockNo, timeLatestBlock);
