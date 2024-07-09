@@ -94,8 +94,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
       initializeTokenInfoDataForFirstTime(latestBlockNo, timeLatestBlock);
     } else {
 
-      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 10) {
-        latestBlockNo = tokenInfoCheckpoint.get().getBlockNo() + 10;
+      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 100) {
+        latestBlockNo = tokenInfoCheckpoint.get().getBlockNo() + 100;
         timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
       }
 
@@ -215,12 +215,12 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         "tokensInTransactionWithNewBlockRange has size: {}",
         tokensInTransactionWithNewBlockRange.size());
 
-    Long epochSecondLastUpdateTime =
-        tokenInfoCheckpoint
-            .getUpdateTime()
-            .toLocalDateTime()
-            .minusDays(1)
-            .toEpochSecond(ZoneOffset.UTC);
+    //    Long epochSecondLastUpdateTime =
+    //        tokenInfoCheckpoint
+    //            .getUpdateTime()
+    //            .toLocalDateTime()
+    //            .minusDays(1)
+    //            .toEpochSecond(ZoneOffset.UTC);
 
     LocalDateTime epochSecond24hAgo = LocalDateTime.now(ZoneOffset.UTC).minusDays(1);
 
@@ -230,20 +230,21 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     //        addressTxAmountRepository.getTokensInTransactionInTimeRange(
     //            epochSecondLastUpdateTime, epochSecond24hAgo);
 
-    var recentTxSlotFrom =
-        converters
-            .time()
-            .toSlot(tokenInfoCheckpoint.getUpdateTime().toLocalDateTime().minusDays(1));
-    var recentTxSlotTo = converters.time().toSlot(LocalDateTime.now(ZoneOffset.UTC).minusDays(1));
+    //    var recentTxSlotFrom =
+    //        converters
+    //            .time()
+    //            .toSlot(tokenInfoCheckpoint.getUpdateTime().toLocalDateTime().minusDays(1));
+    //    var recentTxSlotTo =
+    // converters.time().toSlot(LocalDateTime.now(ZoneOffset.UTC).minusDays(1));
 
-    List<String> tokenNeedUpdateVolume24h =
-        addressTxAmountRepository.getTokensInTransactionInSlotRange(
-            recentTxSlotFrom, recentTxSlotTo);
+    //    List<String> tokenNeedUpdateVolume24h =
+    //        addressTxAmountRepository.getTokensInTransactionInSlotRange(
+    //            recentTxSlotFrom, recentTxSlotTo);
 
     // Create a map that merges all the multi-assets that need to be processed in this update.
     Set<String> tokenToProcessSet = new HashSet<>();
     tokenToProcessSet.addAll(tokensInTransactionWithNewBlockRange);
-    tokenToProcessSet.addAll(tokenNeedUpdateVolume24h);
+    //    tokenToProcessSet.addAll(tokenNeedUpdateVolume24h);
 
     log.info("tokenToProcess has size: {}", tokenToProcessSet.size());
 
