@@ -78,10 +78,13 @@ public class AggregateAnalyticSchedule {
 
     // Should be max slot - 43200 to ensure rollback case
     long targetSlot = addressBalanceRepository.getMaxSlot() - 43200;
-
+    log.info("Cleaning address balance table. Target slot: {}", targetSlot);
+    long totalDeletedRowsRows = 0;
     long deletedRows = 0;
     do {
       deletedRows = jooqAddressBalanceRepository.cleanUpAddressBalance(targetSlot, 1000);
+      totalDeletedRowsRows += deletedRows;
+      log.info("Total removed {} rows", totalDeletedRowsRows);
     } while (deletedRows > 0);
 
     log.info(
