@@ -195,19 +195,11 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         tokenInfoCheckpoint.getBlockNo(),
         maxBlockNo);
 
-    Long epochSecond24hAgo =
-        LocalDateTime.now(ZoneOffset.UTC).minusDays(1).toEpochSecond(ZoneOffset.UTC);
-    Long epochSecondLastUpdateTime =
-        tokenInfoCheckpoint
-            .getUpdateTime()
-            .toLocalDateTime()
-            .minusDays(1)
-            .toEpochSecond(ZoneOffset.UTC);
+    var txSlotFrom =
+        converters.time().toSlot(tokenInfoCheckpoint.getUpdateTime().toLocalDateTime());
+    var txSlotTo = converters.time().toSlot(timeLatestBlock.toLocalDateTime());
 
-    var slotFrom = converters.time().toSlot(tokenInfoCheckpoint.getUpdateTime().toLocalDateTime());
-    var slotTo = converters.time().toSlot(timeLatestBlock.toLocalDateTime());
-
-    log.info("slot range, from: {}, to: {}", slotFrom, slotTo);
+    log.info("slot range, from: {}, to: {}", txSlotFrom, txSlotTo);
 
     // Retrieve multi-assets involved in transactions between the last processed block and the
     // latest block.
@@ -217,17 +209,37 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     //            timeLatestBlock.toInstant().getEpochSecond());
 
     List<String> tokensInTransactionWithNewBlockRange =
-        addressTxAmountRepository.getTokensInTransactionInSlotRange(slotFrom, slotTo);
+        addressTxAmountRepository.getTokensInTransactionInSlotRange(txSlotFrom, txSlotTo);
 
     log.info(
         "tokensInTransactionWithNewBlockRange has size: {}",
         tokensInTransactionWithNewBlockRange.size());
 
+    Long epochSecondLastUpdateTime =
+        tokenInfoCheckpoint
+            .getUpdateTime()
+            .toLocalDateTime()
+            .minusDays(1)
+            .toEpochSecond(ZoneOffset.UTC);
+
+    Long epochSecond24hAgo =
+        LocalDateTime.now(ZoneOffset.UTC).minusDays(1).toEpochSecond(ZoneOffset.UTC);
+
     // Retrieve multi-assets involved in transactions
     // from 24h before last update time to 24h before the current time
+    //    List<String> tokenNeedUpdateVolume24h =
+    //        addressTxAmountRepository.getTokensInTransactionInTimeRange(
+    //            epochSecondLastUpdateTime, epochSecond24hAgo);
+
+    var recentTxSlotFrom =
+        converters
+            .time()
+            .toSlot(tokenInfoCheckpoint.getUpdateTime().toLocalDateTime().minusDays(1));
+    var recentTxSlotTo = converters.time().toSlot(LocalDateTime.now(ZoneOffset.UTC).minusDays(1));
+
     List<String> tokenNeedUpdateVolume24h =
-        addressTxAmountRepository.getTokensInTransactionInTimeRange(
-            epochSecondLastUpdateTime, epochSecond24hAgo);
+        addressTxAmountRepository.getTokensInTransactionInSlotRange(
+            recentTxSlotFrom, recentTxSlotTo);
 
     // Create a map that merges all the multi-assets that need to be processed in this update.
     Set<String> tokenToProcessSet = new HashSet<>();
