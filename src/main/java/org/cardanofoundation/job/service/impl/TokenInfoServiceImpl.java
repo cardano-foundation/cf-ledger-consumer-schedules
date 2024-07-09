@@ -249,7 +249,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     log.info("tokenToProcess has size: {}", tokenToProcessSet.size());
 
-    Iterables.partition(tokenToProcessSet, 5)
+    Iterables.partition(tokenToProcessSet, 30)
             .forEach(units -> {
               var startTime = System.currentTimeMillis();
               var tokenInfoList =
