@@ -10,12 +10,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopStakeAddressBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQAddressBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
 
 @Component
@@ -30,6 +32,8 @@ public class AggregateAnalyticSchedule {
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
   private final TxChartService txChartService;
+  private final JOOQAddressBalanceRepository jooqAddressBalanceRepository;
+  private final AddressBalanceRepository addressBalanceRepository;
   private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
   private final TopAddressBalanceRepository topAddressBalanceRepository;
   private final TopStakeAddressBalanceRepository topStakeAddressBalanceRepository;
@@ -67,7 +71,25 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(initialDelay = 40000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  public void cleanUpAddressBalance() {
+    long currentTime = System.currentTimeMillis();
+    log.info("---CleanUpAddressBalance--- Remove old history record has been started");
+
+    // Should be max slot - 43200 to ensure rollback case
+    long targetSlot = addressBalanceRepository.getMaxSlot() - 43200;
+
+    long deletedRows = 0;
+    do {
+      deletedRows = jooqAddressBalanceRepository.cleanUpAddressBalance(targetSlot, 1000);
+    } while (deletedRows > 0);
+
+    log.info(
+        "---CleanUpAddressBalance--- Remove history record has ended. Time taken {}ms",
+        System.currentTimeMillis() - currentTime);
+  }
+
+  @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshTopAddressBalance() {
     refreshMaterializedView(
         topAddressBalanceRepository::refreshMaterializedView, "TopAddressBalance");
