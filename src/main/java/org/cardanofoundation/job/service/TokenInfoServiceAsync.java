@@ -2,6 +2,8 @@ package org.cardanofoundation.job.service;
 
 import java.math.BigInteger;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +17,9 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.cardanofoundation.conversions.CardanoConverters;
+import org.cardanofoundation.conversions.ClasspathConversionsFactory;
+import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.projection.TokenUnitProjection;
@@ -30,6 +35,8 @@ public class TokenInfoServiceAsync {
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final MultiAssetService multiAssetService;
   private final MultiAssetRepository multiAssetRepository;
+
+  CardanoConverters converters = ClasspathConversionsFactory.createConverters(NetworkType.MAINNET);
 
   /**
    * Asynchronously builds a list of TokenInfo entities based on the provided list of MultiAsset.
@@ -143,7 +150,7 @@ public class TokenInfoServiceAsync {
   public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
       List<String> multiAssetUnits,
       Long blockNo,
-      Long epochSecond24hAgo,
+      LocalDateTime epochSecond24hAgo,
       Timestamp timeLatestBlock) {
     var curTime = System.currentTimeMillis();
     List<TokenInfo> saveEntities = new ArrayList<>();
@@ -154,9 +161,12 @@ public class TokenInfoServiceAsync {
 
     List<TokenVolume> volumes24h = new ArrayList<>();
     // if epochSecond24hAgo > epochTime of timeLatestBlock then ignore calculation of 24h volume
-    if (epochSecond24hAgo <= timeLatestBlock.toInstant().getEpochSecond()) {
-      volumes24h =
-          addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
+    if (epochSecond24hAgo.toEpochSecond(ZoneOffset.UTC)
+        <= timeLatestBlock.toInstant().getEpochSecond()) {
+      //      volumes24h =
+      // addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
+      var slotFrom = converters.time().toSlot(epochSecond24hAgo);
+      volumes24h = addressTxAmountRepository.sumBalanceAfterBlockSlot(multiAssetUnits, slotFrom);
     }
 
     List<TokenVolume> totalVolumes =

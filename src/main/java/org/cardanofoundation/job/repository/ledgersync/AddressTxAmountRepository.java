@@ -98,6 +98,19 @@ public interface AddressTxAmountRepository
       SELECT new org.cardanofoundation.job.model.TokenVolume(ata.unit, sum(ata.quantity))
       FROM AddressTxAmount ata
       WHERE ata.unit IN :units
+      AND ata.slot >= :slotFrom
+      AND ata.quantity > 0
+      GROUP BY ata.unit
+      """)
+  List<TokenVolume> sumBalanceAfterBlockSlot(
+      @Param("units") List<String> units, @Param("slotFrom") Long slotFrom);
+
+  @Query(
+      value =
+          """
+      SELECT new org.cardanofoundation.job.model.TokenVolume(ata.unit, sum(ata.quantity))
+      FROM AddressTxAmount ata
+      WHERE ata.unit IN :units
       AND ata.quantity > 0
       GROUP BY ata.unit
       """)

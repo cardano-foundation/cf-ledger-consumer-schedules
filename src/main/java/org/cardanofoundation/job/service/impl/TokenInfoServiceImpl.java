@@ -222,8 +222,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
             .minusDays(1)
             .toEpochSecond(ZoneOffset.UTC);
 
-    Long epochSecond24hAgo =
-        LocalDateTime.now(ZoneOffset.UTC).minusDays(1).toEpochSecond(ZoneOffset.UTC);
+    LocalDateTime epochSecond24hAgo = LocalDateTime.now(ZoneOffset.UTC).minusDays(1);
 
     // Retrieve multi-assets involved in transactions
     // from 24h before last update time to 24h before the current time
