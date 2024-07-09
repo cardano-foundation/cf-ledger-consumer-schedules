@@ -72,6 +72,14 @@ public interface AddressTxAmountRepository
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
 
   @Query(
+      "select distinct addressTxAmount.unit "
+          + " from AddressTxAmount addressTxAmount"
+          + " where addressTxAmount.slot BETWEEN :slotFrom and :slotTo "
+          + " and addressTxAmount.unit != 'lovelace'")
+  List<String> getTokensInTransactionInSlotRange(
+      @Param("slotFrom") Long slotFrom, @Param("slotTo") Long slotTo);
+
+  @Query(
       value =
           """
       SELECT new org.cardanofoundation.job.model.TokenVolume(ata.unit, sum(ata.quantity))

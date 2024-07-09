@@ -24,6 +24,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.cardanofoundation.conversions.CardanoConverters;
+import org.cardanofoundation.conversions.ClasspathConversionsFactory;
+import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
@@ -55,6 +58,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
 
   private final RedisTemplate<String, String> redisTemplate;
+
+  CardanoConverters converters = ClasspathConversionsFactory.createConverters(NetworkType.MAINNET);
 
   @Value("${application.network}")
   private String network;
@@ -199,12 +204,19 @@ public class TokenInfoServiceImpl implements TokenInfoService {
             .minusDays(1)
             .toEpochSecond(ZoneOffset.UTC);
 
+    var slotFrom = converters.time().toSlot(tokenInfoCheckpoint.getUpdateTime().toLocalDateTime());
+    var slotTo = converters.time().toSlot(timeLatestBlock.toLocalDateTime());
+
     // Retrieve multi-assets involved in transactions between the last processed block and the
     // latest block.
+    //    List<String> tokensInTransactionWithNewBlockRange =
+    //        addressTxAmountRepository.getTokensInTransactionInTimeRange(
+    //            tokenInfoCheckpoint.getUpdateTime().toInstant().getEpochSecond(),
+    //            timeLatestBlock.toInstant().getEpochSecond());
+
     List<String> tokensInTransactionWithNewBlockRange =
-        addressTxAmountRepository.getTokensInTransactionInTimeRange(
-            tokenInfoCheckpoint.getUpdateTime().toInstant().getEpochSecond(),
-            timeLatestBlock.toInstant().getEpochSecond());
+        addressTxAmountRepository.getTokensInTransactionInSlotRange(slotFrom, slotTo);
+
     log.info(
         "tokensInTransactionWithNewBlockRange has size: {}",
         tokensInTransactionWithNewBlockRange.size());
