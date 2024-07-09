@@ -1,23 +1,23 @@
 package org.cardanofoundation.job.schedules;
 
-import jakarta.annotation.PostConstruct;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import org.cardanofoundation.job.common.enumeration.RedisKey;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopStakeAddressBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQAddressBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
 
 @Component
@@ -32,22 +32,17 @@ public class AggregateAnalyticSchedule {
   private final AggregateAddressTokenRepository aggregateAddressTokenRepository;
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
   private final TxChartService txChartService;
+  private final JOOQAddressBalanceRepository jooqAddressBalanceRepository;
+  private final AddressBalanceRepository addressBalanceRepository;
   private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
   private final TopAddressBalanceRepository topAddressBalanceRepository;
   private final TopStakeAddressBalanceRepository topStakeAddressBalanceRepository;
   private final StakeTxBalanceRepository stakeTxBalanceRepository;
-  private final RedisTemplate<String, Integer> redisTemplate;
-
-  @Value("${application.network}")
-  private String network;
 
   @Value("${jobs.agg-analytic.number-of-concurrent-tasks}")
   private Integer numberOfConcurrentTasks;
 
-  @PostConstruct
-  public void init() {
-    redisTemplate.delete(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
-  }
+  private final AtomicInteger currentConcurrentTasks = new AtomicInteger(0);
 
   @Scheduled(
       cron = "0 20 0 * * *",
@@ -76,7 +71,25 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - currentTime);
   }
 
-  @Scheduled(initialDelay = 40000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  public void cleanUpAddressBalance() {
+    long currentTime = System.currentTimeMillis();
+    log.info("---CleanUpAddressBalance--- Remove old history record has been started");
+
+    // Should be max slot - 43200 to ensure rollback case
+    long targetSlot = addressBalanceRepository.getMaxSlot() - 43200;
+
+    long deletedRows = 0;
+    do {
+      deletedRows = jooqAddressBalanceRepository.cleanUpAddressBalance(targetSlot, 1000);
+    } while (deletedRows > 0);
+
+    log.info(
+        "---CleanUpAddressBalance--- Remove history record has ended. Time taken {}ms",
+        System.currentTimeMillis() - currentTime);
+  }
+
+  @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshTopAddressBalance() {
     refreshMaterializedView(
         topAddressBalanceRepository::refreshMaterializedView, "TopAddressBalance");
@@ -91,7 +104,7 @@ public class AggregateAnalyticSchedule {
   @Scheduled(initialDelay = 20000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void refreshStakeAddressView() {
     refreshMaterializedView(
-        stakeAddressBalanceRepository::refreshStakeAddressMaterializedView, "StakeAddressBalance");
+        stakeAddressBalanceRepository::refreshStakeAddressMaterializedView, "StakeAddressView");
   }
 
   @Scheduled(initialDelay = 50000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
@@ -104,24 +117,14 @@ public class AggregateAnalyticSchedule {
     refreshMaterializedView(stakeTxBalanceRepository::refreshMaterializedView, "StakeTxBalance");
   }
 
-  private String getRedisKey(String prefix) {
-    return prefix + "_" + network;
-  }
-
   public void refreshMaterializedView(Runnable refreshViewRunnable, String matViewName) {
     long currentTime = System.currentTimeMillis();
     log.info("---{}---- Refresh job has been started", matViewName);
-    String concurrentTasksKey = getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name());
-    Integer currentConcurrentTasks = redisTemplate.opsForValue().get(concurrentTasksKey);
 
-    if (currentConcurrentTasks == null || currentConcurrentTasks < numberOfConcurrentTasks) {
-      redisTemplate
-          .opsForValue()
-          .set(concurrentTasksKey, currentConcurrentTasks == null ? 1 : currentConcurrentTasks + 1);
+    if (currentConcurrentTasks.get() < numberOfConcurrentTasks) {
+      currentConcurrentTasks.incrementAndGet();
       refreshViewRunnable.run();
-      redisTemplate
-          .opsForValue()
-          .decrement(getRedisKey(RedisKey.AGGREGATED_CONCURRENT_TASKS_COUNT.name()));
+      currentConcurrentTasks.decrementAndGet();
     } else {
       log.info(
           "---{}---- Refresh job has been skipped due to full of concurrent tasks. Current concurrent tasks: {}",

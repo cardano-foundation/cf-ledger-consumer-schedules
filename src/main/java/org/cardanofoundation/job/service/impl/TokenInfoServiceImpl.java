@@ -128,7 +128,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         LocalDateTime.now(ZoneOffset.UTC).minusDays(1).toEpochSecond(ZoneOffset.UTC);
 
     // Define the maximum batch size for processing multi-assets.
-    int multiAssetListSize = 10000;
+    int multiAssetListSize = 1000;
 
     // Process the multi-assets in batches to build token info data.
     for (int i = 0; i < multiAssetIdList.size(); i += multiAssetListSize) {
