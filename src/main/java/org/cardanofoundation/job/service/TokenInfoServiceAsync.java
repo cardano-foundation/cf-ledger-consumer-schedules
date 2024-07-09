@@ -145,7 +145,6 @@ public class TokenInfoServiceAsync {
    * @return A CompletableFuture containing the list of TokenInfo entities built from the provided
    *     MultiAsset list.
    */
-  @Async
   @Transactional(readOnly = true)
   public List<TokenInfo> buildTokenInfoList(
       List<String> multiAssetUnits,
