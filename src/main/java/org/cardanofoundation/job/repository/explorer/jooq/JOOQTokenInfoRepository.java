@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -41,7 +42,7 @@ public class JOOQTokenInfoRepository {
 
     for (TokenInfo tokenInfo : tokenInfos) {
 
-      if (tokenInfo == null ) {
+      if (tokenInfo == null) {
         log.warn("tokenInfo is null");
         continue;
       }
