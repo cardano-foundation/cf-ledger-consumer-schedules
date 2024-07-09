@@ -123,7 +123,7 @@ jobs:
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
     batch-size: ${TOKEN_INFO_BATCH_SIZE:1000}
   smart-contract-info:
-    fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:30000}
+    fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:600000}
   native-script-info:
     fixed-delay: ${NATIVE_SCRIPT_INFO_FIXED_DELAY:30000}
   drep-info:

@@ -61,7 +61,7 @@ public class DRepInfoSchedule {
   private final DRepMapper dRepMapper;
   private static final int DEFAULT_PAGE_SIZE = 100;
 
-  @Scheduled(fixedRateString = "${jobs.drep-info.fixed-delay}")
+  @Scheduled(cron = "-")
   @Transactional
   public void syncUpDRepInfo() {
     long startTime = System.currentTimeMillis();

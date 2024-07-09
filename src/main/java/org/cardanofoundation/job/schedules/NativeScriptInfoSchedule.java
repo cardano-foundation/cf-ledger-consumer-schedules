@@ -70,7 +70,7 @@ public class NativeScriptInfoSchedule {
     redisTemplate.delete(nativeScriptTxCheckPoint);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.native-script-info.fixed-delay}")
+  @Scheduled(cron = "-")
   @Transactional(value = "explorerTransactionManager")
   public void syncNativeScriptInfo() {
     final String nativeScriptTxCheckPoint = getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());

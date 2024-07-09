@@ -52,7 +52,7 @@ public class GovActionInfoSchedule {
 
   private static final int DEFAULT_PAGE_SIZE = 1000;
 
-  @Scheduled(fixedRateString = "${jobs.governance-info.fixed-delay}")
+  @Scheduled(cron = "-")
   public void syncUpGovActionInfo() {
     long startTime = System.currentTimeMillis();
     log.info("Scheduled Governance Info Job: -------Start------");

@@ -26,7 +26,7 @@ public class TokenInfoSchedule {
 
   private final TokenTxCountRepository tokenTxCountRepository;
 
-  @Scheduled(fixedDelayString = "${jobs.token-info.fixed-delay}")
+  @Scheduled(cron = "-")
   public void updateTokenInfo() {
     try {
       log.info("Token Info Job: -------Start------");
