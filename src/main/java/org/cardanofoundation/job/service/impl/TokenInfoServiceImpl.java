@@ -248,39 +248,17 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     log.info("tokenToProcess has size: {}", tokenToProcessSet.size());
 
-    List<CompletableFuture<List<TokenInfo>>> tokenInfoFutures = new ArrayList<>();
-
     // Process the tokens to update the corresponding TokenInfo entities in batches of 10,000.
     BatchUtils.doBatching(
         1000,
         tokenToProcessSet.stream().toList(),
         units -> {
-          tokenInfoFutures.add(
-              tokenInfoServiceAsync
-                  .buildTokenInfoList(units, maxBlockNo, epochSecond24hAgo, timeLatestBlock)
-                  .exceptionally(
-                      e -> {
-                        throw new RuntimeException(
-                            "Exception occurs when updating token info list", e);
-                      }));
+          var tokenInfoList =
+              tokenInfoServiceAsync.buildTokenInfoList(
+                  units, maxBlockNo, epochSecond24hAgo, timeLatestBlock);
 
-          // After every 5 batches, insert the fetched token info data into the database in batches.
-          if (tokenInfoFutures.size() % 5 == 0) {
-            var tokenInfoList =
-                tokenInfoFutures.stream()
-                    .map(CompletableFuture::join)
-                    .flatMap(List::stream)
-                    .toList();
-            BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
-            tokenInfoFutures.clear();
-          }
+          BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
         });
-
-    // Wait for the remaining CompletableFuture instances to complete.
-    CompletableFuture.allOf(tokenInfoFutures.toArray(new CompletableFuture[0])).join();
-    List<TokenInfo> tokenInfoList =
-        tokenInfoFutures.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
-    BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
 
     tokenInfoCheckpointRepository.save(
         TokenInfoCheckpoint.builder().blockNo(maxBlockNo).updateTime(timeLatestBlock).build());

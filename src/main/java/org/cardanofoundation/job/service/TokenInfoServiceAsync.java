@@ -147,13 +147,12 @@ public class TokenInfoServiceAsync {
    */
   @Async
   @Transactional(readOnly = true)
-  public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
+  public List<TokenInfo> buildTokenInfoList(
       List<String> multiAssetUnits,
       Long blockNo,
       LocalDateTime epochSecond24hAgo,
       Timestamp timeLatestBlock) {
     var curTime = System.currentTimeMillis();
-    List<TokenInfo> saveEntities = new ArrayList<>();
 
     Map<String, Long> multiAssetUnitMap =
         multiAssetRepository.getTokenUnitByUnitIn(multiAssetUnits).stream()
@@ -181,21 +180,26 @@ public class TokenInfoServiceAsync {
     volumes24h.clear();
     totalVolumes.clear();
 
-    multiAssetUnits.parallelStream()
-        .forEach(
-            unit -> {
-              var tokenInfo = new TokenInfo();
-              tokenInfo.setMultiAssetId(multiAssetUnitMap.get(unit));
-              tokenInfo.setVolume24h(tokenVolume24hMap.getOrDefault(unit, BigInteger.ZERO));
-              tokenInfo.setTotalVolume(totalVolumeMap.getOrDefault(unit, BigInteger.ZERO));
-              tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(unit, 0L));
-              tokenInfo.setUpdateTime(timeLatestBlock);
-              tokenInfo.setBlockNo(blockNo);
-              saveEntities.add(tokenInfo);
-            });
+    List<TokenInfo> saveEntities =
+        multiAssetUnits.stream()
+            .map(
+                unit -> {
+                  var tokenInfo = new TokenInfo();
+                  tokenInfo.setMultiAssetId(multiAssetUnitMap.get(unit));
+                  tokenInfo.setVolume24h(tokenVolume24hMap.getOrDefault(unit, BigInteger.ZERO));
+                  tokenInfo.setTotalVolume(totalVolumeMap.getOrDefault(unit, BigInteger.ZERO));
+                  tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(unit, 0L));
+                  tokenInfo.setUpdateTime(timeLatestBlock);
+                  tokenInfo.setBlockNo(blockNo);
+                  return tokenInfo;
+                })
+            .toList();
 
-    log.info("getTokenInfoListNeedSave : {} took: {}ms", System.currentTimeMillis() - curTime);
+    log.info(
+        "getTokenInfoListNeedSave : {} took: {}ms",
+        saveEntities.size(),
+        System.currentTimeMillis() - curTime);
 
-    return CompletableFuture.completedFuture(saveEntities);
+    return saveEntities;
   }
 }
