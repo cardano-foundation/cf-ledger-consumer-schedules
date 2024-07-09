@@ -28,7 +28,6 @@ public class JOOQAddressBalanceRepository {
   }
 
   public int cleanUpAddressBalance(long targetSlot, int batchSize) {
-    log.info("Cleaning address balance table");
     long startTime = System.currentTimeMillis();
     String deleteQuery =
         """
