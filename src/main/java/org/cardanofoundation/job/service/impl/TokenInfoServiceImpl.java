@@ -94,8 +94,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
       initializeTokenInfoDataForFirstTime(latestBlockNo, timeLatestBlock);
     } else {
 
-      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 100) {
-        latestBlockNo = tokenInfoCheckpoint.get().getBlockNo() + 100;
+      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 5) {
+        latestBlockNo = tokenInfoCheckpoint.get().getBlockNo() + 5;
         timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
       }
 
