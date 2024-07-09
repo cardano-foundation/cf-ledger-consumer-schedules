@@ -207,6 +207,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     var slotFrom = converters.time().toSlot(tokenInfoCheckpoint.getUpdateTime().toLocalDateTime());
     var slotTo = converters.time().toSlot(timeLatestBlock.toLocalDateTime());
 
+    log.info("slot range, from: {}, to: {}", slotFrom, slotTo);
+
     // Retrieve multi-assets involved in transactions between the last processed block and the
     // latest block.
     //    List<String> tokensInTransactionWithNewBlockRange =
