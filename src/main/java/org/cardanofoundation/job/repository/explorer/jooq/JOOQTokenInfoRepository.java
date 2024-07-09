@@ -6,6 +6,7 @@ import static org.jooq.impl.DSL.table;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -18,6 +19,7 @@ import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo_;
 import org.cardanofoundation.explorer.common.utils.EntityUtil;
 
 @Repository
+@Slf4j
 public class JOOQTokenInfoRepository {
 
   private final DSLContext dsl;
@@ -38,6 +40,12 @@ public class JOOQTokenInfoRepository {
     List<Query> queries = new ArrayList<>();
 
     for (TokenInfo tokenInfo : tokenInfos) {
+
+      if (tokenInfo == null ) {
+        log.warn("tokenInfo is null");
+        continue;
+      }
+
       var query =
           dsl.insertInto(table(entityUtil.getTableName()))
               .columns(
