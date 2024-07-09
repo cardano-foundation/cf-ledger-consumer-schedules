@@ -15,6 +15,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import com.google.common.collect.Iterables;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -248,16 +249,28 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     log.info("tokenToProcess has size: {}", tokenToProcessSet.size());
 
-    tokenToProcessSet.forEach(
-        unit -> {
-          var startTime = System.currentTimeMillis();
-          var tokenInfoList =
-              tokenInfoServiceAsync.buildTokenInfoList(
-                  List.of(unit), maxBlockNo, epochSecond24hAgo, timeLatestBlock);
-          log.info("buildTokenInfoList elapsed: {}ms", System.currentTimeMillis() - startTime);
+    Iterables.partition(tokenToProcessSet, 5)
+            .forEach(units -> {
+              var startTime = System.currentTimeMillis();
+              var tokenInfoList =
+                      tokenInfoServiceAsync.buildTokenInfoList(
+                              units, maxBlockNo, epochSecond24hAgo, timeLatestBlock);
+              log.info("buildTokenInfoList elapsed: {}ms", System.currentTimeMillis() - startTime);
 
-          BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
-        });
+              BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
+            });
+
+
+//    tokenToProcessSet.forEach(
+//        unit -> {
+//          var startTime = System.currentTimeMillis();
+//          var tokenInfoList =
+//              tokenInfoServiceAsync.buildTokenInfoList(
+//                  List.of(unit), maxBlockNo, epochSecond24hAgo, timeLatestBlock);
+//          log.info("buildTokenInfoList elapsed: {}ms", System.currentTimeMillis() - startTime);
+//
+//          BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
+//        });
 
     // Process the tokens to update the corresponding TokenInfo entities in batches of 10,000.
     //    BatchUtils.doBatching(
