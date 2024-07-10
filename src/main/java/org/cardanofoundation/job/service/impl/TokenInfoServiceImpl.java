@@ -31,6 +31,7 @@ import org.cardanofoundation.conversions.ClasspathConversionsFactory;
 import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint;
+import org.cardanofoundation.job.projection.TokenUnitProjection;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
@@ -96,14 +97,20 @@ public class TokenInfoServiceImpl implements TokenInfoService {
       initializeTokenInfoDataForFirstTime(latestBlockNo, timeLatestBlock);
     } else {
 
-      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 100) {
-        latestBlockNo = tokenInfoCheckpoint.get().getBlockNo() + 100;
-        timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
+      Long blockNumberTo;
+      Timestamp timeBlockTo;
+      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 15) {
+        blockNumberTo = tokenInfoCheckpoint.get().getBlockNo() + 15;
+        timeBlockTo = blockRepository.getBlockTimeByBlockNo(blockNumberTo);
+      } else {
+        blockNumberTo = latestBlockNo;
+        timeBlockTo = timeLatestBlock;
       }
 
       // If a checkpoint exists, update the existing token info data by
       // inserting new data and updating existing ones.
-      updateExistingTokenInfo(tokenInfoCheckpoint.get(), latestBlockNo, timeLatestBlock);
+      updateExistingTokenInfo(
+          tokenInfoCheckpoint.get(), blockNumberTo, timeBlockTo, timeLatestBlock);
     }
 
     // Save total token count into redis cache
@@ -181,10 +188,14 @@ public class TokenInfoServiceImpl implements TokenInfoService {
    *
    * @param tokenInfoCheckpoint The latest token info checkpoint.
    * @param maxBlockNo The maximum block number.
+   * @param timeLatestProcessableBlock is the time of the latest block for which we have all stats
    * @param timeLatestBlock The update time.
    */
   private void updateExistingTokenInfo(
-      TokenInfoCheckpoint tokenInfoCheckpoint, Long maxBlockNo, Timestamp timeLatestBlock) {
+      TokenInfoCheckpoint tokenInfoCheckpoint,
+      Long maxBlockNo,
+      Timestamp timeLatestBlock,
+      Timestamp timeLatestProcessableBlock) {
     if (maxBlockNo.compareTo(tokenInfoCheckpoint.getBlockNo()) <= 0) {
       log.info(
           "Stop updating token info as the latest block no is not greater than the checkpoint, {} <= {}",
@@ -250,17 +261,53 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     log.info("tokenToProcess has size: {}", tokenToProcessSet.size());
 
-    Iterables.partition(tokenToProcessSet, 30)
+    List<String> filteredTokenToProcess = new ArrayList<>();
+    Iterables.partition(tokenToProcessSet, 50)
         .forEach(
             units -> {
-              var startTime = System.currentTimeMillis();
-              var tokenInfoList =
-                  tokenInfoServiceAsync.buildTokenInfoList(
-                      units, maxBlockNo, epochSecond24hAgo, timeLatestBlock);
-              log.info("buildTokenInfoList elapsed: {}ms", System.currentTimeMillis() - startTime);
+              var tokenUnitIdents = multiAssetRepository.getTokenUnitByUnitIn(units);
+              log.info(
+                  "units size: {}, tokenUnitIdents size: {}", units.size(), tokenUnitIdents.size());
+              var tokenInfoIdents =
+                  tokenUnitIdents.stream().map(TokenUnitProjection::getIdent).toList();
+              var tokenInfos = tokenInfoRepository.findByMultiAssetIdIn(tokenInfoIdents);
+              log.info("tokenInfos size: {}", tokenInfos.size());
+              tokenInfos.forEach(
+                  tokenInfo -> {
+                    log.info(
+                        "Checkpoint From Time: {}, tokenInfo: {}/{}/{}",
+                        tokenInfoCheckpoint.getUpdateTime().toLocalDateTime(),
+                        tokenInfo.getId(),
+                        tokenInfo.getMultiAssetId(),
+                        tokenInfo.getUpdateTime().toLocalDateTime());
+                    if (tokenInfo.getUpdateTime().before(tokenInfoCheckpoint.getUpdateTime())) {
+                      var tokenToProcessOpt =
+                          tokenUnitIdents.stream()
+                              .filter(
+                                  tokenIdent ->
+                                      tokenIdent.getIdent().equals(tokenInfo.getMultiAssetId()))
+                              .findFirst();
 
-              BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
+                      tokenToProcessOpt.ifPresent(
+                          tokenIdent -> filteredTokenToProcess.add(tokenIdent.getUnit()));
+
+                      if (tokenToProcessOpt.isEmpty()) {
+                        log.warn("expected token to process, could not be found.");
+                      }
+                    }
+                  });
             });
+
+    filteredTokenToProcess.forEach(
+        unit -> {
+          var startTime = System.currentTimeMillis();
+          var tokenInfoList =
+              tokenInfoServiceAsync.buildTokenInfoList(
+                  List.of(unit), maxBlockNo, epochSecond24hAgo, timeLatestProcessableBlock);
+          log.info("buildTokenInfoList elapsed: {}ms", System.currentTimeMillis() - startTime);
+
+          BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
+        });
 
     //    tokenToProcessSet.forEach(
     //        unit -> {
