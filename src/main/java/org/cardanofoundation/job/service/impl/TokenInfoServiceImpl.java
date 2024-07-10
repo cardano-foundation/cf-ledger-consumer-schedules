@@ -99,8 +99,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
       Long blockNumberTo;
       Timestamp timeBlockTo;
-      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 15) {
-        blockNumberTo = tokenInfoCheckpoint.get().getBlockNo() + 15;
+      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 100) {
+        blockNumberTo = tokenInfoCheckpoint.get().getBlockNo() + 100;
         timeBlockTo = blockRepository.getBlockTimeByBlockNo(blockNumberTo);
       } else {
         blockNumberTo = latestBlockNo;
