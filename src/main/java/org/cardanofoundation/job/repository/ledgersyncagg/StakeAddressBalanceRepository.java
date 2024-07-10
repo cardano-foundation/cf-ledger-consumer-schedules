@@ -33,6 +33,9 @@ public interface StakeAddressBalanceRepository
   List<StakeBalanceProjection> findStakeAddressBalanceByStakeAddressIn(
       @Param("stakeAddresses") Collection<String> stakeAddresses);
 
+  @Query(value = "SELECT MAX(ab.slot) FROM StakeAddressBalance ab")
+  Long getMaxSlot();
+
   @Modifying(clearAutomatically = true)
   @Transactional
   @Query(value = "REFRESH MATERIALIZED VIEW CONCURRENTLY stake_address_view", nativeQuery = true)

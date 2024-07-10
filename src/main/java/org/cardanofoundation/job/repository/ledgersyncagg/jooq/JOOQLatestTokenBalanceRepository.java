@@ -2,7 +2,6 @@ package org.cardanofoundation.job.repository.ledgersyncagg.jooq;
 
 import static org.jooq.impl.DSL.excluded;
 import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.lateral;
 import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.substring;
 import static org.jooq.impl.DSL.table;
@@ -26,7 +25,6 @@ import org.jooq.impl.SQLDataType;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.Address;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressBalance;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressBalance_;
-import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxAmount;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.Address_;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.LatestTokenBalance;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.LatestTokenBalance_;
@@ -38,7 +36,6 @@ public class JOOQLatestTokenBalanceRepository {
 
   private final DSLContext dsl;
   private final EntityUtil addressBalanceEntity;
-  private final EntityUtil addressTxAmountEntity;
   private final EntityUtil latestTokenBalanceEntity;
   private final EntityUtil addressEntity;
   private final PlatformTransactionManager transactionManager;
@@ -52,7 +49,6 @@ public class JOOQLatestTokenBalanceRepository {
     this.addressBalanceEntity = new EntityUtil(schema, AddressBalance.class);
     this.latestTokenBalanceEntity = new EntityUtil(schema, LatestTokenBalance.class);
     this.addressEntity = new EntityUtil(schema, Address.class);
-    this.addressTxAmountEntity = new EntityUtil(schema, AddressTxAmount.class);
     this.transactionManager = platformTransactionManager;
   }
 
@@ -134,12 +130,12 @@ public class JOOQLatestTokenBalanceRepository {
                 with("full_balances")
                     .as(
                         select(
-                            field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
-                            field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
-                            field(addressBalanceEntity.getColumnField(AddressBalance_.SLOT)),
-                            field(
-                                addressBalanceEntity.getColumnField(AddressBalance_.QUANTITY)),
-                            field("block_time"))
+                                field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
+                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
+                                field(addressBalanceEntity.getColumnField(AddressBalance_.SLOT)),
+                                field(
+                                    addressBalanceEntity.getColumnField(AddressBalance_.QUANTITY)),
+                                field("block_time"))
                             .distinctOn(
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)))
@@ -148,8 +144,8 @@ public class JOOQLatestTokenBalanceRepository {
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
                                     .in(units),
                                 blockTimeCheckpoint > 0
-                                ? field("block_time").gt(blockTimeCheckpoint)
-                                : trueCondition())
+                                    ? field("block_time").gt(blockTimeCheckpoint)
+                                    : trueCondition())
                             .orderBy(
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
@@ -159,10 +155,10 @@ public class JOOQLatestTokenBalanceRepository {
                         field("addr.address"),
                         field(addressEntity.getColumnField(Address_.STAKE_ADDRESS)),
                         substring(
-                            field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
-                                .cast(String.class),
-                            1,
-                            56)
+                                field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
+                                    .cast(String.class),
+                                1,
+                                56)
                             .as("policy"),
                         field(addressBalanceEntity.getColumnField(AddressBalance_.SLOT)),
                         field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
@@ -174,8 +170,8 @@ public class JOOQLatestTokenBalanceRepository {
                             .on(field("addr.address").eq(field("full_balances.address")))
                             .where(
                                 includeZeroHolders
-                                ? trueCondition()
-                                : field("full_balances.quantity").gt(0))))
+                                    ? trueCondition()
+                                    : field("full_balances.quantity").gt(0))))
             .onConflict(
                 field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.ADDRESS)),
                 field(latestTokenBalanceEntity.getColumnField(LatestTokenBalance_.UNIT)))
