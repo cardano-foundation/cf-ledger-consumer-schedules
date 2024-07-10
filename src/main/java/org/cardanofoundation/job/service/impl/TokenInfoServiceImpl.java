@@ -9,35 +9,32 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
-import com.google.common.collect.Iterables;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.common.collect.Iterables;
 
 import org.cardanofoundation.conversions.CardanoConverters;
 import org.cardanofoundation.conversions.ClasspathConversionsFactory;
 import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint;
-import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
-import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
-import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
+import org.cardanofoundation.job.repository.ledgersync.*;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
@@ -57,6 +54,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final MultiAssetService multiAssetService;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
+  private final AddressBalanceRepository addressBalanceRepository;
 
   private final RedisTemplate<String, String> redisTemplate;
 
@@ -72,13 +70,16 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   @Transactional(value = "explorerTransactionManager")
   @SneakyThrows
   public void updateTokenInfoList() {
-    Optional<Block> latestBlock = blockRepository.findLatestBlock();
-    if (latestBlock.isEmpty()) {
+    var latestBlock = blockRepository.findLatestBlock();
+    var addressBalance = addressBalanceRepository.findFirstBy(Sort.by("block").descending());
+    log.info("latestBlock: {}", latestBlock);
+    log.info("addressBalance: {}", addressBalance);
+
+    if (latestBlock.isEmpty() || addressBalance.isEmpty()) {
       return;
     }
-    Long maxBLockTimeFromLsAgg = latestTokenBalanceRepository.getTheSecondLastBlockTime();
 
-    Long maxBlockNoFromLsAgg = blockRepository.getBlockNoByExtractEpochTime(maxBLockTimeFromLsAgg);
+    Long maxBlockNoFromLsAgg = addressBalance.get().getBlockTime();
     Long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
 
     log.info(
@@ -250,27 +251,28 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     log.info("tokenToProcess has size: {}", tokenToProcessSet.size());
 
     Iterables.partition(tokenToProcessSet, 30)
-            .forEach(units -> {
+        .forEach(
+            units -> {
               var startTime = System.currentTimeMillis();
               var tokenInfoList =
-                      tokenInfoServiceAsync.buildTokenInfoList(
-                              units, maxBlockNo, epochSecond24hAgo, timeLatestBlock);
+                  tokenInfoServiceAsync.buildTokenInfoList(
+                      units, maxBlockNo, epochSecond24hAgo, timeLatestBlock);
               log.info("buildTokenInfoList elapsed: {}ms", System.currentTimeMillis() - startTime);
 
               BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
             });
 
-
-//    tokenToProcessSet.forEach(
-//        unit -> {
-//          var startTime = System.currentTimeMillis();
-//          var tokenInfoList =
-//              tokenInfoServiceAsync.buildTokenInfoList(
-//                  List.of(unit), maxBlockNo, epochSecond24hAgo, timeLatestBlock);
-//          log.info("buildTokenInfoList elapsed: {}ms", System.currentTimeMillis() - startTime);
-//
-//          BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
-//        });
+    //    tokenToProcessSet.forEach(
+    //        unit -> {
+    //          var startTime = System.currentTimeMillis();
+    //          var tokenInfoList =
+    //              tokenInfoServiceAsync.buildTokenInfoList(
+    //                  List.of(unit), maxBlockNo, epochSecond24hAgo, timeLatestBlock);
+    //          log.info("buildTokenInfoList elapsed: {}ms", System.currentTimeMillis() -
+    // startTime);
+    //
+    //          BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
+    //        });
 
     // Process the tokens to update the corresponding TokenInfo entities in batches of 10,000.
     //    BatchUtils.doBatching(
