@@ -1,6 +1,8 @@
 package org.cardanofoundation.job.schedules;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,7 @@ import org.cardanofoundation.job.repository.ledgersyncagg.StakeTxBalanceReposito
 import org.cardanofoundation.job.repository.ledgersyncagg.TopAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.TopStakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQAddressBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQStakeAddressBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
 
 @Component
@@ -33,6 +36,7 @@ public class AggregateAnalyticSchedule {
   private final AggregateAddressTxBalanceRepository aggregateAddressTxBalanceRepository;
   private final TxChartService txChartService;
   private final JOOQAddressBalanceRepository jooqAddressBalanceRepository;
+  private final JOOQStakeAddressBalanceRepository jooqStakeAddressBalanceRepository;
   private final AddressBalanceRepository addressBalanceRepository;
   private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
   private final TopAddressBalanceRepository topAddressBalanceRepository;
@@ -73,23 +77,18 @@ public class AggregateAnalyticSchedule {
 
   @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void cleanUpAddressBalance() {
-    long currentTime = System.currentTimeMillis();
-    log.info("---CleanUpAddressBalance--- Remove old history record has been started");
+    cleanUpBalance(
+        jooqAddressBalanceRepository::cleanUpAddressBalance,
+        addressBalanceRepository::getMaxSlot,
+        "AddressBalance");
+  }
 
-    // Should be max slot - 43200 to ensure rollback case
-    long targetSlot = addressBalanceRepository.getMaxSlot() - 43200;
-    log.info("Cleaning address balance table. Target slot: {}", targetSlot);
-    long totalDeletedRowsRows = 0;
-    long deletedRows = 0;
-    do {
-      deletedRows = jooqAddressBalanceRepository.cleanUpAddressBalance(targetSlot, 1000);
-      totalDeletedRowsRows += deletedRows;
-      log.info("Total removed {} rows", totalDeletedRowsRows);
-    } while (deletedRows > 0);
-
-    log.info(
-        "---CleanUpAddressBalance--- Remove history record has ended. Time taken {}ms",
-        System.currentTimeMillis() - currentTime);
+  @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
+  public void cleanUpStakeAddressBalance() {
+    cleanUpBalance(
+        jooqStakeAddressBalanceRepository::cleanUpStakeAddressBalance,
+        stakeAddressBalanceRepository::getMaxSlot,
+        "StakeAddressBalance");
   }
 
   @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
@@ -120,7 +119,31 @@ public class AggregateAnalyticSchedule {
     refreshMaterializedView(stakeTxBalanceRepository::refreshMaterializedView, "StakeTxBalance");
   }
 
-  public void refreshMaterializedView(Runnable refreshViewRunnable, String matViewName) {
+  private void cleanUpBalance(
+      BiFunction<Long, Integer, Integer> cleanUpFunction,
+      Supplier<Long> maxSlotSupplier,
+      String tableName) {
+    long currentTime = System.currentTimeMillis();
+    log.info("---CleanUp{}---- Remove history record has been started", tableName);
+
+    // Should be max slot - 43200 to ensure rollback case
+    long targetSlot = maxSlotSupplier.get() - 43200;
+    log.info("Cleaning {} table. Target slot: {}", tableName, targetSlot);
+    long totalDeletedRowsRows = 0;
+    long deletedRows = 0;
+    do {
+      deletedRows = cleanUpFunction.apply(targetSlot, 1000);
+      totalDeletedRowsRows += deletedRows;
+      log.info("Total {} history removed {} rows", tableName, totalDeletedRowsRows);
+    } while (deletedRows > 0);
+
+    log.info(
+        "---CleanUp{}---- Remove history record has ended. Time taken {}ms",
+        tableName,
+        System.currentTimeMillis() - currentTime);
+  }
+
+  private void refreshMaterializedView(Runnable refreshViewRunnable, String matViewName) {
     long currentTime = System.currentTimeMillis();
     log.info("---{}---- Refresh job has been started", matViewName);
 
