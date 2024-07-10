@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
@@ -264,25 +265,17 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     log.info("tokenToProcess has size: {}", tokenToProcessSet.size());
 
+    final var counter = new AtomicLong(0L);
     List<String> filteredTokenToProcess = new ArrayList<>();
     Iterables.partition(tokenToProcessSet, 50)
         .forEach(
             units -> {
               var tokenUnitIdents = multiAssetRepository.getTokenUnitByUnitIn(units);
-              log.info(
-                  "units size: {}, tokenUnitIdents size: {}", units.size(), tokenUnitIdents.size());
               var tokenInfoIdents =
                   tokenUnitIdents.stream().map(TokenUnitProjection::getIdent).toList();
               var tokenInfos = tokenInfoRepository.findByMultiAssetIdIn(tokenInfoIdents);
-              log.info("tokenInfos size: {}", tokenInfos.size());
               tokenInfos.forEach(
                   tokenInfo -> {
-                    log.info(
-                        "Checkpoint From Time: {}, tokenInfo: {}/{}/{}",
-                        tokenInfoCheckpoint.getUpdateTime().toLocalDateTime(),
-                        tokenInfo.getId(),
-                        tokenInfo.getMultiAssetId(),
-                        tokenInfo.getUpdateTime().toLocalDateTime());
                     if (tokenInfo.getUpdateTime().before(tokenInfoCheckpoint.getUpdateTime())) {
                       var tokenToProcessOpt =
                           tokenUnitIdents.stream()
@@ -297,9 +290,13 @@ public class TokenInfoServiceImpl implements TokenInfoService {
                       if (tokenToProcessOpt.isEmpty()) {
                         log.warn("expected token to process, could not be found.");
                       }
+                    } else {
+                      counter.incrementAndGet();
                     }
                   });
             });
+
+    log.info("skipped {} tokens refresh", counter.get());
 
     filteredTokenToProcess.forEach(
         unit -> {
