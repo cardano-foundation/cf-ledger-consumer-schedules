@@ -67,6 +67,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   @Value("${jobs.token-info.batch-size}")
   private int tokenInfoBatchSize;
 
+  @Value("${jobs.token-info.block-interval-size}")
+  private int tokenInfoBlockIntervalSize;
+
   @Override
   @Transactional(value = "explorerTransactionManager")
   @SneakyThrows
@@ -99,8 +102,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
       Long blockNumberTo;
       Timestamp timeBlockTo;
-      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > 100) {
-        blockNumberTo = tokenInfoCheckpoint.get().getBlockNo() + 100;
+      if (latestBlockNo - tokenInfoCheckpoint.get().getBlockNo() > tokenInfoBlockIntervalSize) {
+        blockNumberTo = tokenInfoCheckpoint.get().getBlockNo() + tokenInfoBlockIntervalSize;
         timeBlockTo = blockRepository.getBlockTimeByBlockNo(blockNumberTo);
       } else {
         blockNumberTo = latestBlockNo;
