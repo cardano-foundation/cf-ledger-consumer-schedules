@@ -71,7 +71,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   @SneakyThrows
   public void updateTokenInfoList() {
     var latestBlock = blockRepository.findLatestBlock();
-    var addressBalance = addressBalanceRepository.findFirstBy(Sort.by("block").descending());
+    var addressBalance = addressBalanceRepository.findFirstBy(Sort.by("blockNumber").descending());
     log.info("latestBlock: {}", latestBlock);
     log.info("addressBalance: {}", addressBalance);
 
