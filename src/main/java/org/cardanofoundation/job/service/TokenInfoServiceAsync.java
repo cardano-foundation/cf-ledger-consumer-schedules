@@ -33,7 +33,7 @@ public class TokenInfoServiceAsync {
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final MultiAssetService multiAssetService;
   private final MultiAssetRepository multiAssetRepository;
-  private final CardanoConverters converters;
+  private final CardanoConverters cardanoConverters;
 
   /**
    * Asynchronously builds a list of TokenInfo entities based on the provided list of MultiAsset.
@@ -76,7 +76,7 @@ public class TokenInfoServiceAsync {
     if (epochSecond24hAgo.toEpochSecond(ZoneOffset.UTC)
         <= timeLatestBlock.toInstant().getEpochSecond()) {
 
-      var slotFrom = converters.time().toSlot(epochSecond24hAgo);
+      var slotFrom = cardanoConverters.time().toSlot(epochSecond24hAgo);
 
       volumes24h = addressTxAmountRepository.sumBalanceAfterBlockSlot(multiAssetUnits, slotFrom);
     }

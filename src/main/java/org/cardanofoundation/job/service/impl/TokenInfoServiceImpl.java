@@ -52,7 +52,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final JOOQTokenInfoRepository jooqTokenInfoRepository;
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final AddressBalanceRepository addressBalanceRepository;
-  private final CardanoConverters converters;
+  private final CardanoConverters cardanoConverters;
 
   private final RedisTemplate<String, String> redisTemplate;
 
@@ -206,8 +206,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
         maxBlockNo);
 
     var txSlotFrom =
-        converters.time().toSlot(tokenInfoCheckpoint.getUpdateTime().toLocalDateTime());
-    var txSlotTo = converters.time().toSlot(timeLatestBlock.toLocalDateTime());
+        cardanoConverters.time().toSlot(tokenInfoCheckpoint.getUpdateTime().toLocalDateTime());
+    var txSlotTo = cardanoConverters.time().toSlot(timeLatestBlock.toLocalDateTime());
 
     log.info("slot range, from: {}, to: {}", txSlotFrom, txSlotTo);
 
