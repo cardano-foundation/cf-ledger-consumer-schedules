@@ -28,8 +28,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.google.common.collect.Iterables;
 
 import org.cardanofoundation.conversions.CardanoConverters;
-import org.cardanofoundation.conversions.ClasspathConversionsFactory;
-import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint;
 import org.cardanofoundation.job.projection.TokenUnitProjection;
@@ -37,7 +35,6 @@ import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointReposito
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.*;
-import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
 import org.cardanofoundation.job.util.BatchUtils;
@@ -54,13 +51,10 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   private final TokenInfoServiceAsync tokenInfoServiceAsync;
   private final JOOQTokenInfoRepository jooqTokenInfoRepository;
   private final AddressTxAmountRepository addressTxAmountRepository;
-  private final MultiAssetService multiAssetService;
-  private final LatestTokenBalanceRepository latestTokenBalanceRepository;
   private final AddressBalanceRepository addressBalanceRepository;
+  private final CardanoConverters converters;
 
   private final RedisTemplate<String, String> redisTemplate;
-
-  CardanoConverters converters = ClasspathConversionsFactory.createConverters(NetworkType.MAINNET);
 
   @Value("${application.network}")
   private String network;

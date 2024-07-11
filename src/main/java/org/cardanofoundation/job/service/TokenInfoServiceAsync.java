@@ -18,8 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.conversions.CardanoConverters;
-import org.cardanofoundation.conversions.ClasspathConversionsFactory;
-import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.projection.TokenUnitProjection;
@@ -35,8 +33,7 @@ public class TokenInfoServiceAsync {
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final MultiAssetService multiAssetService;
   private final MultiAssetRepository multiAssetRepository;
-
-  CardanoConverters converters = ClasspathConversionsFactory.createConverters(NetworkType.MAINNET);
+  private final CardanoConverters converters;
 
   /**
    * Asynchronously builds a list of TokenInfo entities based on the provided list of MultiAsset.
