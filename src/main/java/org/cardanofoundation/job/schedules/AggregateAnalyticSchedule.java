@@ -131,8 +131,10 @@ public class AggregateAnalyticSchedule {
     log.info("Cleaning {} table. Target slot: {}", tableName, targetSlot);
     long totalDeletedRowsRows = 0;
     long deletedRows = 0;
+    final int deletedRowsThreshold = 10000;
+
     do {
-      deletedRows = cleanUpFunction.apply(targetSlot, 1000);
+      deletedRows = cleanUpFunction.apply(targetSlot, deletedRowsThreshold);
       totalDeletedRowsRows += deletedRows;
       log.info("Total {} history removed {} rows", tableName, totalDeletedRowsRows);
     } while (deletedRows > 0);
