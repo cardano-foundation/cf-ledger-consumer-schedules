@@ -152,6 +152,7 @@ public class AggregateAnalyticSchedule {
       deletedRows = cleanUpFutures.stream().mapToInt(CompletableFuture::join).sum();
       totalDeletedRowsRows += deletedRows;
       log.info("Total {} history removed {} rows", tableName, totalDeletedRowsRows);
+      cleanUpFutures.clear();
     } while (deletedRows > 0);
 
     log.info(
