@@ -163,7 +163,7 @@ public class TokenInfoServiceAsync {
         <= timeLatestBlock.toInstant().getEpochSecond()) {
       //      volumes24h =
       // addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
-      var slotFrom = converters.time().toSlot(epochSecond24hAgo);
+      var slotFrom = cardanoConverters.time().toSlot(epochSecond24hAgo);
       volumes24h = addressTxAmountRepository.sumBalanceAfterBlockSlot(multiAssetUnits, slotFrom);
     }
 
