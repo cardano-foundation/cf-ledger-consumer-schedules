@@ -1,8 +1,5 @@
 package org.cardanofoundation.job.schedules;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -134,25 +131,12 @@ public class AggregateAnalyticSchedule {
     log.info("Cleaning {} table. Target slot: {}", tableName, targetSlot);
     long totalDeletedRowsRows = 0;
     long deletedRows = 0;
-    final int fixedBatchSize = 10;
     final int deletedRowsThreshold = 10000;
 
-    List<CompletableFuture<Integer>> cleanUpFutures = new ArrayList<>();
     do {
-
-      for (int i = 0; i < fixedBatchSize; i++) {
-        CompletableFuture<Integer> future =
-            CompletableFuture.supplyAsync(
-                () -> cleanUpFunction.apply(targetSlot, deletedRowsThreshold));
-        cleanUpFutures.add(future);
-      }
-
-      CompletableFuture.allOf(cleanUpFutures.toArray(new CompletableFuture[0])).join();
-
-      deletedRows = cleanUpFutures.stream().mapToInt(CompletableFuture::join).sum();
+      deletedRows = cleanUpFunction.apply(targetSlot, deletedRowsThreshold);
       totalDeletedRowsRows += deletedRows;
       log.info("Total {} history removed {} rows", tableName, totalDeletedRowsRows);
-      cleanUpFutures.clear();
     } while (deletedRows > 0);
 
     log.info(
