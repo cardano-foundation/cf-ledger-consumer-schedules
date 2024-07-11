@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -23,9 +24,13 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.cardanofoundation.conversions.CardanoConverters;
+import org.cardanofoundation.conversions.ClasspathConversionsFactory;
+import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.ledgersync.EpochParam;
 import org.cardanofoundation.explorer.common.entity.ledgersync.StakeAddress;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Tx;
@@ -68,11 +73,19 @@ class StakeKeyLifeCycleServiceImplTest {
 
   @Mock private FetchRewardDataService fetchRewardDataService;
 
+  CardanoConverters cardanoConverters =
+      ClasspathConversionsFactory.createConverters(NetworkType.MAINNET);
+
+  @BeforeEach
+  public void setUp() {
+    ReflectionTestUtils.setField(stakeKeyLifeCycleService, "cardanoConverters", cardanoConverters);
+  }
+
   @Test
   void
       getStakeWalletActivities_whenStakeAddressHaveRegistrationWithCondition_showReturnRegistrations() {
     Pageable pageable = PageRequest.of(0, 1);
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2023-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
@@ -193,18 +206,18 @@ class StakeKeyLifeCycleServiceImplTest {
             .validContract(false)
             .build());
 
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2023-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
     StakeLifeCycleFilterRequest condition =
         StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
 
-    when(addressTxAmountRepository.findTxAndAmountByStake(
-            stakeAddress.getView(),
-            DateUtils.timestampToEpochSecond(condition.getFromDate()),
-            DateUtils.timestampToEpochSecond(condition.getToDate()),
-            pageable))
+    var slotFrom = cardanoConverters.time().toSlot(condition.getFromDate().toLocalDateTime());
+    var slotTo = cardanoConverters.time().toSlot(condition.getToDate().toLocalDateTime());
+
+    when(addressTxAmountRepository.findTxAndAmountByStakeBetweenSlots(
+            stakeAddress.getView(), slotFrom, slotTo, pageable))
         .thenReturn(page);
 
     when(txRepository.findByIdIn(any())).thenReturn(txList);
@@ -238,7 +251,7 @@ class StakeKeyLifeCycleServiceImplTest {
   void
       getStakeRegistrations_whenStakeAddressHaveRegistrationWithCondition_showReturnRegistrations() {
     Pageable pageable = PageRequest.of(0, 1);
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2023-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
@@ -274,7 +287,7 @@ class StakeKeyLifeCycleServiceImplTest {
   @Test
   void getStakeDelegations_whenStakeAddressHaveDelegationWithCondition_showReturnDelegations() {
     Pageable pageable = PageRequest.of(0, 1);
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2023-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
@@ -306,7 +319,7 @@ class StakeKeyLifeCycleServiceImplTest {
     when(projection.getEpoch()).thenReturn(333);
     when(projection.getAmount()).thenReturn(BigInteger.valueOf(382916));
     when(projection.getTime()).thenReturn(Timestamp.valueOf(LocalDateTime.now()));
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2023-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
@@ -330,7 +343,7 @@ class StakeKeyLifeCycleServiceImplTest {
   @Test
   void getStakeWithdrawals_whenStakeAddressHaveWithdrawalWithCondition_showReturnWithdrawal() {
     Pageable pageable = PageRequest.of(0, 1);
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2023-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
@@ -360,7 +373,7 @@ class StakeKeyLifeCycleServiceImplTest {
   void
       getStakeDeRegistrations_whenStakeAddressHaveDeRegistrationWithCondition_showReturnDeRegistrations() {
     Pageable pageable = PageRequest.of(0, 1);
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2023-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));

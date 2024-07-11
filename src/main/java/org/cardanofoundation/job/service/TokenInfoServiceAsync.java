@@ -53,7 +53,7 @@ public class TokenInfoServiceAsync {
       Long startIdent,
       Long endIdent,
       Long blockNo,
-      Long epochSecond24hAgo,
+      LocalDateTime epochSecond24hAgo,
       Timestamp timeLatestBlock) {
 
     List<TokenInfo> saveEntities = new ArrayList<>((int) (endIdent - startIdent + 1));
@@ -73,9 +73,12 @@ public class TokenInfoServiceAsync {
     List<String> multiAssetUnits = new ArrayList<>(multiAssetUnitMap.keySet());
     List<TokenVolume> volumes24h = new ArrayList<>();
     // if epochSecond24hAgo > epochTime of timeLatestBlock then ignore calculation of 24h volume
-    if (epochSecond24hAgo <= timeLatestBlock.toInstant().getEpochSecond()) {
-      volumes24h =
-          addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
+    if (epochSecond24hAgo.toEpochSecond(ZoneOffset.UTC)
+        <= timeLatestBlock.toInstant().getEpochSecond()) {
+
+      var slotFrom = converters.time().toSlot(epochSecond24hAgo);
+
+      volumes24h = addressTxAmountRepository.sumBalanceAfterBlockSlot(multiAssetUnits, slotFrom);
     }
     log.info(
         "get24hVolume startIdent: {} endIdent: {} took: {}ms",

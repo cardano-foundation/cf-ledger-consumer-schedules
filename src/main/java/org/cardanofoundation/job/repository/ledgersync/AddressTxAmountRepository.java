@@ -40,6 +40,7 @@ public interface AddressTxAmountRepository
               + " WHERE addTxAmount.stakeAddress = :stakeAddress"
               + " AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate"
               + " GROUP BY addTxAmount.txHash, addTxAmount.blockTime, tx.id")
+  @Deprecated
   Page<StakeTxProjection> findTxAndAmountByStake(
       @Param("stakeAddress") String stakeAddress,
       @Param("fromDate") Long fromDate,
@@ -47,13 +48,37 @@ public interface AddressTxAmountRepository
       Pageable pageable);
 
   @Query(
+      value =
+          "SELECT new org.cardanofoundation.job.projection.StakeTxProjection(tx.id, sum(addTxAmount.quantity), addTxAmount.blockTime)"
+              + " FROM AddressTxAmount addTxAmount"
+              + " JOIN Tx tx on tx.hash = addTxAmount.txHash"
+              + " WHERE addTxAmount.stakeAddress = :stakeAddress"
+              + " AND addTxAmount.slot BETWEEN :slotFrom and :slotTo"
+              + " GROUP BY addTxAmount.txHash, addTxAmount.blockTime, tx.id")
+  Page<StakeTxProjection> findTxAndAmountByStakeBetweenSlots(
+      @Param("stakeAddress") String stakeAddress,
+      @Param("slotFrom") Long slotFrom,
+      @Param("slotTo") Long slotTo,
+      Pageable pageable);
+
+  @Query(
       "SELECT COUNT(DISTINCT addTxAmount.txHash) FROM AddressTxAmount addTxAmount"
           + " WHERE addTxAmount.stakeAddress = :stakeAddress"
           + " AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate")
+  @Deprecated
   Long getCountTxByStakeInDateRange(
       @Param("stakeAddress") String stakeAddress,
       @Param("fromDate") Long fromDate,
       @Param("toDate") Long toDate);
+
+  @Query(
+      "SELECT COUNT(DISTINCT addTxAmount.txHash) FROM AddressTxAmount addTxAmount"
+          + " WHERE addTxAmount.stakeAddress = :stakeAddress"
+          + " AND addTxAmount.slot BETWEEN :slotFrom AND :slotTo")
+  Long getCountTxByStakeInSlotRange(
+      @Param("stakeAddress") String stakeAddress,
+      @Param("slotFrom") Long slotFrom,
+      @Param("slotTo") Long slotTo);
 
   @Query(
       "select distinct addressTxAmount.unit "
@@ -68,6 +93,7 @@ public interface AddressTxAmountRepository
           + " from AddressTxAmount addressTxAmount"
           + " where addressTxAmount.blockTime >= :fromTime and addressTxAmount.blockTime <= :toTime"
           + " and addressTxAmount.unit != 'lovelace'")
+  @Deprecated
   List<String> getTokensInTransactionInTimeRange(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
 
@@ -89,6 +115,7 @@ public interface AddressTxAmountRepository
       AND ata.quantity > 0
       GROUP BY ata.unit
       """)
+  @Deprecated
   List<TokenVolume> sumBalanceAfterBlockTime(
       @Param("units") List<String> units, @Param("blockTime") Long blockTime);
 

@@ -137,8 +137,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     var multiAssetIdList =
         LongStream.rangeClosed(1, maxMultiAssetId).boxed().collect(Collectors.toList());
 
-    Long epochSecond24hAgo =
-        LocalDateTime.now(ZoneOffset.UTC).minusDays(1).toEpochSecond(ZoneOffset.UTC);
+    LocalDateTime epochSecond24hAgo = LocalDateTime.now(ZoneOffset.UTC).minusDays(1);
 
     // Define the maximum batch size for processing multi-assets.
     int multiAssetListSize = tokenInfoBatchSize;
