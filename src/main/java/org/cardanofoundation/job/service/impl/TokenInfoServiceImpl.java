@@ -34,7 +34,10 @@ import org.cardanofoundation.job.projection.TokenUnitProjection;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
-import org.cardanofoundation.job.repository.ledgersync.*;
+import org.cardanofoundation.job.repository.ledgersync.AddressBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
+import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
+import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.service.TokenInfoService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
 import org.cardanofoundation.job.util.BatchUtils;
@@ -267,6 +270,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
               var tokenInfoIdents =
                   tokenUnitIdents.stream().map(TokenUnitProjection::getIdent).toList();
               var tokenInfos = tokenInfoRepository.findByMultiAssetIdIn(tokenInfoIdents);
+              // For the pre-existing, check if they require updating
               tokenInfos.forEach(
                   tokenInfo -> {
                     if (tokenInfo.getUpdateTime().before(tokenInfoCheckpoint.getUpdateTime())) {
@@ -287,6 +291,25 @@ public class TokenInfoServiceImpl implements TokenInfoService {
                       counter.incrementAndGet();
                     }
                   });
+              // now check for new ones
+              var preexistingTokenIdentities =
+                  tokenInfos.stream().map(TokenInfo::getMultiAssetId).toList();
+              tokenInfoIdents.stream()
+                  .filter(ident -> !preexistingTokenIdentities.contains(ident))
+                  .forEach(
+                      newTokenIdent -> {
+                        var tokenToProcessOpt =
+                            tokenUnitIdents.stream()
+                                .filter(tokenIdent -> tokenIdent.getIdent().equals(newTokenIdent))
+                                .findFirst();
+
+                        tokenToProcessOpt.ifPresent(
+                            tokenIdent -> filteredTokenToProcess.add(tokenIdent.getUnit()));
+
+                        if (tokenToProcessOpt.isEmpty()) {
+                          log.warn("expected token to process, could not be found.");
+                        }
+                      });
             });
 
     log.info("skipped {} tokens refresh", counter.get());
