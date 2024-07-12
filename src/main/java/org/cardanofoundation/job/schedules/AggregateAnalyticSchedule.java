@@ -111,7 +111,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - startTime);
   }
 
-  @Scheduled(cron = "-")
+  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void updateNumberOfTokenTx() {
     try {
       log.info("---TokenInfo--- Refresh job has been started");
