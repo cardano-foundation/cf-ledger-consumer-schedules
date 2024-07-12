@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.common.entity.compositeKey.AddressTxAmountId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxAmount;
+import org.cardanofoundation.job.model.TokenNumberHolders;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
@@ -142,4 +143,16 @@ public interface AddressTxAmountRepository
       GROUP BY ata.unit
       """)
   List<TokenVolume> getTotalVolumeByUnits(@Param("units") List<String> units);
+
+  @Query(
+      value =
+          """
+              SELECT new org.cardanofoundation.job.model.TokenNumberHolders(unit, count(address))
+              FROM address_balance_view
+              WHERE unit IN :units
+              AND quantity > 0
+              GROUP BY unit
+          """,
+      nativeQuery = true)
+  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(@Param("units") List<String> units);
 }

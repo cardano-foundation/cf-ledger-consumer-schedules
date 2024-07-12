@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 import org.cardanofoundation.job.model.TokenNumberHolders;
-import org.cardanofoundation.job.repository.ledgersync.LatestTokenBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.util.StreamUtil;
 
@@ -19,7 +19,8 @@ import org.cardanofoundation.job.util.StreamUtil;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MultiAssetServiceImpl implements MultiAssetService {
 
-  LatestTokenBalanceRepository latestTokenBalanceRepository;
+  //  LatestTokenBalanceRepository latestTokenBalanceRepository;
+  private final AddressTxAmountRepository addressTxAmountRepository;
 
   /**
    * Build a mapping of multiAsset IDs to the total number of holders for each multi-asset. The
@@ -32,7 +33,7 @@ public class MultiAssetServiceImpl implements MultiAssetService {
    */
   @Override
   public Map<String, Long> getMapNumberHolderByUnits(List<String> units) {
-    var numberOfHolders = latestTokenBalanceRepository.countHoldersByMultiAssetIdInRange(units);
+    var numberOfHolders = addressTxAmountRepository.countHoldersByMultiAssetIdInRange(units);
     return StreamUtil.toMap(
         numberOfHolders, TokenNumberHolders::getUnit, TokenNumberHolders::getNumberOfHolders);
   }
