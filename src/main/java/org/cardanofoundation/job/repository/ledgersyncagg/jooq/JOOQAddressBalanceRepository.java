@@ -55,4 +55,26 @@ public class JOOQAddressBalanceRepository {
         deletedRows);
     return deletedRows;
   }
+
+  public void deleteAllZeroHolders(long targetBlockTime) {
+    log.info("Deleting all zero holders from address balance");
+    long startTime = System.currentTimeMillis();
+    String deleteQuery =
+        """
+        DELETE
+        FROM address_balance
+        WHERE block_time < ?
+          AND unit != 'lovelace'
+          AND quantity = 0;
+        """;
+
+    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+    transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    int deletedRows =
+        transactionTemplate.execute(status -> dsl.execute(deleteQuery, targetBlockTime));
+    log.info(
+        "Deleted all zero holders from address balance: {} record deleted in {} ms",
+        deletedRows,
+        System.currentTimeMillis() - startTime);
+  }
 }
