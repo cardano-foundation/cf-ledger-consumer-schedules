@@ -36,9 +36,13 @@ public class MultiAssetServiceImpl implements MultiAssetService {
   public Map<String, Long> getMapNumberHolderByUnits(List<String> units) {
     Map<String, Long> map = new HashMap<>();
     try {
+      var startTime = System.currentTimeMillis();
       var numberOfHolders = addressTxAmountRepository.countHoldersByMultiAssetIdInRange(units);
       if (numberOfHolders != null) {
-        log.info("numberOfHolders is not null, size: {}", numberOfHolders.size());
+        log.info(
+            "numberOfHolders is not null, size: {}, elapsed: {}ms",
+            numberOfHolders.size(),
+            System.currentTimeMillis() - startTime);
         numberOfHolders.forEach(holder -> map.put(holder.getUnit(), holder.getNumberOfHolders()));
       }
       return map;
