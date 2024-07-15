@@ -11,10 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 
-import org.cardanofoundation.job.projection.TokenNumberHoldersProjection;
 import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
-import org.cardanofoundation.job.util.StreamUtil;
 
 @Service
 @RequiredArgsConstructor
@@ -36,20 +34,17 @@ public class MultiAssetServiceImpl implements MultiAssetService {
    */
   @Override
   public Map<String, Long> getMapNumberHolderByUnits(List<String> units) {
+    Map<String, Long> map = new HashMap<>();
     try {
       var numberOfHolders = addressTxAmountRepository.countHoldersByMultiAssetIdInRange(units);
       if (numberOfHolders != null) {
         log.info("numberOfHolders is not null, size: {}", numberOfHolders.size());
-        return StreamUtil.toMap(
-            numberOfHolders,
-            TokenNumberHoldersProjection::getUnit,
-            TokenNumberHoldersProjection::getNumberOfHolders);
-      } else {
-        return new HashMap<>();
+        numberOfHolders.forEach(holder -> map.put(holder.getUnit(), holder.getNumberOfHolders()));
       }
+      return map;
     } catch (Exception e) {
       log.error("Error Token", e);
-      return new HashMap<>();
+      return map;
     }
   }
 }
