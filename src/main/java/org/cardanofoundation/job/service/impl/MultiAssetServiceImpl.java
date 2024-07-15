@@ -9,7 +9,7 @@ import lombok.experimental.FieldDefaults;
 
 import org.springframework.stereotype.Service;
 
-import org.cardanofoundation.job.model.TokenNumberHolders;
+import org.cardanofoundation.job.projection.TokenNumberHoldersProjection;
 import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.util.StreamUtil;
@@ -35,6 +35,8 @@ public class MultiAssetServiceImpl implements MultiAssetService {
   public Map<String, Long> getMapNumberHolderByUnits(List<String> units) {
     var numberOfHolders = addressTxAmountRepository.countHoldersByMultiAssetIdInRange(units);
     return StreamUtil.toMap(
-        numberOfHolders, TokenNumberHolders::getUnit, TokenNumberHolders::getNumberOfHolders);
+        numberOfHolders,
+        TokenNumberHoldersProjection::getUnit,
+        TokenNumberHoldersProjection::getNumberOfHolders);
   }
 }

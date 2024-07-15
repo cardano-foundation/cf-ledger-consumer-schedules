@@ -10,9 +10,9 @@ import org.springframework.data.repository.query.Param;
 
 import org.cardanofoundation.explorer.common.entity.compositeKey.AddressTxAmountId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.AddressTxAmount;
-import org.cardanofoundation.job.model.TokenNumberHolders;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.projection.StakeTxProjection;
+import org.cardanofoundation.job.projection.TokenNumberHoldersProjection;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
 
 public interface AddressTxAmountRepository
@@ -147,12 +147,13 @@ public interface AddressTxAmountRepository
   @Query(
       value =
           """
-              SELECT new org.cardanofoundation.job.model.TokenNumberHolders(unit, count(address))
+              SELECT unit, count(address) AS number_of_holders
               FROM address_balance_view
               WHERE unit IN :units
               AND quantity > 0
               GROUP BY unit
           """,
       nativeQuery = true)
-  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(@Param("units") List<String> units);
+  List<TokenNumberHoldersProjection> countHoldersByMultiAssetIdInRange(
+      @Param("units") List<String> units);
 }
