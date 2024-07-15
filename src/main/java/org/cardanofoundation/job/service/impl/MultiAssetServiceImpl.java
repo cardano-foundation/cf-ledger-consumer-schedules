@@ -44,6 +44,8 @@ public class MultiAssetServiceImpl implements MultiAssetService {
             numberOfHolders,
             TokenNumberHoldersProjection::getUnit,
             TokenNumberHoldersProjection::getNumberOfHolders);
+      } else {
+        return new HashMap<>();
       }
     } catch (Exception e) {
       return new HashMap<>();
