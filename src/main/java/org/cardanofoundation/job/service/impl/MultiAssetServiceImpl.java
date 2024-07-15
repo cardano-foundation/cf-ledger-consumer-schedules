@@ -1,11 +1,13 @@
 package org.cardanofoundation.job.service.impl;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,7 @@ import org.cardanofoundation.job.util.StreamUtil;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class MultiAssetServiceImpl implements MultiAssetService {
 
@@ -33,10 +36,17 @@ public class MultiAssetServiceImpl implements MultiAssetService {
    */
   @Override
   public Map<String, Long> getMapNumberHolderByUnits(List<String> units) {
-    var numberOfHolders = addressTxAmountRepository.countHoldersByMultiAssetIdInRange(units);
-    return StreamUtil.toMap(
-        numberOfHolders,
-        TokenNumberHoldersProjection::getUnit,
-        TokenNumberHoldersProjection::getNumberOfHolders);
+    try {
+      var numberOfHolders = addressTxAmountRepository.countHoldersByMultiAssetIdInRange(units);
+      if (numberOfHolders != null) {
+        log.info("numberOfHolders is not null, size: {}", numberOfHolders.size());
+        return StreamUtil.toMap(
+            numberOfHolders,
+            TokenNumberHoldersProjection::getUnit,
+            TokenNumberHoldersProjection::getNumberOfHolders);
+      }
+    } catch (Exception e) {
+      return new HashMap<>();
+    }
   }
 }
