@@ -48,6 +48,7 @@ public class MultiAssetServiceImpl implements MultiAssetService {
         return new HashMap<>();
       }
     } catch (Exception e) {
+      log.error("Error Token", e);
       return new HashMap<>();
     }
   }
