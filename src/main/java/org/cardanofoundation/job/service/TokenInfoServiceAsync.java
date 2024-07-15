@@ -174,7 +174,9 @@ public class TokenInfoServiceAsync {
         StreamUtil.toMap(volumes24h, TokenVolume::getUnit, TokenVolume::getVolume);
     var totalVolumeMap =
         StreamUtil.toMap(totalVolumes, TokenVolume::getUnit, TokenVolume::getVolume);
-    var mapNumberHolder = multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
+    // FIXME: this is very slow
+    //    var mapNumberHolder = multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
+    Map<String, Long> mapNumberHolder = Map.of();
     // Clear unnecessary lists to free up memory to avoid OOM error
     volumes24h.clear();
     totalVolumes.clear();
