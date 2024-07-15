@@ -32,6 +32,7 @@ import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.TokenTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.LatestTokenBalanceRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQLatestTokenBalanceRepository;
 
 @Slf4j
@@ -45,6 +46,7 @@ public class LatestTokenBalanceSchedule {
   private final TokenTxCountRepository tokenTxCountRepository;
   private final MultiAssetRepository multiAssetRepository;
   private final JOOQLatestTokenBalanceRepository jooqLatestTokenBalanceRepository;
+  private final JOOQAddressBalanceRepository jooqAddressBalanceRepository;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
   private final BlockRepository blockRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
@@ -71,7 +73,7 @@ public class LatestTokenBalanceSchedule {
             addressTxAmountRepository.getMaxBlockNoFromCursor(), latestBlock.get().getBlockNo());
     final Integer checkpoint = redisTemplate.opsForValue().get(latestTokenBalanceCheckpoint);
     if (Objects.isNull(checkpoint) || latestTokenBalanceRepository.count() == 0) {
-      init();
+      init(currentMaxBlockNo);
     } else if (currentMaxBlockNo > checkpoint.longValue()) {
       update(checkpoint.longValue(), currentMaxBlockNo);
     }
@@ -83,9 +85,12 @@ public class LatestTokenBalanceSchedule {
         .set(latestTokenBalanceCheckpoint, Math.max((int) currentMaxBlockNo - 2160, 0));
   }
 
-  private void init() {
+  private void init(long currentMaxBlockNo) {
     log.info("Start init LatestTokenBalance");
     long startTime = System.currentTimeMillis();
+
+    Long epochBlockTimeCurrent =
+        blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
 
     // Drop all indexes before inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.dropAllIndexes();
@@ -105,6 +110,7 @@ public class LatestTokenBalanceSchedule {
     // Create all indexes after inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.createAllIndexes();
     jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
+    jooqAddressBalanceRepository.deleteAllZeroHolders(epochBlockTimeCurrent);
     log.info("End init LatestTokenBalance in {} ms", System.currentTimeMillis() - startTime);
   }
 
@@ -143,6 +149,7 @@ public class LatestTokenBalanceSchedule {
     processingLatestTokenBalance(unitsInBlockRange, epochBlockTimeCheckpoint, true);
 
     jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
+    jooqAddressBalanceRepository.deleteAllZeroHolders(epochBlockTimeCurrent);
 
     log.info(
         "End update LatestTokenBalance with address size = {} in {} ms",
