@@ -137,7 +137,7 @@ jobs:
     enabled: ${AGG_ANALYTIC_JOB_ENABLED:true}
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:3600000}
     token-tx-count:
-      enabled: ${TX_COUNT_ENABLED_JOB_ENABLED:false}
+      enabled: ${TOKEN_TX_COUNT_JOB_ENABLED:false}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
