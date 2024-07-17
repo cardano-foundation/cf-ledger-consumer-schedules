@@ -111,8 +111,7 @@ public class AggregateAnalyticSchedule {
         System.currentTimeMillis() - startTime);
   }
 
-  @Scheduled(fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  @ConditionalOnProperty("jobs.agg-analytic.token-tx-count.enabled")
+  @Scheduled(cron = "-")
   public void updateNumberOfTokenTx() {
     try {
       log.info("---TokenInfo--- Refresh job has been started");
