@@ -42,7 +42,7 @@ public class VotingProcedureSchedule {
 
   private static final int DEFAULT_PAGE_SIZE = 1000;
 
-  @Scheduled(fixedRateString = "${jobs.governance-info.fixed-delay}")
+  @Scheduled(cron = "-")
   @Transactional
   void syncUpLatestVotingProcedure() {
     long startTime = System.currentTimeMillis();

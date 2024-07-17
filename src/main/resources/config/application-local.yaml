@@ -121,6 +121,8 @@ jobs:
   token-info:
     enabled: ${TOKEN_INFO_JOB_ENABLED:false}
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
+    batch-size: ${TOKEN_INFO_BATCH_SIZE:1000}
+    block-interval-size: ${BLOCK_INTERVAL_SIZE:1000}
   smart-contract-info:
     fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:30000}
   native-script-info:
@@ -132,7 +134,10 @@ jobs:
     enabled: ${GOVERNANCE_INFO_JOB_ENABLED:true}
     fixed-delay: ${GOVERNANCE_INFO_FIXED_DELAY:30000}
   agg-analytic:
+    enabled: ${AGG_ANALYTIC_JOB_ENABLED:false}
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
+    token-tx-count:
+      enabled: ${TX_COUNT_ENABLED_JOB_ENABLED:false}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 

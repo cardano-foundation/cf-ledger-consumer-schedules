@@ -18,7 +18,7 @@ public class CommitteeInfoSchedule {
 
   private final CommitteeInfoRepository committeeInfoRepository;
 
-  @Scheduled(fixedRate = 1000 * 60 * 5) // 5 minutes
+  @Scheduled(cron = "-") // 5 minutes
   public void refreshMaterializedView() {
     try {
       long startTime = System.currentTimeMillis();

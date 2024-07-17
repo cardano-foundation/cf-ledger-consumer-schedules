@@ -117,14 +117,16 @@ jobs:
     enabled: ${STAKE_TX_BALANCE_JOB_ENABLED:true}
     fixed-delay: ${STAKE_TX_BALANCE_FIXED_DELAY:300000}
   aggregate-pool-info:
-    fixed-delay: ${AGGREGATE_POOL_INFO_FIXED_DELAY:10000}
+    fixed-delay: ${AGGREGATE_POOL_INFO_FIXED_DELAY:3600000}
   token-info:
     enabled: ${TOKEN_INFO_JOB_ENABLED:true}
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
+    batch-size: ${TOKEN_INFO_BATCH_SIZE:1000}
+    block-interval-size: ${BLOCK_INTERVAL_SIZE:1000}
   smart-contract-info:
-    fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:30000}
+    fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:3600000}
   native-script-info:
-    fixed-delay: ${NATIVE_SCRIPT_INFO_FIXED_DELAY:30000}
+    fixed-delay: ${NATIVE_SCRIPT_INFO_FIXED_DELAY:3600000}
   drep-info:
     enabled: ${DREP_INFO_JOB_ENABLED:true}
     fixed-delay: ${DREP_INFO_FIXED_DELAY:30000}
@@ -132,7 +134,10 @@ jobs:
     enabled: ${GOVERNANCE_INFO_JOB_ENABLED:true}
     fixed-delay: ${GOVERNANCE_INFO_FIXED_DELAY:30000}
   agg-analytic:
-    fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
+    enabled: ${AGG_ANALYTIC_JOB_ENABLED:true}
+    fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:3600000}
+    token-tx-count:
+      enabled: ${TOKEN_TX_COUNT_JOB_ENABLED:false}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
