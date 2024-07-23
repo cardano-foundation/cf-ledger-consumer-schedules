@@ -26,13 +26,13 @@
     <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     <version.explorer-common>0.9.0-PR232</version.explorer-common>
     <version.spring-cloud-aws>2.4.2</version.spring-cloud-aws>
-    <version.lombok>1.18.26</version.lombok>
+    <version.lombok>1.18.20</version.lombok>
     <version.eclipse.jgit>6.5.0.202303070854-r</version.eclipse.jgit>
     <version.apache.poi>5.2.0</version.apache.poi>
     <version.spotless-maven-plugin>2.36.0</version.spotless-maven-plugin>
     <version.google-java-format>1.15.0</version.google-java-format>
     <version.flyway>9.4.0</version.flyway>
-    <version.log4j>2.20.0</version.log4j>
+    <version.log4j>2.17.2</version.log4j>
     <version.guava>31.1-jre</version.guava>
     <version.emmbedded-redis>1.2</version.emmbedded-redis>
     <version.axb-api>2.3.1</version.axb-api>
@@ -80,6 +80,11 @@
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-api</artifactId>
       <version>${version.log4j}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.7.7</version>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -188,6 +193,58 @@
       <artifactId>jaxb-api</artifactId>
       <version>${version.axb-api}</version>
     </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-core -->
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-core_2.12</artifactId>
+      <version>3.3.0</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql_2.12</artifactId>
+      <version>3.3.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/jakarta.servlet/jakarta.servlet-api -->
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>4.0.3</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-servlet</artifactId>
+      <version>2.36</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jersey.containers</groupId>
+      <artifactId>jersey-container-servlet-core</artifactId>
+      <version>2.36</version>
+    </dependency>
+    <!-- if you are using Jersey client specific features without the server side -->
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-server</artifactId>
+      <version>2.36</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-client</artifactId>
+      <version>2.36</version>
+    </dependency>
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-common</artifactId>
+      <version>2.36</version>
+    </dependency>
+
   </dependencies>
 
   <build>

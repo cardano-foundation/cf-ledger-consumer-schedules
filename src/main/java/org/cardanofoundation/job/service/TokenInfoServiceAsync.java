@@ -12,11 +12,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.apache.hadoop.shaded.org.eclipse.jetty.websocket.common.frames.DataFrame;
+import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.SQLContext;
+import org.apache.spark.sql.SparkSession;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
@@ -35,6 +40,12 @@ public class TokenInfoServiceAsync {
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final MultiAssetRepository multiAssetRepository;
   private final MultiAssetService multiAssetService;
+  private final SparkSession sparkSession;
+  private final SQLContext sqlContext;
+
+
+  @Value("${multi-datasource.datasourceLedgerSyncAgg.hikariConfig.jdbcUrl.hikariConfig.jdbcUrl}")
+  private String jdbcUrl;
 
   /**
    * Asynchronously builds a list of TokenInfo entities based on the provided list of MultiAsset.
