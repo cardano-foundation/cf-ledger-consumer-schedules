@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,6 +27,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.cardanofoundation.conversions.CardanoConverters;
+import org.cardanofoundation.conversions.ClasspathConversionsFactory;
+import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.ledgersync.EpochParam;
 import org.cardanofoundation.explorer.common.entity.ledgersync.StakeAddress;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Tx;
@@ -107,6 +111,10 @@ class StakeKeyLifeCycleServiceImplTest {
 
   @Test
   void getStakeWalletActivities_whenGetStakeWalletActivities_showReturnWalletActivities() {
+    CardanoConverters cardanoConverters =
+        ClasspathConversionsFactory.createConverters(NetworkType.MAINNET);
+    ReflectionTestUtils.setField(stakeKeyLifeCycleService, "cardanoConverters", cardanoConverters);
+
     Pageable pageable = PageRequest.of(0, 6);
     StakeTxProjection projection = Mockito.mock(StakeTxProjection.class);
     when(projection.getTxHash()).thenReturn("txhash");
@@ -193,17 +201,17 @@ class StakeKeyLifeCycleServiceImplTest {
             .validContract(false)
             .build());
 
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2022-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
     StakeLifeCycleFilterRequest condition =
         StakeLifeCycleFilterRequest.builder().fromDate(fromDate).toDate(toDate).build();
 
-    when(addressTxAmountRepository.findTxAndAmountByStake(
+    when(addressTxAmountRepository.findTxAndAmountByStakeAndSlotRange(
             stakeAddress.getView(),
-            DateUtils.timestampToEpochSecond(condition.getFromDate()),
-            DateUtils.timestampToEpochSecond(condition.getToDate()),
+            cardanoConverters.time().toSlot(condition.getFromDate().toLocalDateTime()),
+            cardanoConverters.time().toSlot(condition.getToDate().toLocalDateTime()),
             pageable))
         .thenReturn(page);
 
