@@ -26,15 +26,22 @@ GROUP BY ata.address, ata.stake_address, day
 ORDER BY day;
 ------------------------------------------------------------------------------------------------------------------------
 DROP TABLE IF EXISTS stake_tx_balance;
-CREATE MATERIALIZED VIEW IF NOT EXISTS stake_tx_balance AS
+CREATE MATERIALIZED VIEW stake_tx_balance AS
 SELECT ata.tx_hash       AS tx_hash,
        ata.stake_address AS stake_address,
        SUM(ata.quantity) AS balance_change,
-       ata.block_time    AS time
+       ata.slot          AS slot
 FROM address_tx_amount ata
-WHERE to_timestamp(ata.block_time) > now() - INTERVAL '3' MONTH - INTERVAL '1' DAY
+WHERE ata.slot > (SELECT ata.slot
+                  FROM address_tx_amount ata
+                  WHERE ata.block_time >
+                        CAST(EXTRACT(epoch from (now() - INTERVAL '3' MONTH - INTERVAL '1' DAY)) AS BIGINT)
+                  ORDER BY ata.block_time
+                  LIMIT 1)
   AND ata.unit = 'lovelace'
-GROUP BY ata.tx_hash, ata.block_time, ata.stake_address;
+  AND ata.stake_address IS NOT NULL
+GROUP BY ata.tx_hash, ata.slot, ata.stake_address;
+
 ------------------------------------------------------------------------------------------------------------------------
 DROP MATERIALIZED VIEW IF EXISTS latest_address_balance;
 CREATE MATERIALIZED VIEW IF NOT EXISTS top_address_balance AS
