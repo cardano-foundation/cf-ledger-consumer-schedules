@@ -104,6 +104,7 @@ jobs:
     enabled: ${META_DATA_JOB_ENABLED:false}
   report-history:
     enabled: ${REPORT_HISTORY_JOB_ENABLED:false}
+    fixed-delay: ${REPORT_HISTORY_FIXED_DELAY:60000}
     expired:
       rate: ${SET_EXPIRED_REPORTS_DELAY:86400000} # 1 day
   pool-status:
@@ -148,49 +149,6 @@ application:
     check-pool-history:
       base-url: ${API_CHECK_POOL_HISTORY_URL:http://10.4.10.231:8888/api/v1/pool-history/fetch}
   token-logo-endpoint: ${TOKEN_LOGO_ENDPOINT:http://localhost:9001/}
-
-kafka:
-  configuration-enabled: ${KAFKA_CONFIGURATION_ENABLED:false}
-  topics:
-    reports:
-      name: reports
-      partitions: 1
-      replicationFactor: 1
-  admin:
-    bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:29092}
-    useSsl: ${KAFKA_USE_SSL:false}
-  producers:
-    json-producer:
-      clientId: json-producer
-      retries: 3
-      bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:29092}
-      maxInFlightRequestsPerConnection: 1
-      requestTimeoutMs: 30000
-      batchSize: 16384
-      lingerMs: 5
-      bufferMemory: 33554432
-      acks: all
-      enableIdempotence: true
-      keySerializer: org.apache.kafka.common.serialization.StringSerializer
-      valueSerializer: org.springframework.kafka.support.serializer.JsonSerializer
-  consumers:
-    json-consumer:
-      clientId: json-consumer
-      bootstrapServers: ${KAFKA_BOOSTRAP_SERVER_URL:localhost:29092}
-      keyDeserializer: org.apache.kafka.common.serialization.StringDeserializer
-      valueDeserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      autoOffsetReset: earliest
-      enableAutoCommit: false
-      autoCommitIntervalMs: 1000
-      sessionTimeoutMs: 30000
-      trustedPackages: "*"
-      allowAutoCreateTopics: true
-      concurrency: 6
-      pollTimeout: 360000000
-      groupId: ${KAFKA_GROUP_ID:mainnet}
-  listeners:
-    topics:
-      reports: ${KAFKA_REPORTS_TOPIC:dev.explorer.api.mainnet.reports}
 
 clouds:
   s3Configs:

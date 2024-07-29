@@ -1,6 +1,7 @@
 package org.cardanofoundation.job.repository.ledgersync;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,5 +21,5 @@ public interface EpochParamRepository extends JpaRepository<EpochParam, Long> {
   EpochParam findCurrentEpochParam();
 
   @Query(value = "select ep.drepActivity from EpochParam ep where ep.epochNo = :epochNo")
-  Long findDRepActivityByEpochNo(@Param("epochNo") Long epochNo);
+  Optional<Long> findDRepActivityByEpochNo(@Param("epochNo") Long epochNo);
 }

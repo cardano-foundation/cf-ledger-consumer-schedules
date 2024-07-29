@@ -51,20 +51,27 @@ public class TokenInfoServiceAsync {
     List<Long> multiAssetIds =
         LongStream.rangeClosed(startIdent, endIdent).boxed().collect(Collectors.toList());
     List<TokenVolume> volumes24h =
-        addressTxAmountRepository.sumBalanceAfterTx(startIdent, endIdent, afterTxId);
+        addressTxAmountRepository.sumBalanceAfterTx(startIdent, endIdent, afterTxId).stream()
+            .map(TokenVolume::from)
+            .collect(Collectors.toList());
+    log.info("volumes24h took: {}ms", System.currentTimeMillis() - curTime);
 
     List<TokenVolume> totalVolumes =
         addressTxAmountRepository.getTotalVolumeByIdentInRange(startIdent, endIdent);
+    log.info("totalVolumes took: {}ms", System.currentTimeMillis() - curTime);
 
     List<TokenTxCount> txCounts =
         addressTxAmountRepository.getTotalTxCountByIdentInRange(startIdent, endIdent);
+    log.info("txCounts took: {}ms", System.currentTimeMillis() - curTime);
 
     var tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getIdent, TokenVolume::getVolume);
     var totalVolumeMap =
         StreamUtil.toMap(totalVolumes, TokenVolume::getIdent, TokenVolume::getVolume);
     var txCountMap = StreamUtil.toMap(txCounts, TokenTxCount::getIdent, TokenTxCount::getTxCount);
+    log.info("before getMapNumberHolder took: {}ms", System.currentTimeMillis() - curTime);
     var mapNumberHolder = multiAssetService.getMapNumberHolder(startIdent, endIdent);
+    log.info("multiAssetService took: {}ms", System.currentTimeMillis() - curTime);
 
     // Clear unnecessary lists to free up memory to avoid OOM error
     volumes24h.clear();
