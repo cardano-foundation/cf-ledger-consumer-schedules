@@ -2,7 +2,10 @@ package org.cardanofoundation.job.repository.ledgersync;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,6 +13,7 @@ import org.springframework.data.repository.query.Param;
 import org.cardanofoundation.explorer.common.entity.compositeKey.GovActionProposalId;
 import org.cardanofoundation.explorer.common.entity.enumeration.GovActionType;
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal;
+import org.cardanofoundation.job.projection.gov.AnchorProjection;
 import org.cardanofoundation.job.projection.gov.GovActionVoteCountProjection;
 
 public interface GovActionProposalRepository
@@ -38,4 +42,23 @@ public interface GovActionProposalRepository
   @Query(value = "select gap from GovActionProposal gap where gap.type in (:govActionTypes)")
   List<GovActionProposal> getGovActionThatAllowedToVoteForSPO(
       @Param("govActionTypes") Collection<GovActionType> govActionTypes);
+
+  @Query(
+      value =
+          """
+        SELECT gap.anchorUrl as anchorUrl, gap.anchorHash as anchorHash
+        FROM GovActionProposal gap
+        WHERE gap.slot >= :slotNo and gap.slot <= :maxSlotNo
+        ORDER BY gap.slot asc
+        """)
+  Slice<AnchorProjection> getAnchorUrlAndHash(
+      Pageable pageable, @Param("slotNo") Long slotNo, @Param("maxSlotNo") Long maxSlotNo);
+
+  @Query(
+      value =
+          """
+        SELECT MAX(gap.slot) as maxSlotNo
+        FROM GovActionProposal gap
+        """)
+  Optional<Long> maxSlotNo();
 }
