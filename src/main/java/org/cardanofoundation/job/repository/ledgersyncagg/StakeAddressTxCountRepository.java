@@ -1,4 +1,4 @@
-package org.cardanofoundation.job.repository.ledgersync;
+package org.cardanofoundation.job.repository.ledgersyncagg;
 
 import jakarta.transaction.Transactional;
 
@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import org.cardanofoundation.explorer.common.entity.ledgersync.StakeAddressTxCount;
+import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.StakeAddressTxCount;
 
 public interface StakeAddressTxCountRepository extends JpaRepository<StakeAddressTxCount, String> {
   @Modifying(clearAutomatically = true)
