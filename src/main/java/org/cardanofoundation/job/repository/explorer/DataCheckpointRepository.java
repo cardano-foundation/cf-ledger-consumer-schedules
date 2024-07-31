@@ -11,6 +11,6 @@ import org.cardanofoundation.explorer.common.entity.explorer.DataCheckpoint;
 
 public interface DataCheckpointRepository extends JpaRepository<DataCheckpoint, Long> {
 
-  @Query("SELECT d FROM DataCheckpoint d WHERE d.type = :type ORDER BY d.updateTime DESC LIMIT 1")
+  @Query("SELECT d FROM DataCheckpoint d WHERE d.type = :type ORDER BY d.slotNo DESC LIMIT 1")
   Optional<DataCheckpoint> findFirstByType(@Param("type") DataCheckpointType type);
 }

@@ -4,8 +4,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.cardanofoundation.explorer.common.entity.compositeKey.GovActionProposalId;
 import org.cardanofoundation.explorer.common.entity.enumeration.GovActionType;
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal;
-import org.cardanofoundation.job.projection.gov.AnchorProjection;
+import org.cardanofoundation.job.dto.govActionMetaData.Anchor;
 import org.cardanofoundation.job.projection.gov.GovActionVoteCountProjection;
 
 public interface GovActionProposalRepository
@@ -44,15 +42,28 @@ public interface GovActionProposalRepository
       @Param("govActionTypes") Collection<GovActionType> govActionTypes);
 
   @Query(
-      value =
-          """
-        SELECT gap.anchorUrl as anchorUrl, gap.anchorHash as anchorHash
+      """
+        SELECT new org.cardanofoundation.job.dto.govActionMetaData.Anchor(gap.anchorUrl, gap.anchorHash)
         FROM GovActionProposal gap
-        WHERE gap.slot >= :slotNo and gap.slot <= :maxSlotNo
-        ORDER BY gap.slot asc
+        WHERE gap.slot > :fromSlot and gap.slot <= :toSlot
+        AND gap.anchorUrl IS NOT NULL
+        AND gap.anchorHash IS NOT NULL
+        AND NOT EXISTS (SELECT 1 FROM OffChainVoteGovActionData oc WHERE oc.anchorHash = gap.anchorHash AND oc.anchorUrl = gap.anchorUrl)
         """)
-  Slice<AnchorProjection> getAnchorUrlAndHash(
-      Pageable pageable, @Param("slotNo") Long slotNo, @Param("maxSlotNo") Long maxSlotNo);
+  List<Anchor> getAnchorInfoBySlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
+
+  @Query(
+      """
+        SELECT new org.cardanofoundation.job.dto.govActionMetaData.Anchor(ocvfe.anchorUrl, ocvfe.anchorHash)
+        FROM OffChainVoteFetchError ocvfe
+        WHERE ocvfe.retryCount < :retryCount
+          AND NOT EXISTS (SELECT 1
+                          FROM OffChainVoteGovActionData ocvgad
+                          WHERE ocvgad.anchorUrl = ocvfe.anchorUrl
+                            AND ocvgad.anchorHash = ocvfe.anchorHash)
+        """)
+  List<Anchor> getAnchorInfoByRetryCount(@Param("retryCount") Integer retryCount);
 
   @Query(
       value =
