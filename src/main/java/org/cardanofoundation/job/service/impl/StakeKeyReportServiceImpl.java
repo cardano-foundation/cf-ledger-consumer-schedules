@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import org.cardanofoundation.conversions.CardanoConverters;
 import org.cardanofoundation.explorer.common.entity.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
 import org.cardanofoundation.job.common.enumeration.ExportType;
@@ -26,7 +27,6 @@ import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryReposi
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.service.StakeKeyReportService;
-import org.cardanofoundation.job.util.DateUtils;
 import org.cardanofoundation.job.util.report.ExcelHelper;
 import org.cardanofoundation.job.util.report.ExportContent;
 
@@ -40,6 +40,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
   private final ExcelHelper excelHelper;
   private final AddressTxAmountRepository addressTxAmountRepository;
+  private final CardanoConverters cardanoConverters;
 
   @Value("${jobs.limit-content}")
   private int limitSize;
@@ -137,12 +138,15 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
       // amount of data,
       // So we need to split the content in to multiple sheets
 
+      long fromSlot =
+          cardanoConverters.time().toSlot(stakeKeyReportHistory.getFromDate().toLocalDateTime());
+      long toSlot =
+          cardanoConverters.time().toSlot(stakeKeyReportHistory.getToDate().toLocalDateTime());
+
       // Get total content
       Long totalContent =
           addressTxAmountRepository.getCountTxByStakeInDateRange(
-              stakeKeyReportHistory.getStakeKey(),
-              DateUtils.timestampToEpochSecond(stakeLifeCycleFilterRequest.getFromDate()),
-              DateUtils.timestampToEpochSecond(stakeLifeCycleFilterRequest.getToDate()));
+              stakeKeyReportHistory.getStakeKey(), fromSlot, toSlot);
 
       // Split content into multiple sheets
       long totalPage = totalContent / limitSize;

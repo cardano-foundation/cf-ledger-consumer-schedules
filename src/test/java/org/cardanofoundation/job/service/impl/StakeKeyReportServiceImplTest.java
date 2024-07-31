@@ -29,6 +29,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.cardanofoundation.conversions.CardanoConverters;
+import org.cardanofoundation.conversions.ClasspathConversionsFactory;
+import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.common.entity.enumeration.ReportType;
 import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
@@ -56,14 +59,18 @@ class StakeKeyReportServiceImplTest {
 
   @Mock StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
 
+  CardanoConverters cardanoConverters;
+
   @BeforeEach
   public void setUp() {
+    cardanoConverters = ClasspathConversionsFactory.createConverters(NetworkType.MAINNET);
+    ReflectionTestUtils.setField(stakeKeyReportService, "cardanoConverters", cardanoConverters);
     ReflectionTestUtils.setField(stakeKeyReportService, "limitSize", 1000000);
   }
 
   @Test
   void exportStakeKeyReport_shouldThrowExceptionWhenPersistFileToStorageFail() {
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2022-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
@@ -130,7 +137,7 @@ class StakeKeyReportServiceImplTest {
 
   @Test
   void exportStakeKeyReport_shouldSuccess() {
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2022-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
@@ -179,8 +186,8 @@ class StakeKeyReportServiceImplTest {
 
     when(addressTxAmountRepository.getCountTxByStakeInDateRange(
             stakeKey,
-            DateUtils.timestampToEpochSecond(condition.getFromDate()),
-            DateUtils.timestampToEpochSecond(condition.getToDate())))
+            cardanoConverters.time().toSlot(condition.getFromDate().toLocalDateTime()),
+            cardanoConverters.time().toSlot(condition.getToDate().toLocalDateTime())))
         .thenReturn(2000000L);
 
     when(reportHistoryServiceAsync.exportStakeWalletActivitys(

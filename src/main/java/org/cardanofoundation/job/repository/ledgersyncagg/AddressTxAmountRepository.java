@@ -24,11 +24,11 @@ public interface AddressTxAmountRepository
   @Query(
       value =
           """
-      select (case when ata.stake_address is null then ata.address else ata.stake_address end) as account, count(distinct(ata.tx_hash)) as txCount
-      from address_tx_amount ata
-      where ata.epoch = :epochNo
-      and ata.slot != -1
-      group by account
+          select (case when ata.stake_address is null then ata.address else ata.stake_address end) as account, count(distinct(ata.tx_hash)) as txCount
+          from address_tx_amount ata
+          where ata.epoch = :epochNo
+          and ata.slot != -1
+          group by account
       """,
       nativeQuery = true)
   List<UniqueAccountTxCountProjection> findUniqueAccountsInEpoch(@Param("epochNo") Integer epochNo);
@@ -38,24 +38,24 @@ public interface AddressTxAmountRepository
           "SELECT new org.cardanofoundation.job.projection.StakeTxProjection(addTxAmount.txHash, sum(addTxAmount.quantity), addTxAmount.blockTime)"
               + " FROM AddressTxAmount addTxAmount"
               + " WHERE addTxAmount.stakeAddress = :stakeAddress"
-              + " AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate"
+              + " AND addTxAmount.slot >= :fromSlot AND addTxAmount.slot <= :toSlot"
               + " AND addTxAmount.unit = 'lovelace'"
               + " GROUP BY addTxAmount.txHash, addTxAmount.blockTime")
-  Page<StakeTxProjection> findTxAndAmountByStake(
+  Page<StakeTxProjection> findTxAndAmountByStakeAndSlotRange(
       @Param("stakeAddress") String stakeAddress,
-      @Param("fromDate") Long fromDate,
-      @Param("toDate") Long toDate,
+      @Param("fromSlot") Long fromSlot,
+      @Param("toSlot") Long toSlot,
       Pageable pageable);
 
   @Query(
       "SELECT COUNT(DISTINCT addTxAmount.txHash) FROM AddressTxAmount addTxAmount"
           + " WHERE addTxAmount.stakeAddress = :stakeAddress"
           + " AND addTxAmount.unit = 'lovelace'"
-          + " AND addTxAmount.blockTime >= :fromDate AND addTxAmount.blockTime <= :toDate")
+          + " AND addTxAmount.slot >= :fromSlot AND addTxAmount.slot <= :toSlot")
   Long getCountTxByStakeInDateRange(
       @Param("stakeAddress") String stakeAddress,
-      @Param("fromDate") Long fromDate,
-      @Param("toDate") Long toDate);
+      @Param("fromSlot") Long fromSlot,
+      @Param("toSlot") Long toSlot);
 
   @Query(
       value =
@@ -84,10 +84,10 @@ public interface AddressTxAmountRepository
   @Query(
       value =
           """
-      SELECT new org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount(ata.unit, count(distinct (ata.txHash)))
-      FROM AddressTxAmount ata
-      WHERE ata.unit in :units
-      GROUP BY ata.unit
+          SELECT new org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount(ata.unit, count(distinct (ata.txHash)))
+          FROM AddressTxAmount ata
+          WHERE ata.unit in :units
+          GROUP BY ata.unit
       """)
   List<TokenTxCount> getTotalTxCountByUnitIn(@Param("units") List<String> units);
 
@@ -103,39 +103,39 @@ public interface AddressTxAmountRepository
       value =
           """
           SELECT DISTINCT(SUBSTRING(ata.unit, 1 , 56)) FROM AddressTxAmount ata
-          WHERE ata.blockTime >= :fromTime AND ata.blockTime <= :toTime
+          WHERE ata.slot >= :fromSlot AND ata.slot <= :toSlot
       """)
-  List<String> findPolicyByBlockTimeInRange(
-      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+  List<String> findPolicyBySlotInRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
 
   @Query(
       value =
           """
           SELECT DISTINCT(ata.unit) FROM AddressTxAmount ata
           WHERE ata.unit != 'lovelace'
-          AND ata.blockTime >= :fromTime AND ata.blockTime <= :toTime
+          AND ata.slot >= :fromSlot AND ata.slot <= :toSlot
       """)
-  List<String> findUnitByBlockTimeInRange(
-      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+  List<String> findUnitBySlotInRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
 
   @Query(
       value =
           """
           SELECT DISTINCT(ata.stakeAddress) FROM AddressTxAmount ata
-          WHERE ata.slot >= :fromTime AND ata.slot <= :toTime
+          WHERE ata.slot >= :fromSlot AND ata.slot <= :toSlot
           AND ata.stakeAddress IS NOT NULL
       """)
   List<String> findStakeAddressBySlotNoBetween(
-      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
 
   @Query(
       value =
           """
           SELECT DISTINCT(ata.address) FROM AddressTxAmount ata
-          WHERE ata.blockTime >= :fromTime AND ata.blockTime <= :toTime
+          WHERE ata.slot >= :fromSlot AND ata.slot <= :toSlot
       """)
   List<String> findAddressBySlotNoBetween(
-      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
 
   @Query(value = "SELECT max(a.id) FROM Address a")
   Long getMaxAddressId();

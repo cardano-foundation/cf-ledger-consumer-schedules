@@ -1,7 +1,5 @@
 package org.cardanofoundation.job.schedules;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,10 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.cardanofoundation.explorer.common.entity.enumeration.ScriptType;
 import org.cardanofoundation.explorer.common.entity.explorer.NativeScriptInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Script;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQNativeScriptInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.NativeScriptInfoServiceAsync;
@@ -43,6 +43,7 @@ public class NativeScriptInfoSchedule {
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final JOOQNativeScriptInfoRepository jooqNativeScriptInfoRepository;
   private final NativeScriptInfoServiceAsync nativeScriptInfoServiceAsync;
+  private final BlockRepository blockRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
 
   @Value("${application.network}")
@@ -63,16 +64,20 @@ public class NativeScriptInfoSchedule {
   @Transactional(value = "explorerTransactionManager")
   public void syncNativeScriptInfo() {
     final String nativeScriptTxCheckPoint = getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name());
-    long currentEpochSecond = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
     final Integer checkpoint = redisTemplate.opsForValue().get(nativeScriptTxCheckPoint);
+
+    final long currentLSAggSlot = addressTxAmountRepository.getMaxSlotNoFromCursor();
+    final long currentLSSlot = blockRepository.findLatestBlock().map(Block::getSlotNo).orElse(0L);
+
+    long currentSlot = Math.min(currentLSAggSlot, currentLSSlot);
     if (Objects.isNull(checkpoint) || nativeScriptInfoRepository.count() == 0L) {
       init();
-    } else if (currentEpochSecond > checkpoint.longValue()) {
-      update(Long.valueOf(checkpoint), currentEpochSecond);
+    } else if (currentSlot > checkpoint.longValue()) {
+      update(Long.valueOf(checkpoint), currentSlot);
     }
     redisTemplate
         .opsForValue()
-        .set(nativeScriptTxCheckPoint, Math.max((int) currentEpochSecond - 18000, 0));
+        .set(nativeScriptTxCheckPoint, Math.max((int) currentSlot - 43200, 0));
   }
 
   private void update(Long epochSecondCheckpoint, Long currentEpochSecond) {
@@ -80,8 +85,9 @@ public class NativeScriptInfoSchedule {
     long startTime = System.currentTimeMillis();
 
     List<String> scriptHashList =
-        addressTxAmountRepository.findPolicyByBlockTimeInRange(
+        addressTxAmountRepository.findPolicyBySlotInRange(
             epochSecondCheckpoint, currentEpochSecond);
+
     List<Script> scripts =
         scriptRepository.findAllByHashInAndTypeIn(scriptHashList, NATIVE_SCRIPT_TYPES);
 
