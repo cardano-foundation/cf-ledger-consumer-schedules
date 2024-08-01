@@ -1,5 +1,5 @@
 DROP MATERIALIZED VIEW IF EXISTS stake_tx_balance;
-CREATE MATERIALIZED VIEW stake_tx_balance AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS stake_tx_balance AS
 SELECT ata.tx_hash       AS tx_hash,
        ata.stake_address AS stake_address,
        SUM(ata.quantity) AS balance_change,
