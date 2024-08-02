@@ -184,6 +184,10 @@ jobs:
     enabled: ${BLOCK_STATISTICS_JOB_ENABLED:false}
     daily-url: ${BLOCK_STATISTICS_DAILY_URL:https://data.blockperf.cardanofoundation.org/daily/daily_agr_cfm.json}
     per-epoch-url: ${BLOCK_STATISTICS_PER_EPOCH_URL:https://data.blockperf.cardanofoundation.org/per_epoch/epoch_agr_cfm.json}
+  gov-action-metadata:
+    enabled: ${GOV_ACTION_METADATA_JOB_ENABLED:true}
+    fixed-delay: ${GOV_ACTION_METADATA_FIXED_DELAY:300000}
+    retry-count: ${GOV_ACTION_METADATA_RETRY_COUNT:3}
   install-batch: 100
   limit-content: ${LIMIT_CONTENT_PER_SHEET:1000000}
 
