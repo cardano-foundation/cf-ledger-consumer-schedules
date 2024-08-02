@@ -5,9 +5,8 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.SliceImpl;
@@ -30,8 +29,6 @@ import org.cardanofoundation.explorer.common.entity.enumeration.ScriptType;
 import org.cardanofoundation.explorer.common.entity.explorer.NativeScriptInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Script;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
-import org.cardanofoundation.job.projection.ScriptNumberHolderProjection;
-import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQNativeScriptInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
@@ -84,26 +81,23 @@ public class NativeScriptInfoScheduleTest {
 
     when(scriptRepository.findAllByTypeIn(anyList(), any(Pageable.class)))
         .thenReturn(new SliceImpl<>(List.of(script)));
-    when(nativeScriptInfoRepository.findAllByScriptHashIn(Set.of(scriptHash)))
-        .thenReturn(Collections.emptyList());
 
-    ScriptNumberTokenProjection scriptNumberTokenProjection =
-        Mockito.mock(ScriptNumberTokenProjection.class);
-    when(scriptNumberTokenProjection.getScriptHash()).thenReturn(scriptHash);
-    when(scriptNumberTokenProjection.getNumberOfTokens()).thenReturn(1L);
-    //    when(multiAssetRepository.countByPolicyIn(Set.of(scriptHash)))
-    //        .thenReturn(List.of(scriptNumberTokenProjection));
+    NativeScriptInfo nativeScriptInfo =
+        NativeScriptInfo.builder()
+            .scriptHash(script.getHash())
+            .type(script.getType())
+            .numberOfAssetHolders(1L)
+            .numberOfTokens(1L)
+            .beforeSlot(23069343L)
+            .numberSig(1L)
+            .build();
 
-    ScriptNumberHolderProjection scriptNumberHolderProjection =
-        Mockito.mock(ScriptNumberHolderProjection.class);
-    when(scriptNumberHolderProjection.getScriptHash()).thenReturn(scriptHash);
-    when(scriptNumberHolderProjection.getNumberOfHolders()).thenReturn(1L);
-    //    when(latestTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
-    //        .thenReturn(List.of(scriptNumberHolderProjection));
+    when(nativeScriptInfoServiceAsync.buildNativeScriptInfoList(any()))
+        .thenReturn(CompletableFuture.completedFuture(List.of(nativeScriptInfo)));
 
     nativeScriptInfoSchedule.syncNativeScriptInfo();
-    verify(nativeScriptInfoRepository, Mockito.times(1))
-        .saveAll(argumentCaptorNativeScriptInfo.capture());
+    verify(jooqNativeScriptInfoRepository, Mockito.times(1))
+        .insertAll(argumentCaptorNativeScriptInfo.capture());
 
     List<NativeScriptInfo> nativeScriptInfoList = argumentCaptorNativeScriptInfo.getValue();
     Assertions.assertEquals(1, nativeScriptInfoList.size());
@@ -134,26 +128,21 @@ public class NativeScriptInfoScheduleTest {
         .thenReturn(List.of(scriptHash));
     when(scriptRepository.findAllByHashInAndTypeIn(anyList(), anyList()))
         .thenReturn(List.of(script));
-    when(nativeScriptInfoRepository.findAllByScriptHashIn(Set.of(scriptHash)))
-        .thenReturn(Collections.emptyList());
+    NativeScriptInfo nativeScriptInfo =
+        NativeScriptInfo.builder()
+            .scriptHash(script.getHash())
+            .type(script.getType())
+            .numberOfAssetHolders(15L)
+            .numberOfTokens(3L)
+            .numberSig(1L)
+            .build();
 
-    ScriptNumberTokenProjection scriptNumberTokenProjection =
-        Mockito.mock(ScriptNumberTokenProjection.class);
-    when(scriptNumberTokenProjection.getScriptHash()).thenReturn(scriptHash);
-    when(scriptNumberTokenProjection.getNumberOfTokens()).thenReturn(3L);
-    //    when(multiAssetRepository.countByPolicyIn(Set.of(scriptHash)))
-    //        .thenReturn(List.of(scriptNumberTokenProjection));
-
-    ScriptNumberHolderProjection scriptNumberHolderProjection =
-        Mockito.mock(ScriptNumberHolderProjection.class);
-    when(scriptNumberHolderProjection.getScriptHash()).thenReturn(scriptHash);
-    when(scriptNumberHolderProjection.getNumberOfHolders()).thenReturn(15L);
-    //    when(latestTokenBalanceRepository.countHolderByPolicyIn(Set.of(scriptHash)))
-    //        .thenReturn(List.of(scriptNumberHolderProjection));
+    when(nativeScriptInfoServiceAsync.buildNativeScriptInfoList(any()))
+        .thenReturn(CompletableFuture.completedFuture(List.of(nativeScriptInfo)));
 
     nativeScriptInfoSchedule.syncNativeScriptInfo();
-    verify(nativeScriptInfoRepository, Mockito.times(1))
-        .saveAll(argumentCaptorNativeScriptInfo.capture());
+    verify(jooqNativeScriptInfoRepository, Mockito.times(1))
+        .insertAll(argumentCaptorNativeScriptInfo.capture());
 
     List<NativeScriptInfo> nativeScriptInfoList = argumentCaptorNativeScriptInfo.getValue();
     Assertions.assertEquals(1, nativeScriptInfoList.size());
