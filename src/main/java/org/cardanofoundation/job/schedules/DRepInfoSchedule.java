@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.enumeration.DRepActionType;
 import org.cardanofoundation.explorer.common.entity.enumeration.DRepStatus;
-import org.cardanofoundation.explorer.common.entity.explorer.DRepInfo;
+import org.cardanofoundation.explorer.common.entity.ledgersync.DRepInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity;
 import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal;
@@ -32,7 +32,7 @@ import org.cardanofoundation.job.projection.DelegationVoteProjection;
 import org.cardanofoundation.job.projection.LatestDrepVotingProcedureProjection;
 import org.cardanofoundation.job.projection.LatestEpochVotingProcedureProjection;
 import org.cardanofoundation.job.projection.StakeBalanceProjection;
-import org.cardanofoundation.job.repository.explorer.DRepInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.DRepInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.DRepRegistrationRepository;
 import org.cardanofoundation.job.repository.ledgersync.DelegationVoteRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
