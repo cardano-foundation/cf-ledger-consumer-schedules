@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.data.domain.Pageable;
@@ -27,10 +28,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.cardanofoundation.explorer.common.entity.enumeration.ScriptType;
 import org.cardanofoundation.explorer.common.entity.explorer.NativeScriptInfo;
+import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Script;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQNativeScriptInfoRepository;
+import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.ScriptRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.schedules.NativeScriptInfoSchedule;
@@ -46,7 +49,7 @@ public class NativeScriptInfoScheduleTest {
   @Mock AddressTxAmountRepository addressTxAmountRepository;
   @Mock JOOQNativeScriptInfoRepository jooqNativeScriptInfoRepository;
   @Mock NativeScriptInfoServiceAsync nativeScriptInfoServiceAsync;
-
+  @Mock BlockRepository blockRepository;
   @Captor ArgumentCaptor<List<NativeScriptInfo>> argumentCaptorNativeScriptInfo;
 
   NativeScriptInfoSchedule nativeScriptInfoSchedule;
@@ -60,6 +63,7 @@ public class NativeScriptInfoScheduleTest {
             addressTxAmountRepository,
             jooqNativeScriptInfoRepository,
             nativeScriptInfoServiceAsync,
+            blockRepository,
             redisTemplate);
     when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     ReflectionTestUtils.setField(nativeScriptInfoSchedule, "network", "mainnet");
@@ -84,12 +88,12 @@ public class NativeScriptInfoScheduleTest {
 
     NativeScriptInfo nativeScriptInfo =
         NativeScriptInfo.builder()
-            .scriptHash(script.getHash())
-            .type(script.getType())
+            .scriptHash(scriptHash)
             .numberOfAssetHolders(1L)
             .numberOfTokens(1L)
             .beforeSlot(23069343L)
             .numberSig(1L)
+            .type(ScriptType.TIMELOCK)
             .build();
 
     when(nativeScriptInfoServiceAsync.buildNativeScriptInfoList(any()))
@@ -114,6 +118,10 @@ public class NativeScriptInfoScheduleTest {
     when(redisTemplate.opsForValue().get(getRedisKey(RedisKey.NATIVE_SCRIPT_CHECKPOINT.name())))
         .thenReturn(3);
     when(nativeScriptInfoRepository.count()).thenReturn(1L);
+    when(addressTxAmountRepository.getMaxSlotNoFromCursor()).thenReturn(5L);
+    when(blockRepository.findLatestBlock())
+        .thenReturn(Optional.of(Block.builder().slotNo(6L).build()));
+
     String scriptHash = "02f68378e37af4545d027d0a9fa5581ac682897a3fc1f6d8f936ed2b";
     Script script =
         Script.builder()
@@ -124,21 +132,23 @@ public class NativeScriptInfoScheduleTest {
                 "{\"type\":\"sig\",\"keyHash\":\"89d555c7a028bc560ea44e52a81c866088566f3a99c9989a5a183940\"}")
             .build();
 
-    when(addressTxAmountRepository.findPolicyByBlockTimeInRange(any(), any()))
+    when(addressTxAmountRepository.findPolicyBySlotInRange(any(), any()))
         .thenReturn(List.of(scriptHash));
     when(scriptRepository.findAllByHashInAndTypeIn(anyList(), anyList()))
         .thenReturn(List.of(script));
+
     NativeScriptInfo nativeScriptInfo =
         NativeScriptInfo.builder()
-            .scriptHash(script.getHash())
-            .type(script.getType())
+            .scriptHash(scriptHash)
             .numberOfAssetHolders(15L)
             .numberOfTokens(3L)
             .numberSig(1L)
+            .type(ScriptType.TIMELOCK)
             .build();
 
     when(nativeScriptInfoServiceAsync.buildNativeScriptInfoList(any()))
         .thenReturn(CompletableFuture.completedFuture(List.of(nativeScriptInfo)));
+    ;
 
     nativeScriptInfoSchedule.syncNativeScriptInfo();
     verify(jooqNativeScriptInfoRepository, Mockito.times(1))

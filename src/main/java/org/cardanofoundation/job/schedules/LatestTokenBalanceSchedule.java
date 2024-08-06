@@ -68,29 +68,28 @@ public class LatestTokenBalanceSchedule {
     if (latestBlock.isEmpty()) {
       return;
     }
-    final long currentMaxBlockNo =
-        Math.min(
-            addressTxAmountRepository.getMaxBlockNoFromCursor(), latestBlock.get().getBlockNo());
+
+    final long currentMaxSlotNo =
+        Math.min(addressTxAmountRepository.getMaxSlotNoFromCursor(), latestBlock.get().getSlotNo());
     final Integer checkpoint = redisTemplate.opsForValue().get(latestTokenBalanceCheckpoint);
+
     if (Objects.isNull(checkpoint) || latestTokenBalanceRepository.count() == 0) {
-      init(currentMaxBlockNo);
-    } else if (currentMaxBlockNo > checkpoint.longValue()) {
-      update(checkpoint.longValue(), currentMaxBlockNo);
+      init(currentMaxSlotNo);
+    } else if (currentMaxSlotNo > checkpoint.longValue()) {
+      update(checkpoint.longValue(), currentMaxSlotNo);
     }
 
-    // Update the checkpoint to the currentMaxBlockNo - 2160 to avoid missing any data when node
+    // Update the checkpoint to the currentMaxSlotNo - 43200 (slot) to avoid missing any data when
+    // node
     // rollback
     redisTemplate
         .opsForValue()
-        .set(latestTokenBalanceCheckpoint, Math.max((int) currentMaxBlockNo - 2160, 0));
+        .set(latestTokenBalanceCheckpoint, Math.max((int) currentMaxSlotNo - 43200, 0));
   }
 
-  private void init(long currentMaxBlockNo) {
+  private void init(long currentMaxSlotNo) {
     log.info("Start init LatestTokenBalance");
     long startTime = System.currentTimeMillis();
-
-    Long epochBlockTimeCurrent =
-        blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
 
     // Drop all indexes before inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.dropAllIndexes();
@@ -110,7 +109,7 @@ public class LatestTokenBalanceSchedule {
     // Create all indexes after inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.createAllIndexes();
     jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
-    jooqAddressBalanceRepository.deleteAllZeroHolders(epochBlockTimeCurrent);
+    jooqAddressBalanceRepository.deleteAllZeroHolders(currentMaxSlotNo);
     log.info("End init LatestTokenBalance in {} ms", System.currentTimeMillis() - startTime);
   }
 
@@ -128,28 +127,22 @@ public class LatestTokenBalanceSchedule {
             }));
   }
 
-  private void update(Long blockNoCheckpoint, Long currentMaxBlockNo) {
+  private void update(Long slotNoCheckpoint, Long currentMaxSlotNo) {
     log.info("Start update LatestTokenBalance");
     long startTime = System.currentTimeMillis();
-    Long epochBlockTimeCheckpoint =
-        blockRepository.getBlockTimeByBlockNo(blockNoCheckpoint).toInstant().getEpochSecond();
-    Long epochBlockTimeCurrent =
-        blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
-
     List<String> unitsInBlockRange =
-        addressTxAmountRepository.findUnitByBlockTimeInRange(
-            epochBlockTimeCheckpoint, epochBlockTimeCurrent);
+        addressTxAmountRepository.findUnitBySlotInRange(slotNoCheckpoint, currentMaxSlotNo);
 
     log.info(
-        "unitsInBlockRange from blockCheckpoint {} to {}, size: {}",
-        epochBlockTimeCheckpoint,
-        epochBlockTimeCurrent,
+        "unitsInBlockRange from slotNoCheckpoint {} to {}, size: {}",
+        slotNoCheckpoint,
+        currentMaxSlotNo,
         unitsInBlockRange.size());
 
-    processingLatestTokenBalance(unitsInBlockRange, epochBlockTimeCheckpoint, true);
+    processingLatestTokenBalance(unitsInBlockRange, slotNoCheckpoint, true);
 
     jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
-    jooqAddressBalanceRepository.deleteAllZeroHolders(epochBlockTimeCurrent);
+    jooqAddressBalanceRepository.deleteAllZeroHolders(currentMaxSlotNo);
 
     log.info(
         "End update LatestTokenBalance with address size = {} in {} ms",
@@ -171,14 +164,14 @@ public class LatestTokenBalanceSchedule {
    *
    * @param units A list of strings representing the identifiers of the processing units whose
    *     transaction counts are being aggregated and saved.
-   * @param epochBlockTimeCheckpoint A timestamp indicating the point in time at which the latest
-   *     token balances were captured. This is used as part of the data being saved.
+   * @param slotCheckpoint A timestamp indicating the point in time at which the latest token
+   *     balances were captured. This is used as part of the data being saved.
    * @param includeZeroHolders A boolean flag indicating whether the processing should include units
    *     with zero transaction counts. This can be useful for maintaining accurate records even for
    *     units with no activity.
    */
   private void processingLatestTokenBalance(
-      List<String> units, Long epochBlockTimeCheckpoint, boolean includeZeroHolders) {
+      List<String> units, Long slotCheckpoint, boolean includeZeroHolders) {
     List<TokenTxCount> tokenTxCounts = getTokenTxCountOrderedByTxCount(units);
     List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures = new ArrayList<>();
 
@@ -201,7 +194,7 @@ public class LatestTokenBalanceSchedule {
         addLatestTokenBalanceFutures(
             savingLatestTokenBalanceFutures,
             new ArrayList<>(currentProcessingUnits),
-            epochBlockTimeCheckpoint,
+            slotCheckpoint,
             includeZeroHolders);
         currentProcessingUnits.clear();
         currentSumTxCount = 0;
@@ -224,7 +217,7 @@ public class LatestTokenBalanceSchedule {
       addLatestTokenBalanceFutures(
           savingLatestTokenBalanceFutures,
           new ArrayList<>(currentProcessingUnits),
-          epochBlockTimeCheckpoint,
+          slotCheckpoint,
           includeZeroHolders);
     }
     // Insert the remaining stake address tx count data into the database.
