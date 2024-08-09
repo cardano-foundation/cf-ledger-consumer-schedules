@@ -25,6 +25,7 @@ import org.cardanofoundation.explorer.common.entity.explorer.NativeScriptInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Script;
+import org.cardanofoundation.job.common.constant.Constant;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.explorer.NativeScriptInfoRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQNativeScriptInfoRepository;
@@ -77,7 +78,7 @@ public class NativeScriptInfoSchedule {
     }
     redisTemplate
         .opsForValue()
-        .set(nativeScriptTxCheckPoint, Math.max((int) currentSlot - 43200, 0));
+        .set(nativeScriptTxCheckPoint, Math.max((int) currentSlot - Constant.rollbackSlot, 0));
   }
 
   private void update(Long epochSecondCheckpoint, Long currentEpochSecond) {
