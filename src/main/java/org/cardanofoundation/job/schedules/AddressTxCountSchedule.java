@@ -19,9 +19,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
+import org.cardanofoundation.job.common.constant.Constant;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQAddressTxCountRepository;
 import org.cardanofoundation.job.util.BatchUtils;
 
@@ -37,6 +39,7 @@ public class AddressTxCountSchedule {
   private final JOOQAddressTxCountRepository jooqAddressTxCountRepository;
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final BlockRepository blockRepository;
+  private final AddressTxCountRepository addressTxCountRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
 
   private String getRedisKey(String prefix) {
@@ -53,21 +56,22 @@ public class AddressTxCountSchedule {
     if (latestBlock.isEmpty()) {
       return;
     }
-    final long currentMaxBlockNo =
-        Math.min(
-            addressTxAmountRepository.getMaxBlockNoFromCursor(), latestBlock.get().getBlockNo());
+
+    final long currentMaxSlotNo =
+        Math.min(latestBlock.get().getSlotNo(), addressTxAmountRepository.getMaxSlotNoFromCursor());
+
     final Integer checkpoint = redisTemplate.opsForValue().get(addressTxCountCheckPoint);
-    if (Objects.isNull(checkpoint)) {
+    if (Objects.isNull(checkpoint) || addressTxCountRepository.count() == 0) {
       init();
-    } else if (currentMaxBlockNo > checkpoint.longValue()) {
-      update(checkpoint.longValue(), currentMaxBlockNo);
+    } else if (currentMaxSlotNo > checkpoint.longValue()) {
+      update(checkpoint.longValue(), currentMaxSlotNo);
     }
 
-    // Update the checkpoint to the currentMaxBlockNo - 2160 to avoid missing any data when node
+    // Update the checkpoint to the currentMaxSlotNo - 43200 to avoid missing any data when node
     // rollback
     redisTemplate
         .opsForValue()
-        .set(addressTxCountCheckPoint, Math.max((int) currentMaxBlockNo - 2160, 0));
+        .set(addressTxCountCheckPoint, Math.max((int) currentMaxSlotNo - Constant.ROLLBACKSLOT, 0));
   }
 
   public void init() {
@@ -87,23 +91,18 @@ public class AddressTxCountSchedule {
     log.info("End init AddressTxCount in {} ms", System.currentTimeMillis() - startTime);
   }
 
-  private void update(Long blockNoCheckpoint, Long currentMaxBlockNo) {
+  private void update(Long slotNoCheckpoint, Long currentMaxSlotNo) {
     log.info("Start update AddressTxCount");
     long startTime = System.currentTimeMillis();
     List<CompletableFuture<List<Void>>> savingAddressTxCountFutures = new ArrayList<>();
-    Long epochBlockTimeCheckpoint =
-        blockRepository.getBlockTimeByBlockNo(blockNoCheckpoint).toInstant().getEpochSecond();
-    Long epochBlockTimeCurrent =
-        blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
 
     List<String> addressInvolvedInTx =
-        addressTxAmountRepository.findAddressBySlotNoBetween(
-            epochBlockTimeCheckpoint, epochBlockTimeCurrent);
+        addressTxAmountRepository.findAddressBySlotNoBetween(slotNoCheckpoint, currentMaxSlotNo);
 
     log.info(
         "addressInBlockRange from blockCheckpoint {} to {}, size: {}",
-        epochBlockTimeCheckpoint,
-        epochBlockTimeCurrent,
+        slotNoCheckpoint,
+        currentMaxSlotNo,
         addressInvolvedInTx.size());
 
     BatchUtils.doBatching(

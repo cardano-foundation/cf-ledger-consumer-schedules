@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import io.micrometer.common.util.StringUtils;
 
+import org.cardanofoundation.conversions.CardanoConverters;
 import org.cardanofoundation.explorer.common.entity.ledgersync.EpochParam;
 import org.cardanofoundation.explorer.common.entity.ledgersync.StakeAddress;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Tx;
@@ -64,6 +65,7 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final TxRepository txRepository;
   private final EpochParamRepository epochParamRepository;
+  private final CardanoConverters cardanoConverters;
 
   @Override
   public List<StakeWalletActivityResponse> getStakeWalletActivities(
@@ -71,13 +73,12 @@ public class StakeKeyLifeCycleServiceImpl implements StakeKeyLifeCycleService {
 
     makeCondition(condition);
 
+    long slotFrom = cardanoConverters.time().toSlot(condition.getFromDate().toLocalDateTime());
+    long slotTo = cardanoConverters.time().toSlot(condition.getToDate().toLocalDateTime());
+
     var txAmountList =
         addressTxAmountRepository
-            .findTxAndAmountByStake(
-                stakeKey,
-                DateUtils.timestampToEpochSecond(condition.getFromDate()),
-                DateUtils.timestampToEpochSecond(condition.getToDate()),
-                pageable)
+            .findTxAndAmountByStakeAndSlotRange(stakeKey, slotFrom, slotTo, pageable)
             .getContent();
 
     List<String> txHashes =
