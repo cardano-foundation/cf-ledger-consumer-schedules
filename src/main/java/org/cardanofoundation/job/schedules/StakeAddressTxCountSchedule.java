@@ -77,7 +77,7 @@ public class StakeAddressTxCountSchedule {
         .opsForValue()
         .set(
             stakeAddressTxCountCheckPoint,
-            Math.max((int) currentMaxSlotNo - Constant.rollbackSlot, 0));
+            Math.max((int) currentMaxSlotNo - Constant.ROLLBACKSLOT, 0));
   }
 
   public void init() {

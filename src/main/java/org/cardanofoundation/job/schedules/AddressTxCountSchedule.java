@@ -71,7 +71,7 @@ public class AddressTxCountSchedule {
     // rollback
     redisTemplate
         .opsForValue()
-        .set(addressTxCountCheckPoint, Math.max((int) currentMaxSlotNo - Constant.rollbackSlot, 0));
+        .set(addressTxCountCheckPoint, Math.max((int) currentMaxSlotNo - Constant.ROLLBACKSLOT, 0));
   }
 
   public void init() {

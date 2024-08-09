@@ -128,7 +128,7 @@ public class AggregateAnalyticSchedule {
     log.info("---CleanUp{}---- Remove history record has been started", tableName);
 
     // Should be max slot - 43200 to ensure rollback case
-    long targetSlot = maxSlotSupplier.get() - Constant.rollbackSlot;
+    long targetSlot = maxSlotSupplier.get() - Constant.ROLLBACKSLOT;
     log.info("Cleaning {} table. Target slot: {}", tableName, targetSlot);
     long totalDeletedRowsRows = 0;
     long deletedRows = 0;

@@ -10,5 +10,5 @@ public final class Constant {
     public static final String SANCHONET = "sanchonet";
   }
 
-  public static final Integer rollbackSlot = 43200;
+  public static final Integer ROLLBACKSLOT = 43200;
 }

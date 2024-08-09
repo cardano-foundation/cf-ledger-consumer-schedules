@@ -78,7 +78,7 @@ public class NativeScriptInfoSchedule {
     }
     redisTemplate
         .opsForValue()
-        .set(nativeScriptTxCheckPoint, Math.max((int) currentSlot - Constant.rollbackSlot, 0));
+        .set(nativeScriptTxCheckPoint, Math.max((int) currentSlot - Constant.ROLLBACKSLOT, 0));
   }
 
   private void update(Long epochSecondCheckpoint, Long currentEpochSecond) {

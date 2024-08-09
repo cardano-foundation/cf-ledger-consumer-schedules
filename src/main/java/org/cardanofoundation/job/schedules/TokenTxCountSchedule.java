@@ -82,7 +82,7 @@ public class TokenTxCountSchedule {
     // rollback
     redisTemplate
         .opsForValue()
-        .set(tokenTxCountCheckPoint, Math.max((int) currentMaxSlotNo - Constant.rollbackSlot, 0));
+        .set(tokenTxCountCheckPoint, Math.max((int) currentMaxSlotNo - Constant.ROLLBACKSLOT, 0));
   }
 
   private void init() {

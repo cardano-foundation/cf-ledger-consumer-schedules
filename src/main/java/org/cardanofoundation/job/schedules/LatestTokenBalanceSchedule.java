@@ -87,7 +87,7 @@ public class LatestTokenBalanceSchedule {
         .opsForValue()
         .set(
             latestTokenBalanceCheckpoint,
-            Math.max((int) currentMaxSlotNo - Constant.rollbackSlot, 0));
+            Math.max((int) currentMaxSlotNo - Constant.ROLLBACKSLOT, 0));
   }
 
   private void init(long currentMaxSlotNo) {
