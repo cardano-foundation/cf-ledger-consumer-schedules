@@ -6,6 +6,7 @@ import static org.cardanofoundation.job.common.enumeration.RedisKey.TOTAL_TOKEN_
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -14,14 +15,17 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import org.cardanofoundation.conversions.CardanoConverters;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
@@ -100,6 +104,68 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
     // Save total token count into redis cache
     saveTotalTokenCount();
+  }
+
+  private final CardanoConverters cardanoConverters;
+
+  private final static Integer NUM_SLOT_INTERVAL = 20 * 100; // avg block slots * num blocks
+  public void updateTokenInfoListV2() {
+
+    // This the slot for the real time
+    var realSlot = cardanoConverters.time().toSlot(LocalDateTime.now(ZoneOffset.UTC));
+
+    // Last slot processed
+    Long latestProcessedSlot = tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint().get().getSlot();
+    Long endSlot = latestProcessedSlot + NUM_SLOT_INTERVAL;
+
+    Long maxLedgerSyncSlot = 0L; // the max slot processed by ledger sync main app.
+    Long maxLedgerSyncAggregationSlot = 0L; // the max slot processed by ledger sync aggregation.
+
+    // This is the min block across all the data, as main app or aggregation could be behind
+    // We want to be sure all the data used for computation are consistent.
+    Long maxSafeProcessableSlot = Stream.of(endSlot, maxLedgerSyncSlot, maxLedgerSyncAggregationSlot).sorted().findFirst().get();
+
+    var maxTime = cardanoConverters.slot().slotToTime(maxSafeProcessableSlot);
+
+    // Check if the order of maxTime and now matter (could be positive/negative)
+    while (ChronoUnit.MINUTES.between(maxTime, LocalDateTime.now(ZoneOffset.UTC)) > 60L) {
+      // As long as the upper bound of our time interval is older than 1h, we can safely while loop and
+      // not care about rollbacks.
+
+      Long slotCheckpoint = processTokenInRange(latestProcessedSlot, maxSafeProcessableSlot); // one iteration done and committed on DB, compute
+      // next range of slots and continue if while condition still valid
+
+      latestProcessedSlot = slotCheckpoint;
+     endSlot = latestProcessedSlot + NUM_SLOT_INTERVAL;
+
+      // This is the min block across all the data, as main app or aggregation could be behind
+      // We want to be sure all the data used for computation are consistent.
+      Long maxSafeProcessableSlot = Stream.of(endSlot, maxLedgerSyncSlot, maxLedgerSyncAggregationSlot).sorted().findFirst().get();
+
+      maxTime = cardanoConverters.slot().slotToTime(maxSafeProcessableSlot);
+
+    }
+
+    // if we get here, the while condition failed, it means we are in incremental mode, so we must to the same as before, BUT
+    // Compute latest aggregation as well as rollback values
+
+
+  }
+
+  // We need requires new so that just this block of code is run in isolation
+  @Transactional(value = "explorerTransactionManager", propagation = Propagation.REQUIRES_NEW)
+  private TokenInfo processTokenInRange(Long from, Long to) {
+    var tokenTransactedInTimeRange = addressTxAmountRepository.getTokensInTransactionInTimeRange(from, to);
+
+    tokenTransactedInTimeRange.forEach(tokenUnit -> {
+      // get current aggreagated data for token
+      // compute aggregated data for token just in the current interval between latestProcessedSlot and maxSafeProcessableSlot
+      // update aggregated data
+    });
+
+    // tokenInfoCheckpointRepository.save() // new checkpoint
+
+    return null;
   }
 
   /**
