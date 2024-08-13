@@ -24,9 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
+import org.cardanofoundation.job.common.constant.Constant;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
+import org.cardanofoundation.job.repository.ledgersync.TokenTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersync.jooq.JOOQTokenTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
@@ -39,15 +41,15 @@ import org.cardanofoundation.job.util.BatchUtils;
 public class TokenTxCountSchedule {
 
   private final AddressTxAmountRepository addressTxAmountRepository;
-
-  @Value("${application.network}")
-  private String network;
-
+  private final TokenTxCountRepository tokenTxCountRepository;
   private final MultiAssetRepository multiAssetRepository;
   private final JOOQTokenTxCountRepository jooqTokenTxCountRepository;
   private final TokenInfoServiceAsync tokenInfoServiceAsync;
   private final BlockRepository blockRepository;
   private final RedisTemplate<String, Integer> redisTemplate;
+
+  @Value("${application.network}")
+  private String network;
 
   private static final int DEFAULT_PAGE_SIZE = 100;
 
@@ -64,21 +66,23 @@ public class TokenTxCountSchedule {
     if (latestBlock.isEmpty()) {
       return;
     }
-    final long currentMaxBlockNo =
-        Math.min(
-            addressTxAmountRepository.getMaxBlockNoFromCursor(), latestBlock.get().getBlockNo());
+
+    final long currentMaxSlotNo =
+        Math.min(addressTxAmountRepository.getMaxSlotNoFromCursor(), latestBlock.get().getSlotNo());
     final Integer checkpoint = redisTemplate.opsForValue().get(tokenTxCountCheckPoint);
-    if (Objects.isNull(checkpoint)) {
+
+    if (Objects.isNull(checkpoint) || tokenTxCountRepository.count() == 0) {
       init();
-    } else if (currentMaxBlockNo > checkpoint.longValue()) {
-      update(checkpoint.longValue(), currentMaxBlockNo);
+    } else if (currentMaxSlotNo > checkpoint.longValue()) {
+      update(checkpoint.longValue(), currentMaxSlotNo);
     }
 
-    // Update the checkpoint to the currentMaxBlockNo - 50 to avoid missing any data when node
+    // Update the checkpoint to the currentMaxSlotNo - 43200 (slot) to avoid missing any data when
+    // node
     // rollback
     redisTemplate
         .opsForValue()
-        .set(tokenTxCountCheckPoint, Math.max((int) currentMaxBlockNo - 50, 0));
+        .set(tokenTxCountCheckPoint, Math.max((int) currentMaxSlotNo - Constant.ROLLBACKSLOT, 0));
   }
 
   private void init() {
@@ -124,21 +128,17 @@ public class TokenTxCountSchedule {
     log.info("End init TokenTxCount in {} ms", System.currentTimeMillis() - startTime);
   }
 
-  private void update(Long blockNoCheckpoint, Long currentMaxBlockNo) {
+  private void update(Long slotNoCheckpoint, Long currentMaxSlotNo) {
     log.info("Start update TokenTxCount");
     long startTime = System.currentTimeMillis();
-    Long epochBlockTimeCheckpoint =
-        blockRepository.getBlockTimeByBlockNo(blockNoCheckpoint).toInstant().getEpochSecond();
-    Long epochBlockTimeCurrent =
-        blockRepository.getBlockTimeByBlockNo(currentMaxBlockNo).toInstant().getEpochSecond();
+
     List<String> unitsInBlockRange =
-        addressTxAmountRepository.findUnitByBlockTimeInRange(
-            epochBlockTimeCheckpoint, epochBlockTimeCurrent);
+        addressTxAmountRepository.findUnitBySlotInRange(slotNoCheckpoint, currentMaxSlotNo);
 
     log.info(
         "unitsInBlockRange from blockCheckpoint {} to {}, size: {}",
-        epochBlockTimeCheckpoint,
-        epochBlockTimeCurrent,
+        slotNoCheckpoint,
+        currentMaxSlotNo,
         unitsInBlockRange.size());
 
     List<CompletableFuture<List<TokenTxCount>>> tokenTxCountNeedSaveFutures = new ArrayList<>();
