@@ -4,21 +4,25 @@ import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
-import org.cardanofoundation.job.model.TokenTxCount;
+import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
+import org.cardanofoundation.job.projection.TokenUnitProjection;
+import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.util.StreamUtil;
 
 @Component
@@ -26,7 +30,10 @@ import org.cardanofoundation.job.util.StreamUtil;
 @Log4j2
 public class TokenInfoServiceAsync {
 
+  @Autowired @Lazy TokenInfoServiceAsync selfProxyService;
+
   private final AddressTxAmountRepository addressTxAmountRepository;
+  private final MultiAssetRepository multiAssetRepository;
   private final MultiAssetService multiAssetService;
 
   /**
@@ -36,56 +43,146 @@ public class TokenInfoServiceAsync {
    * @param startIdent The starting multi-asset ID.
    * @param endIdent The ending multi-asset ID.
    * @param blockNo The maximum block number to set for the TokenInfo entities.
-   * @param afterTxId The transaction ID from which to calculate token volumes.
-   * @param updateTime The timestamp to set as the update time for the TokenInfo entities.
+   * @param epochSecond24hAgo epochSecond 24 hours ago
+   * @param timeLatestBlock The timestamp to set as the update time for the TokenInfo entities.
    * @return A CompletableFuture containing the list of TokenInfo entities built from the provided
    *     MultiAsset list.
    */
   @Async
   @Transactional(readOnly = true)
   public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
-      Long startIdent, Long endIdent, Long blockNo, Long afterTxId, Timestamp updateTime) {
+      Long startIdent,
+      Long endIdent,
+      Long blockNo,
+      Long epochSecond24hAgo,
+      Timestamp timeLatestBlock) {
 
-    List<TokenInfo> saveEntities = new ArrayList<>((int) (endIdent - startIdent + 1));
     var curTime = System.currentTimeMillis();
-    List<Long> multiAssetIds =
-        LongStream.rangeClosed(startIdent, endIdent).boxed().collect(Collectors.toList());
-    List<TokenVolume> volumes24h =
-        addressTxAmountRepository.sumBalanceAfterTx(startIdent, endIdent, afterTxId);
 
-    List<TokenVolume> totalVolumes =
-        addressTxAmountRepository.getTotalVolumeByIdentInRange(startIdent, endIdent);
+    Map<String, Long> multiAssetUnitMap =
+        multiAssetRepository.getTokenUnitByIdBetween(startIdent, endIdent).stream()
+            .collect(Collectors.toMap(TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
 
-    List<TokenTxCount> txCounts =
-        addressTxAmountRepository.getTotalTxCountByIdentInRange(startIdent, endIdent);
+    List<String> multiAssetUnits = new ArrayList<>(multiAssetUnitMap.keySet());
+
+    List<TokenInfo> saveEntities =
+        buildTokenInfo(
+            blockNo, epochSecond24hAgo, timeLatestBlock, multiAssetUnits, multiAssetUnitMap);
+
+    log.info(
+        "getTokenInfoListNeedSave startIdent: {} endIdent: {} took: {}ms",
+        startIdent,
+        endIdent,
+        System.currentTimeMillis() - curTime);
+
+    return CompletableFuture.completedFuture(saveEntities);
+  }
+
+  @Async
+  @Transactional(readOnly = true)
+  public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
+      List<String> units, Long blockNo, Long epochSecond24hAgo, Timestamp timeLatestBlock) {
+    var curTime = System.currentTimeMillis();
+
+    Map<String, Long> multiAssetUnitMap =
+        multiAssetRepository.getTokenUnitByUnitIn(units).stream()
+            .collect(Collectors.toMap(TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
+
+    List<TokenInfo> saveEntities =
+        buildTokenInfo(blockNo, epochSecond24hAgo, timeLatestBlock, units, multiAssetUnitMap);
+
+    log.info(
+        "getTokenInfoListNeedSave size: {} took: {}ms",
+        saveEntities.size(),
+        System.currentTimeMillis() - curTime);
+    return CompletableFuture.completedFuture(saveEntities);
+  }
+
+  @Async
+  @Transactional(readOnly = true)
+  public CompletableFuture<List<TokenTxCount>> buildTokenTxCountList(List<String> units) {
+    long startTime = System.currentTimeMillis();
+    List<TokenTxCount> tokenTxCounts = addressTxAmountRepository.getTotalTxCountByUnitIn(units);
+    log.info(
+        "buildTokenTxCountList size: {}, took: {}ms",
+        tokenTxCounts.size(),
+        System.currentTimeMillis() - startTime);
+    return CompletableFuture.completedFuture(tokenTxCounts);
+  }
+
+  @Async
+  public CompletableFuture<List<TokenVolume>> getVolume24h(
+      List<String> multiAssetUnits, Long epochSecond24hAgo, Long epochSecondLastTimeBlock) {
+    List<TokenVolume> tokenVolumes = new ArrayList<>();
+
+    if (epochSecond24hAgo <= epochSecondLastTimeBlock) {
+      tokenVolumes =
+          addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
+    }
+    return CompletableFuture.completedFuture(tokenVolumes);
+  }
+
+  @Async
+  public CompletableFuture<List<TokenVolume>> getTotalVolume(List<String> multiAssetUnits) {
+    List<TokenVolume> tokenVolumes =
+        addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits);
+    return CompletableFuture.completedFuture(tokenVolumes);
+  }
+
+  @Async
+  public CompletableFuture<Map<String, Long>> getMapNumberHolderByUnits(
+      List<String> multiAssetUnits) {
+    Map<String, Long> mapNumberHolder =
+        multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
+    return CompletableFuture.completedFuture(mapNumberHolder);
+  }
+
+  private List<TokenInfo> buildTokenInfo(
+      Long blockNo,
+      Long epochSecond24hAgo,
+      Timestamp timeLatestBlock,
+      List<String> multiAssetUnits,
+      Map<String, Long> multiAssetUnitMap) {
+
+    List<TokenInfo> saveEntities = new ArrayList<>();
+
+    // Get the volume 24h, total volume, and number of holders for each multi-asset unit
+    // Should be call by selfProxyService to make it async
+    CompletableFuture<List<TokenVolume>> volumes24hFuture =
+        selfProxyService.getVolume24h(
+            multiAssetUnits, epochSecond24hAgo, timeLatestBlock.toInstant().getEpochSecond());
+
+    CompletableFuture<List<TokenVolume>> totalVolumesFuture =
+        selfProxyService.getTotalVolume(multiAssetUnits);
+
+    CompletableFuture<Map<String, Long>> mapNumberHolderFuture =
+        selfProxyService.getMapNumberHolderByUnits(multiAssetUnits);
+
+    // Wait for all the async calls to complete
+    CompletableFuture.allOf(volumes24hFuture, totalVolumesFuture, mapNumberHolderFuture).join();
+
+    // Get the results of the async calls
+    List<TokenVolume> volumes24h = volumes24hFuture.join();
+    List<TokenVolume> totalVolumes = totalVolumesFuture.join();
+    Map<String, Long> mapNumberHolder = mapNumberHolderFuture.join();
 
     var tokenVolume24hMap =
-        StreamUtil.toMap(volumes24h, TokenVolume::getIdent, TokenVolume::getVolume);
+        StreamUtil.toMap(volumes24h, TokenVolume::getUnit, TokenVolume::getVolume);
     var totalVolumeMap =
-        StreamUtil.toMap(totalVolumes, TokenVolume::getIdent, TokenVolume::getVolume);
-    var txCountMap = StreamUtil.toMap(txCounts, TokenTxCount::getIdent, TokenTxCount::getTxCount);
-    var mapNumberHolder = multiAssetService.getMapNumberHolder(startIdent, endIdent);
+        StreamUtil.toMap(totalVolumes, TokenVolume::getUnit, TokenVolume::getVolume);
 
-    // Clear unnecessary lists to free up memory to avoid OOM error
-    volumes24h.clear();
-    totalVolumes.clear();
-    txCounts.clear();
-
-    multiAssetIds.forEach(
-        multiAssetId -> {
+    multiAssetUnits.forEach(
+        unit -> {
           var tokenInfo = new TokenInfo();
-          tokenInfo.setMultiAssetId(multiAssetId);
-          tokenInfo.setVolume24h(tokenVolume24hMap.getOrDefault(multiAssetId, BigInteger.ZERO));
-          tokenInfo.setTotalVolume(totalVolumeMap.getOrDefault(multiAssetId, BigInteger.ZERO));
-          tokenInfo.setTxCount(txCountMap.getOrDefault(multiAssetId, 0L));
-          tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(multiAssetId, 0L));
-          tokenInfo.setUpdateTime(updateTime);
+          tokenInfo.setMultiAssetId(multiAssetUnitMap.get(unit));
+          tokenInfo.setVolume24h(tokenVolume24hMap.getOrDefault(unit, BigInteger.ZERO));
+          tokenInfo.setTotalVolume(totalVolumeMap.getOrDefault(unit, BigInteger.ZERO));
+          tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(unit, 0L));
+          tokenInfo.setUpdateTime(timeLatestBlock);
           tokenInfo.setBlockNo(blockNo);
           saveEntities.add(tokenInfo);
         });
 
-    log.info("getTokenInfoListNeedSave take {} ms", System.currentTimeMillis() - curTime);
-
-    return CompletableFuture.completedFuture(saveEntities);
+    return saveEntities;
   }
 }

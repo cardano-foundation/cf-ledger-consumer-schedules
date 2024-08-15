@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,7 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.DRepRegistrationE
 import org.cardanofoundation.explorer.common.entity.ledgersync.EpochParam;
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposal;
 import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposalInfo;
+import org.cardanofoundation.explorer.common.entity.ledgersync.GovActionProposalInfo_;
 import org.cardanofoundation.job.projection.gov.GovActionVoteCountProjection;
 import org.cardanofoundation.job.repository.ledgersync.CommitteeRegistrationRepository;
 import org.cardanofoundation.job.repository.ledgersync.EpochParamRepository;
@@ -81,9 +83,47 @@ public class GovActionInfoSchedule {
         saveGovActionInfo(govActionProposalSlice.getContent());
       }
     }
+    addIndexTypeForGovAction();
     log.info(
         "Scheduled Governance Info Job: -------End------, time: {} ms",
         System.currentTimeMillis() - startTime);
+  }
+
+  private void addIndexTypeForGovAction() {
+    List<GovActionType> govActionTypes = List.of(GovActionType.values());
+
+    govActionTypes.parallelStream()
+        .forEach(
+            govActionType -> {
+              AtomicLong initValue = new AtomicLong(1);
+              Pageable pageable =
+                  PageRequest.of(
+                      0,
+                      DEFAULT_PAGE_SIZE,
+                      Sort.by(Sort.Direction.ASC, "tx.id", GovActionProposalInfo_.INDEX));
+              Slice<GovActionProposalInfo> govActionProposalInfoList =
+                  govActionProposalInfoRepository.findByType(govActionType, pageable);
+              govActionProposalInfoList.forEach(
+                  govActionProposalInfo -> {
+                    govActionProposalInfo.setIndexType(
+                        BigInteger.valueOf(initValue.getAndIncrement()));
+                  });
+              govActionProposalInfoRepository.saveAll(govActionProposalInfoList);
+              if (govActionProposalInfoList.hasNext()) {
+                while (govActionProposalInfoList.hasNext()) {
+                  pageable = govActionProposalInfoList.nextPageable();
+                  govActionProposalInfoList =
+                      govActionProposalInfoRepository.findByType(govActionType, pageable);
+                  govActionProposalInfoList.forEach(
+                      govActionProposalInfo -> {
+                        govActionProposalInfo.setIndexType(
+                            BigInteger.valueOf(initValue.getAndIncrement()));
+                      });
+                  govActionProposalInfoRepository.saveAll(govActionProposalInfoList);
+                }
+              }
+            });
+    log.info("Add successfully index for gov action proposal by type");
   }
 
   void saveGovActionInfo(List<GovActionProposal> govActionProposals) {
@@ -123,6 +163,8 @@ public class GovActionInfoSchedule {
                     .expiredEpoch(
                         govActionProposal.getEpoch()
                             + getGovActionLifetime(currentEpochParam.getGovActionLifetime()))
+                    .type(govActionProposal.getType())
+                    .blockTime(govActionProposal.getBlockTime())
                     .build();
           }
 
@@ -179,7 +221,7 @@ public class GovActionInfoSchedule {
         committeeRegistrationRepository.countByExpiredEpochNo(expiredEpoch);
     CommitteeState committeeState =
         committeeTotalCount >= currentEpochParam.getCommitteeMinSize().intValue()
-            ? CommitteeState.NORMAL
+            ? CommitteeState.CONFIDENCE
             : CommitteeState.NO_CONFIDENCE;
 
     switch (govActionType) {
@@ -193,7 +235,7 @@ public class GovActionInfoSchedule {
       }
 
       case UPDATE_COMMITTEE -> {
-        if (committeeState == CommitteeState.NORMAL
+        if (committeeState == CommitteeState.CONFIDENCE
             && percentageDRepYesVotes >= getDoubleValue(epochParam.getDvtCommitteeNormal())
             && percentagePoolYesVotes >= getDoubleValue(epochParam.getPvtCommitteeNormal())) {
           return currentEpoch == expiredEpoch ? GovActionStatus.RATIFIED : GovActionStatus.ENACTED;

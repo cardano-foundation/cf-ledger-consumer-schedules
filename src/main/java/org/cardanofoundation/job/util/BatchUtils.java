@@ -25,7 +25,6 @@ public class BatchUtils {
     long start = System.currentTimeMillis();
     for (int startBatchIdx = 0; startBatchIdx < COLLECTION_SIZE; startBatchIdx += batchSize) {
       int endBatchIdx = Math.min(startBatchIdx + batchSize, COLLECTION_SIZE);
-      log.info("batch processing from element number: {} - {}", startBatchIdx, endBatchIdx - 1);
       final List<T> batchList = collection.subList(startBatchIdx, endBatchIdx);
       consumer.accept(batchList);
     }

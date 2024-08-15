@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import org.springframework.data.domain.Pageable;
@@ -28,13 +29,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.cardanofoundation.conversions.CardanoConverters;
+import org.cardanofoundation.conversions.ClasspathConversionsFactory;
+import org.cardanofoundation.conversions.domain.NetworkType;
 import org.cardanofoundation.explorer.common.entity.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.common.entity.enumeration.ReportType;
 import org.cardanofoundation.explorer.common.entity.explorer.ReportHistory;
 import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
 import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.util.DateUtils;
 import org.cardanofoundation.job.util.report.ExcelHelper;
@@ -55,14 +59,18 @@ class StakeKeyReportServiceImplTest {
 
   @Mock StakeKeyReportHistoryRepository stakeKeyReportHistoryRepository;
 
+  CardanoConverters cardanoConverters;
+
   @BeforeEach
   public void setUp() {
+    cardanoConverters = ClasspathConversionsFactory.createConverters(NetworkType.MAINNET);
+    ReflectionTestUtils.setField(stakeKeyReportService, "cardanoConverters", cardanoConverters);
     ReflectionTestUtils.setField(stakeKeyReportService, "limitSize", 1000000);
   }
 
   @Test
   void exportStakeKeyReport_shouldThrowExceptionWhenPersistFileToStorageFail() {
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2022-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
@@ -92,8 +100,9 @@ class StakeKeyReportServiceImplTest {
                 .reportHistory(reportHistory)
                 .build());
 
-    when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString()))
+    when(stakeKeyReportHistoryRepository.findByReportHistoryId(any()))
+        .thenReturn(Optional.of(stakeKeyReportHistory));
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(any(StakeKeyReportHistory.class)))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
     when(reportHistoryServiceAsync.exportStakeRegistrations(stakeKey, condition))
@@ -121,17 +130,14 @@ class StakeKeyReportServiceImplTest {
 
     doThrow(new RuntimeException()).when(storageService).uploadFile(any(), anyString());
     Assertions.assertThrows(
-        Exception.class,
-        () ->
-            stakeKeyReportService.exportStakeKeyReport(
-                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
+        Exception.class, () -> stakeKeyReportService.exportStakeKeyReport(reportHistory.getId()));
     Assertions.assertEquals(
         ReportStatus.FAILED, stakeKeyReportHistory.getReportHistory().getStatus());
   }
 
   @Test
   void exportStakeKeyReport_shouldSuccess() {
-    Timestamp fromDate = Timestamp.valueOf("1970-01-01 00:00:00");
+    Timestamp fromDate = Timestamp.valueOf("2022-01-01 00:00:00");
     Timestamp toDate =
         Timestamp.from(
             LocalDateTime.ofInstant(Instant.now(), ZoneOffset.UTC).toInstant(ZoneOffset.UTC));
@@ -145,6 +151,7 @@ class StakeKeyReportServiceImplTest {
             .reportName("reportName")
             .status(ReportStatus.IN_PROGRESS)
             .type(ReportType.STAKE_KEY)
+            .id(10L)
             .build();
     StakeKeyReportHistory stakeKeyReportHistory =
         spy(
@@ -161,8 +168,9 @@ class StakeKeyReportServiceImplTest {
                 .reportHistory(reportHistory)
                 .build());
 
-    when(reportHistoryServiceAsync.exportInformationOnTheReport(
-            any(), anyLong(), anyString(), anyString()))
+    when(stakeKeyReportHistoryRepository.findByReportHistoryId(any()))
+        .thenReturn(Optional.of(stakeKeyReportHistory));
+    when(reportHistoryServiceAsync.exportInformationOnTheReport(any(StakeKeyReportHistory.class)))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
 
     when(reportHistoryServiceAsync.exportStakeRegistrations(stakeKey, condition))
@@ -178,23 +186,21 @@ class StakeKeyReportServiceImplTest {
 
     when(addressTxAmountRepository.getCountTxByStakeInDateRange(
             stakeKey,
-            DateUtils.timestampToEpochSecond(condition.getFromDate()),
-            DateUtils.timestampToEpochSecond(condition.getToDate())))
+            cardanoConverters.time().toSlot(condition.getFromDate().toLocalDateTime()),
+            cardanoConverters.time().toSlot(condition.getToDate().toLocalDateTime())))
         .thenReturn(2000000L);
 
     when(reportHistoryServiceAsync.exportStakeWalletActivitys(
             anyString(), any(StakeLifeCycleFilterRequest.class), any(Pageable.class), anyString()))
         .thenReturn(CompletableFuture.completedFuture(ExportContent.builder().build()));
-    when(excelHelper.writeContent(anyList(), anyLong(), anyString()))
+    when(excelHelper.writeContent(anyList(), any(), any()))
         .thenReturn(new ByteArrayInputStream(new byte[0]));
     doNothing().when(storageService).uploadFile(any(), anyString());
     when(stakeKeyReportHistoryRepository.save(any(StakeKeyReportHistory.class)))
         .thenReturn(new StakeKeyReportHistory());
 
     Assertions.assertDoesNotThrow(
-        () ->
-            stakeKeyReportService.exportStakeKeyReport(
-                stakeKeyReportHistory, 0L, "MM/dd/yyyy HH:mm:ss", "MM/DD/YYYY (UTC)"));
+        () -> stakeKeyReportService.exportStakeKeyReport(reportHistory.getId()));
     Assertions.assertEquals(
         ReportStatus.GENERATED, stakeKeyReportHistory.getReportHistory().getStatus());
   }

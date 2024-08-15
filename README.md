@@ -55,16 +55,25 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - LEDGER_SYNC_USER: Ledger-sync database username
 - LEDGER_SYNC_PASSWORD: Ledger-sync database password
 - LEDGER_SYNC_DB: Ledger-sync database name
+- LEDGER_SYNC_SCHEMA: Ledger-sync database schema
 - LEDGER_SYNC_FLYWAY_ENABLE: Ledger-sync Migrate schema, set `true` if this is the first time run app
-- LEDGER_SYNC_FLYWAY_VALIDATE: Ledger-sync Flyway schema validation, default `false`
-- EXPLORER_HOST: Analytics database host.
-- EXPLORER_PORT: Analytics database port
-- EXPLORER_USER: Analytics database username
-- EXPLORER_PASSWORD: Analytics database password
-- EXPLORER_DB: Analytics database name
-- EXPLORER_FLYWAY_ENABLE: Analytics Migrate schema, set `true` if this is the first time run app
-- EXPLORER_FLYWAY_VALIDATE: Analytics Flyway schema validation, default `false`
-- POSTGRES_SCHEMA: database schema
+
+- LEDGER_SYNC_AGG_HOST= Ledger-sync aggregate database host.
+- LEDGER_SYNC_AGG_PORT= Ledger-sync aggregate database port
+- LEDGER_SYNC_AGG_USER= Ledger-sync aggregate database username
+- LEDGER_SYNC_AGG_PASSWORD= Ledger-sync aggregate database password
+- LEDGER_SYNC_AGG_DB= Ledger-sync aggregate database name
+- LEDGER_SYNC_AGG_SCHEMA= Ledger-sync aggregate database schema
+- LEDGER_SYNC_AGG_FLYWAY_ENABLE= Ledger-sync aggregate Migrate schema, set `true` if this is the first time run app
+
+- EXPLORER_HOST: Explorer database host.
+- EXPLORER_PORT: Explorer database port
+- EXPLORER_USER: Explorer database username
+- EXPLORER_PASSWORD: Explorer database password
+- EXPLORER_DB: Explorer database name
+- EXPLORER_SCHEMA: Explorer database schema
+- EXPLORER_FLYWAY_ENABLE: Explorer Migrate schema, set `true` if this is the first time run app
+
 - MAXIMUM_POOL_SIZE: Schedule will have job select parallel from database. If you want to task schedule as fast as possible set the `MAXIMUM_POOL_SIZE` as much as possible (cpu core * 4). This will reduce another app performance.
 - REPORT_HISTORY_JOB_ENABLED: enable a report history job to delete expired file. Default `true`
 - SET_EXPIRED_REPORTS_DELAY: delay time between each report history job run. Default `86400000` as 1 day
@@ -72,10 +81,6 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - API_CHECK_REWARD_URL: api url to fetch reward
 - API_CHECK_POOL_HISTORY_URL: api url to fetch pool history
 - NETWORK_NAME: cardano node network name (preprod, testnet, mainnet)
-- KAFKA_CONFIGURATION_ENABLED: enable kafka configuration, default `true`
-- KAFKA_BOOSTRAP_SERVER_URL: kafka bootstrap serve. Default `localhost:9092`
-- KAFKA_GROUP_ID: kafka group id.
-- KAFKA_REPORTS_TOPIC: kafka topic to consume report. Default `dev.explorer.api.mainnet.reports`
 
 - REPORT_S3_ACCESS_KEY: report aws s3 access key
 - REPORT_S3_SECRET_KEY: report aws s3 secret key

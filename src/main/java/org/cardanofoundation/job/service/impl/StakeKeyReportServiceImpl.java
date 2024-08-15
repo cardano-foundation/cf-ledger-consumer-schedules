@@ -18,15 +18,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import org.cardanofoundation.conversions.CardanoConverters;
 import org.cardanofoundation.explorer.common.entity.enumeration.ReportStatus;
 import org.cardanofoundation.explorer.common.entity.explorer.StakeKeyReportHistory;
 import org.cardanofoundation.job.common.enumeration.ExportType;
 import org.cardanofoundation.job.dto.report.stake.StakeLifeCycleFilterRequest;
 import org.cardanofoundation.job.repository.explorer.StakeKeyReportHistoryRepository;
-import org.cardanofoundation.job.repository.ledgersync.AddressTxAmountRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.ReportHistoryServiceAsync;
 import org.cardanofoundation.job.service.StakeKeyReportService;
-import org.cardanofoundation.job.util.DateUtils;
 import org.cardanofoundation.job.util.report.ExcelHelper;
 import org.cardanofoundation.job.util.report.ExportContent;
 
@@ -40,6 +40,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
   private final ReportHistoryServiceAsync reportHistoryServiceAsync;
   private final ExcelHelper excelHelper;
   private final AddressTxAmountRepository addressTxAmountRepository;
+  private final CardanoConverters cardanoConverters;
 
   @Value("${jobs.limit-content}")
   private int limitSize;
@@ -53,16 +54,15 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
    * @throws Exception
    */
   @Override
-  public void exportStakeKeyReport(
-      StakeKeyReportHistory stakeKeyReportHistory,
-      Long zoneOffset,
-      String timePattern,
-      String dateFormat)
-      throws Exception {
-    var startTime = System.currentTimeMillis();
+  public void exportStakeKeyReport(Long reportId) throws Exception {
+    StakeKeyReportHistory stakeKeyReportHistory =
+        stakeKeyReportHistoryRepository
+            .findByReportHistoryId(reportId)
+            .orElseThrow(() -> new RuntimeException("Report not found"));
     try {
-      List<ExportContent> exportContents =
-          getExportContents(stakeKeyReportHistory, zoneOffset, timePattern, dateFormat);
+      Long zoneOffset = stakeKeyReportHistory.getReportHistory().getZoneOffset();
+      String timePattern = stakeKeyReportHistory.getReportHistory().getTimePattern();
+      List<ExportContent> exportContents = getExportContents(stakeKeyReportHistory);
       String storageKey = generateStorageKey(stakeKeyReportHistory);
       String excelFileName = storageKey + ExportType.EXCEL.getValue();
       InputStream excelInputStream =
@@ -79,11 +79,6 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
       throw e;
     } finally {
       stakeKeyReportHistoryRepository.save(stakeKeyReportHistory);
-      var endTime = System.currentTimeMillis();
-      log.info(
-          "Persist ReportHistory {} to storage time taken: {} ms",
-          stakeKeyReportHistory.getReportHistory().getId(),
-          endTime - startTime);
     }
   }
 
@@ -93,15 +88,9 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
    * @param stakeKeyReportHistory stakeKeyReportHistory
    * @return List<ExportContent>
    */
-  private List<ExportContent> getExportContents(
-      StakeKeyReportHistory stakeKeyReportHistory,
-      Long zoneOffset,
-      String timePattern,
-      String dateFormat) {
+  private List<ExportContent> getExportContents(StakeKeyReportHistory stakeKeyReportHistory) {
     StakeLifeCycleFilterRequest stakeLifeCycleFilterRequest =
         getStakeLifeCycleFilterRequest(stakeKeyReportHistory);
-
-    var currentTime = System.currentTimeMillis();
     List<CompletableFuture<ExportContent>> exportContents = new ArrayList<>();
 
     /* Check all events are enabled or not then get content correspondingly to each event
@@ -112,8 +101,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
      */
 
     exportContents.add(
-        reportHistoryServiceAsync.exportInformationOnTheReport(
-            stakeKeyReportHistory.getReportHistory(), zoneOffset, timePattern, dateFormat));
+        reportHistoryServiceAsync.exportInformationOnTheReport(stakeKeyReportHistory));
 
     if (Boolean.TRUE.equals(stakeKeyReportHistory.getEventRegistration())) {
       exportContents.add(
@@ -150,12 +138,15 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
       // amount of data,
       // So we need to split the content in to multiple sheets
 
+      long fromSlot =
+          cardanoConverters.time().toSlot(stakeKeyReportHistory.getFromDate().toLocalDateTime());
+      long toSlot =
+          cardanoConverters.time().toSlot(stakeKeyReportHistory.getToDate().toLocalDateTime());
+
       // Get total content
       Long totalContent =
           addressTxAmountRepository.getCountTxByStakeInDateRange(
-              stakeKeyReportHistory.getStakeKey(),
-              DateUtils.timestampToEpochSecond(stakeLifeCycleFilterRequest.getFromDate()),
-              DateUtils.timestampToEpochSecond(stakeLifeCycleFilterRequest.getToDate()));
+              stakeKeyReportHistory.getStakeKey(), fromSlot, toSlot);
 
       // Split content into multiple sheets
       long totalPage = totalContent / limitSize;
@@ -175,9 +166,6 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
     }
 
     var response = exportContents.stream().map(CompletableFuture::join).toList();
-    log.info(
-        "Get all stake key report data time taken: {} ms",
-        System.currentTimeMillis() - currentTime);
     return response;
   }
 

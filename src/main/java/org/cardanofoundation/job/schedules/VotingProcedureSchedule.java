@@ -35,12 +35,10 @@ import org.cardanofoundation.job.repository.ledgersync.VotingProcedureRepository
     havingValue = "true")
 public class VotingProcedureSchedule {
 
+  private static final int DEFAULT_PAGE_SIZE = 1000;
   private final VotingProcedureRepository votingProcedureRepository;
   private final LatestVotingProcedureRepository latestVotingProcedureRepository;
-
   private final VotingProcedureMapper votingProcedureMapper;
-
-  private static final int DEFAULT_PAGE_SIZE = 1000;
 
   @Scheduled(fixedRateString = "${jobs.governance-info.fixed-delay}")
   @Transactional
