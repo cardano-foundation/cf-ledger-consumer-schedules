@@ -16,19 +16,18 @@ This repository executes tasks in a periodic sequence to precompute computationa
 ## How to run
 Following prerequisites are required to run the application:
 - Java 17
-- Kafka (will be removed soon)
 - Redis 
 - Postgres (ledger-sync and explorer database)
 - Ledger-sync (Ledgersync + Aggregate app + Postgres)
 
 An example docker-compose script is provided in the `example-infra` directory. 
-(This script only sets up Kafka, Redis and Postgres, for a ledger-sync setup, please refer to the [ledger-sync repository](https://github.com/cardano-foundation/cf-ledger-sync))
+(This script only sets up Redis and Postgres, for a ledger-sync setup, please refer to the [ledger-sync repository](https://github.com/cardano-foundation/cf-ledger-sync))
 
 This can be used right away with the provided `.env.example` and adjusted as needed.
 
 To start the needed Infrastructure, run:
 ```shell
-# Start Kafka, Redis and Postgres
+# Start Redis and Postgres
 docker-compose -f example-infra/docker-compose.yml up
 # Additionally start Ledger Sync according to the docs in the ledger-sync repository 
 ```
