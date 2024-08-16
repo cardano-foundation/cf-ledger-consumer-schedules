@@ -2,6 +2,7 @@ package org.cardanofoundation.job.repository.ledgersyncagg;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import jakarta.transaction.Transactional;
 
@@ -28,6 +29,15 @@ public interface LatestTokenBalanceRepository
   Long getTheSecondLastBlockTime();
 
   @Query(
+      value =
+          """
+                  select max(ltb.slot) from latest_token_balance ltb
+                  where ltb.slot != (select max(ltb2.slot) from latest_token_balance ltb2)
+              """,
+      nativeQuery = true)
+  Long getTheSecondLastSlot();
+
+  @Query(
       """
           SELECT latestTokenBalance.policy as scriptHash, COALESCE(COUNT(latestTokenBalance), 0) as numberOfHolders
           FROM LatestTokenBalance latestTokenBalance
@@ -48,7 +58,7 @@ public interface LatestTokenBalanceRepository
           AND latestTokenBalance.quantity > 0
           GROUP BY latestTokenBalance.unit
       """)
-  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(@Param("units") List<String> units);
+  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(@Param("units") Set<String> units);
 
   @Modifying(clearAutomatically = true)
   @Transactional

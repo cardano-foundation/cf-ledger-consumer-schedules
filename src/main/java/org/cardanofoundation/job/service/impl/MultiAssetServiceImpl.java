@@ -1,7 +1,7 @@
 package org.cardanofoundation.job.service.impl;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class MultiAssetServiceImpl implements MultiAssetService {
    * @return A map containing multi-asset IDs as keys and the total number of holders as values.
    */
   @Override
-  public Map<String, Long> getMapNumberHolderByUnits(List<String> units) {
+  public Map<String, Long> getMapNumberHolderByUnits(Set<String> units) {
     var numberOfHolders = latestTokenBalanceRepository.countHoldersByMultiAssetIdInRange(units);
     return StreamUtil.toMap(
         numberOfHolders, TokenNumberHolders::getUnit, TokenNumberHolders::getNumberOfHolders);
