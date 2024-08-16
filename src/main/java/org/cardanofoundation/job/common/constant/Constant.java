@@ -9,4 +9,6 @@ public final class Constant {
     public static final String PREPROD = "preprod";
     public static final String SANCHONET = "sanchonet";
   }
+
+  public static final Integer ROLLBACKSLOT = 43200;
 }

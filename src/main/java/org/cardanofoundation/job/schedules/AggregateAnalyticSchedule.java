@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import org.cardanofoundation.job.common.constant.Constant;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTokenRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTxBalanceRepository;
@@ -127,7 +128,7 @@ public class AggregateAnalyticSchedule {
     log.info("---CleanUp{}---- Remove history record has been started", tableName);
 
     // Should be max slot - 43200 to ensure rollback case
-    long targetSlot = maxSlotSupplier.get() - 43200;
+    long targetSlot = maxSlotSupplier.get() - Constant.ROLLBACKSLOT;
     log.info("Cleaning {} table. Target slot: {}", tableName, targetSlot);
     long totalDeletedRowsRows = 0;
     long deletedRows = 0;

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
+import org.cardanofoundation.job.common.constant.Constant;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
@@ -70,7 +71,7 @@ public class AddressTxCountSchedule {
     // rollback
     redisTemplate
         .opsForValue()
-        .set(addressTxCountCheckPoint, Math.max((int) currentMaxSlotNo - 43200, 0));
+        .set(addressTxCountCheckPoint, Math.max((int) currentMaxSlotNo - Constant.ROLLBACKSLOT, 0));
   }
 
   public void init() {

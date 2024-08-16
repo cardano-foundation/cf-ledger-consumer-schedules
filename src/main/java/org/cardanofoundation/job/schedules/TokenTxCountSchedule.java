@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
+import org.cardanofoundation.job.common.constant.Constant;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
@@ -81,7 +82,7 @@ public class TokenTxCountSchedule {
     // rollback
     redisTemplate
         .opsForValue()
-        .set(tokenTxCountCheckPoint, Math.max((int) currentMaxSlotNo - 43200, 0));
+        .set(tokenTxCountCheckPoint, Math.max((int) currentMaxSlotNo - Constant.ROLLBACKSLOT, 0));
   }
 
   private void init() {
