@@ -31,8 +31,8 @@ public class TokenInfoSchedule {
 
       tokenInfoService.updateTokenInfoList();
 
-      long executionTime = System.currentTimeMillis() - startTime;
-      log.info("Update token info successfully, takes: [{} ms]", executionTime);
+      log.info(
+          "Update token info successfully, takes: [{} ms]", System.currentTimeMillis() - startTime);
       log.info("Token Info Job: -------End------");
     } catch (Exception e) {
       log.error("Error occurred during Token Info update: {}", e.getMessage(), e);
