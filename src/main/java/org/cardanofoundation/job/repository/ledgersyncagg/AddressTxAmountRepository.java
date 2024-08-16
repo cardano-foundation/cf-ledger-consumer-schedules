@@ -1,6 +1,7 @@
 package org.cardanofoundation.job.repository.ledgersyncagg;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -66,12 +67,12 @@ public interface AddressTxAmountRepository
       SELECT new org.cardanofoundation.job.model.TokenVolume(ata.unit, sum(ata.quantity))
       FROM AddressTxAmount ata
       WHERE ata.unit IN :units
-        AND ata.blockTime >= :blockTime
+        AND ata.slot >= :toSlot
         AND ata.quantity > 0
       GROUP BY ata.unit
       """)
   List<TokenVolume> sumBalanceAfterBlockTime(
-      @Param("units") List<String> units, @Param("blockTime") Long blockTime);
+      @Param("units") Set<String> units, @Param("toSlot") Long toSlot);
 
   @Query(
       """
@@ -79,9 +80,13 @@ public interface AddressTxAmountRepository
       FROM AddressTxAmount ata
       WHERE ata.unit IN :units
       AND ata.quantity > 0
+      AND ata.slot BETWEEN :fromSlot AND :toSlot
       GROUP BY ata.unit
       """)
-  List<TokenVolume> getTotalVolumeByUnits(@Param("units") List<String> units);
+  List<TokenVolume> getTotalVolumeByUnits(
+      @Param("units") Set<String> units,
+      @Param("fromSlot") Long fromSlot,
+      @Param("toSlot") Long toSlot);
 
   @Query(
       """
@@ -102,6 +107,17 @@ public interface AddressTxAmountRepository
       """)
   List<String> getTokensInTransactionInTimeRange(
       @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+
+  @Query(
+      """
+          SELECT distinct addressTxAmount.unit
+          FROM AddressTxAmount addressTxAmount
+          WHERE addressTxAmount.slot > :fromSlot
+            AND addressTxAmount.slot <= :toSlot
+            AND addressTxAmount.unit != 'lovelace'
+          """)
+  Set<String> getTokensInTransactionInSlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
 
   @Query(
       """
