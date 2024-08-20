@@ -75,7 +75,6 @@ public class ReportHistorySchedule {
 
   @Scheduled(fixedRateString = "${jobs.report-history.fixed-delay}")
   public void consumeReport() {
-    Thread.currentThread().setName("ConsumeReport");
     var currentTime = System.currentTimeMillis();
     AtomicLong successProcess = new AtomicLong(0);
     List<ReportHistory> reportHistories =
