@@ -2,11 +2,9 @@ package org.cardanofoundation.job.schedules;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
-import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.common.constant.Constant;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
@@ -153,56 +150,20 @@ public class LatestTokenBalanceSchedule {
         System.currentTimeMillis() - startTime);
   }
 
-  /**
-   * Processes and saves the latest token balance information for a specified range of processing
-   * units. This method aggregates transaction counts for tokens across specified processing units
-   * and initiates asynchronous operations to save these aggregated balances. <br>
-   * It ensures that the operation is only initiated when the cumulative transaction count reaches a
-   * predefined threshold or after every 5 batches to avoid overwhelming the system with too many
-   * concurrent database writes. <br>
-   * Additionally, it handles the final batch of transactions that may not reach the threshold but
-   * still needs to be processed. <br>
-   * The method supports an optional parameter to include zero holders in the processing, which can
-   * be useful for accounting purposes even if no transactions occurred for those units.
-   *
-   * @param units A list of strings representing the identifiers of the processing units whose
-   *     transaction counts are being aggregated and saved.
-   * @param slotCheckpoint A timestamp indicating the point in time at which the latest token
-   *     balances were captured. This is used as part of the data being saved.
-   * @param includeZeroHolders A boolean flag indicating whether the processing should include units
-   *     with zero transaction counts. This can be useful for maintaining accurate records even for
-   *     units with no activity.
-   */
   private void processingLatestTokenBalance(
       List<String> units, Long slotCheckpoint, boolean includeZeroHolders) {
-    List<TokenTxCount> tokenTxCounts = getTokenTxCountOrderedByTxCount(units);
     List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures = new ArrayList<>();
 
-    // This variable holds the threshold value for the total transaction count before batching
-    // starts.
-    int sumTxCountThreshold = 5000;
-
-    // Keeps track of the cumulative transaction count for the current batch being processed.
-    int currentSumTxCount = 0;
-
-    // A list to hold the identifiers of the processing units currently being processed in the
-    // batch.
     List<String> currentProcessingUnits = new ArrayList<>();
-
-    for (TokenTxCount tokenTxCount : tokenTxCounts) {
-      currentProcessingUnits.add(tokenTxCount.getUnit());
-
-      // If the cumulative transaction count exceeds the threshold, insert the fetched latest token
-      if (currentSumTxCount + tokenTxCount.getTxCount() > sumTxCountThreshold) {
+    for (String unit : units) {
+      currentProcessingUnits.add(unit);
+      if (currentProcessingUnits.size() % 5 == 0) {
         addLatestTokenBalanceFutures(
             savingLatestTokenBalanceFutures,
             new ArrayList<>(currentProcessingUnits),
             slotCheckpoint,
             includeZeroHolders);
         currentProcessingUnits.clear();
-        currentSumTxCount = 0;
-      } else {
-        currentSumTxCount += tokenTxCount.getTxCount();
       }
 
       // After every 10 batches, insert the fetched latest token balance data into the database
@@ -226,21 +187,5 @@ public class LatestTokenBalanceSchedule {
     // Insert the remaining stake address tx count data into the database.
     CompletableFuture.allOf(savingLatestTokenBalanceFutures.toArray(new CompletableFuture[0]))
         .join();
-  }
-
-  private List<TokenTxCount> getTokenTxCountOrderedByTxCount(List<String> units) {
-    List<TokenTxCount> tokenTxCounts = tokenTxCountRepository.findAllByUnitIn(units);
-
-    Map<String, TokenTxCount> tokenTxCountMap =
-        tokenTxCounts.stream()
-            .collect(Collectors.toMap(TokenTxCount::getUnit, tokenTxCount -> tokenTxCount));
-
-    // put all units with not exist tx count to ZERO
-    units.forEach(unit -> tokenTxCountMap.putIfAbsent(unit, new TokenTxCount(unit, 0L)));
-
-    // return the list of TokenTxCount with tx_count asc order
-    return tokenTxCountMap.values().stream()
-        .sorted((t1, t2) -> (int) (t1.getTxCount() - t2.getTxCount()))
-        .collect(Collectors.toList());
   }
 }
