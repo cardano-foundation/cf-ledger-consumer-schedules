@@ -14,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -40,6 +41,10 @@ import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQLatestTokenBa
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        value = "jobs.latest-token-balance.enabled",
+        matchIfMissing = true,
+        havingValue = "true")
 public class LatestTokenBalanceSchedule {
 
   private static final int DEFAULT_PAGE_SIZE = 1000;

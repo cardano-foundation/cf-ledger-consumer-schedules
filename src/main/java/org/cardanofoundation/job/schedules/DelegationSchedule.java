@@ -6,6 +6,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,10 @@ import org.cardanofoundation.job.service.DelegationService;
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        value = "jobs.number-delegator.enabled",
+        matchIfMissing = true,
+        havingValue = "true")
 public class DelegationSchedule {
   @Value("${application.network}")
   String network;

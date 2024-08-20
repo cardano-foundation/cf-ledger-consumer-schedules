@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -38,6 +39,10 @@ import org.cardanofoundation.job.util.BatchUtils;
 @Component
 @RequiredArgsConstructor
 @Log4j2
+@ConditionalOnProperty(
+        value = "jobs.native-script-info.enabled",
+        matchIfMissing = true,
+        havingValue = "true")
 public class NativeScriptInfoSchedule {
   private final NativeScriptInfoRepository nativeScriptInfoRepository;
   private final ScriptRepository scriptRepository;
