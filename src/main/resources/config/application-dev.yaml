@@ -188,7 +188,7 @@ jobs:
     enabled: ${ADDRESS_TX_COUNT_JOB_ENABLED:false}
     fixed-delay: ${ADDRESS_TX_COUNT_FIXED_DELAY:300000}
   latest-token-balance:
-    enabled: ${LATEST_TOKEN_BALANCE_JOB_ENABLED:false}
+    enabled: ${LATEST_TOKEN_BALANCE_JOB_ENABLED:true}
     fixed-delay: ${LATEST_TOKEN_BALANCE_FIXED_DELAY:300000}
   block-statistics:
     enabled: ${BLOCK_STATISTICS_JOB_ENABLED:false}
