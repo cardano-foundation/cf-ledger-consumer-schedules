@@ -71,7 +71,7 @@ public interface AddressTxAmountRepository
         AND ata.quantity > 0
       GROUP BY ata.unit
       """)
-  List<TokenVolume> sumBalanceAfterBlockTime(
+  List<TokenVolume> sumBalanceAfterSlot(
       @Param("units") Set<String> units, @Param("toSlot") Long toSlot);
 
   @Query(
@@ -80,7 +80,7 @@ public interface AddressTxAmountRepository
       FROM AddressTxAmount ata
       WHERE ata.unit IN :units
       AND ata.quantity > 0
-      AND ata.slot BETWEEN :fromSlot AND :toSlot
+      AND ata.slot > :fromSlot AND ata.slot <= :toSlot
       GROUP BY ata.unit
       """)
   List<TokenVolume> getTotalVolumeByUnits(
