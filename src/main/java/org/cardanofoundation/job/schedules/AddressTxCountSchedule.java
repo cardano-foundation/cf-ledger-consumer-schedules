@@ -33,9 +33,9 @@ import org.cardanofoundation.job.util.BatchUtils;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 @ConditionalOnProperty(
-        value = "jobs.address-tx-count.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
+    value = "jobs.address-tx-count.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class AddressTxCountSchedule {
 
   @Value("${application.network}")

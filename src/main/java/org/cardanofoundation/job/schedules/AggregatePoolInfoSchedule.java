@@ -48,9 +48,9 @@ import org.cardanofoundation.job.service.FetchRewardDataService;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 @ConditionalOnProperty(
-        value = "jobs.aggregate-pool-info.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
+    value = "jobs.aggregate-pool-info.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class AggregatePoolInfoSchedule {
 
   final DelegationService delegatorService;

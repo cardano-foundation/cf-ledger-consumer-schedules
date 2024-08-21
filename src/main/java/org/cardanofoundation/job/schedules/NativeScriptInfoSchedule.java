@@ -40,9 +40,9 @@ import org.cardanofoundation.job.util.BatchUtils;
 @RequiredArgsConstructor
 @Log4j2
 @ConditionalOnProperty(
-        value = "jobs.native-script-info.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
+    value = "jobs.native-script-info.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class NativeScriptInfoSchedule {
   private final NativeScriptInfoRepository nativeScriptInfoRepository;
   private final ScriptRepository scriptRepository;

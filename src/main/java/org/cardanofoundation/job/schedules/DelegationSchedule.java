@@ -19,9 +19,9 @@ import org.cardanofoundation.job.service.DelegationService;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 @ConditionalOnProperty(
-        value = "jobs.number-delegator.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
+    value = "jobs.number-delegator.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class DelegationSchedule {
   @Value("${application.network}")
   String network;

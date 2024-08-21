@@ -42,9 +42,9 @@ import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQLatestTokenBa
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 @ConditionalOnProperty(
-        value = "jobs.latest-token-balance.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
+    value = "jobs.latest-token-balance.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class LatestTokenBalanceSchedule {
 
   private static final int DEFAULT_PAGE_SIZE = 10;
@@ -101,31 +101,7 @@ public class LatestTokenBalanceSchedule {
 
     // Drop all indexes before inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.dropAllIndexes();
-    log.info("jooqLatestTokenBalanceRepository.dropAllIndexes took {}ms", System.currentTimeMillis() - startTime);
-    startTime = System.currentTimeMillis();
-    long index = 1;
-    Pageable pageable =
-        PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, BaseEntity_.ID));
-    Slice<String> multiAssetSlice = multiAssetRepository.getTokenUnitSlice(pageable);
-    log.info("multiAssetRepository.getTokenUnitSlice took {}ms", System.currentTimeMillis() - startTime);
-    startTime = System.currentTimeMillis();
-
-    processingLatestTokenBalance(multiAssetSlice.getContent(), 0L, false);
-    log.info("processingLatestTokenBalance took {}ms", System.currentTimeMillis() - startTime);
-    startTime = System.currentTimeMillis();
-
-    while (multiAssetSlice.hasNext()) {
-      multiAssetSlice = multiAssetRepository.getTokenUnitSlice(multiAssetSlice.nextPageable());
-      log.info("while multiAssetRepository.getTokenUnitSlice took {}ms", System.currentTimeMillis() - startTime);
-      startTime = System.currentTimeMillis();
-
-      processingLatestTokenBalance(multiAssetSlice.getContent(), 0L, false);
-      log.info("while processingLatestTokenBalance took {}ms", System.currentTimeMillis() - startTime);
-      startTime = System.currentTimeMillis();
-
-      index++;
-      log.info("Total processed units: {}", index * DEFAULT_PAGE_SIZE);
-    }
+    jooqLatestTokenBalanceRepository.init();
 
     // Create all indexes after inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.createAllIndexes();
@@ -145,7 +121,9 @@ public class LatestTokenBalanceSchedule {
               var startTime = System.currentTimeMillis();
               jooqLatestTokenBalanceRepository.insertLatestTokenBalanceByUnitIn(
                   units, slotCheckpoint, includeZeroHolders);
-              log.info("jooqLatestTokenBalanceRepository.insertLatestTokenBalanceByUnitIn took {}ms", System.currentTimeMillis() - startTime);
+              log.info(
+                  "jooqLatestTokenBalanceRepository.insertLatestTokenBalanceByUnitIn took {}ms",
+                  System.currentTimeMillis() - startTime);
               return null;
             }));
   }
@@ -200,7 +178,6 @@ public class LatestTokenBalanceSchedule {
     log.info("b");
     List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures = new ArrayList<>();
     log.info("c");
-
 
     // This variable holds the threshold value for the total transaction count before batching
     // starts.

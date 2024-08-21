@@ -41,9 +41,9 @@ import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 @RequiredArgsConstructor
 @Log4j2
 @ConditionalOnProperty(
-        value = "jobs.smart-contract-info.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
+    value = "jobs.smart-contract-info.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class SmartContractInfoSchedule {
   private static final int DEFAULT_PAGE_SIZE = 500;
   final RedisTemplate<String, Integer> redisTemplate;

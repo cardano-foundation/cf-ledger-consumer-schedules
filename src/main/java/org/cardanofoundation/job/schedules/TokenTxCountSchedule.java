@@ -40,9 +40,9 @@ import org.cardanofoundation.job.util.BatchUtils;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 @ConditionalOnProperty(
-        value = "jobs.token-tx-count.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
+    value = "jobs.token-tx-count.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class TokenTxCountSchedule {
 
   private final AddressTxAmountRepository addressTxAmountRepository;

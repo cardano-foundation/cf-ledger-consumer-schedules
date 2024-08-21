@@ -22,9 +22,9 @@ import org.cardanofoundation.job.service.PoolService;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ConditionalOnProperty(
-        value = "jobs.token-tx-count.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
+    value = "jobs.token-tx-count.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class PoolStatusSchedule {
 
   final RedisTemplate<String, Integer> redisTemplate;

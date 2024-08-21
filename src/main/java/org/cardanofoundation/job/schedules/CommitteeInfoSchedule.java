@@ -16,9 +16,9 @@ import org.cardanofoundation.job.repository.ledgersync.CommitteeInfoRepository;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 @ConditionalOnProperty(
-        value = "jobs.committee-info.enabled",
-        matchIfMissing = true,
-        havingValue = "true")
+    value = "jobs.committee-info.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class CommitteeInfoSchedule {
 
   private final CommitteeInfoRepository committeeInfoRepository;
