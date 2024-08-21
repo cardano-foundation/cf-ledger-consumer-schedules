@@ -148,10 +148,10 @@ jobs:
     expired:
       rate: ${SET_EXPIRED_REPORTS_DELAY:86400000} # 1 day
   pool-status:
-    enabled: ${POOL_STATUS_JOB_ENABLED:false}
+    enabled: ${POOL_STATUS_JOB_ENABLED:true}
     fixed-delay: ${POOL_STATUS_FIXED_DELAY:300000}
   number-delegator:
-    enabled: ${NUMBER_DELEGATOR_JOB_ENABLED:false}
+    enabled: ${NUMBER_DELEGATOR_JOB_ENABLED:true}
     fixed-delay: ${NUMBER_DELEGATOR_FIXED_DELAY:300000}
   unique-account:
     enabled: ${UNIQUE_ACCOUNT_ENABLED:false}
@@ -160,19 +160,19 @@ jobs:
     enabled: ${STAKE_TX_BALANCE_JOB_ENABLED:true}
     fixed-delay: ${STAKE_TX_BALANCE_FIXED_DELAY:300000}
   aggregate-pool-info:
-    enabled: ${AGGREGATE_POOL_INFO_JOB_ENABLED:false}
+    enabled: ${AGGREGATE_POOL_INFO_JOB_ENABLED:true}
     fixed-delay: ${AGGREGATE_POOL_INFO_FIXED_DELAY:10000}
   token-info:
     enabled: ${TOKEN_INFO_JOB_ENABLED:true}
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
   token-tx-count:
-    enabled: ${TOKEN_TX_COUNT_JOB_ENABLED:false}
+    enabled: ${TOKEN_TX_COUNT_JOB_ENABLED:true}
     fixed-delay: ${TOKEN_TX_COUNT_FIXED_DELAY:60000}
   smart-contract-info:
-    enabled: ${SMART_CONTRACT_INFO_JOB_ENABLED:false}
+    enabled: ${SMART_CONTRACT_INFO_JOB_ENABLED:true}
     fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:30000}
   native-script-info:
-    enabled: ${NATIVE_SCRIPT_INFO_JOB_ENABLED:false}
+    enabled: ${NATIVE_SCRIPT_INFO_JOB_ENABLED:true}
     fixed-delay: ${NATIVE_SCRIPT_INFO_FIXED_DELAY:30000}
   drep-info:
     enabled: ${DREP_INFO_JOB_ENABLED:true}
@@ -185,7 +185,7 @@ jobs:
     number-of-concurrent-tasks: ${AGG_ANALYTIC_NUMBER_OF_CONCURRENT_TASKS:2}
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
   address-tx-count:
-    enabled: ${ADDRESS_TX_COUNT_JOB_ENABLED:false}
+    enabled: ${ADDRESS_TX_COUNT_JOB_ENABLED:true}
     fixed-delay: ${ADDRESS_TX_COUNT_FIXED_DELAY:300000}
   latest-token-balance:
     enabled: ${LATEST_TOKEN_BALANCE_JOB_ENABLED:true}
@@ -195,7 +195,7 @@ jobs:
     daily-url: ${BLOCK_STATISTICS_DAILY_URL:https://data.blockperf.cardanofoundation.org/daily/daily_agr_cfm.json}
     per-epoch-url: ${BLOCK_STATISTICS_PER_EPOCH_URL:https://data.blockperf.cardanofoundation.org/per_epoch/epoch_agr_cfm.json}
   committee-info:
-    enabled: ${COMMITTEE_INFO_JOB_ENABLED:false}
+    enabled: ${COMMITTEE_INFO_JOB_ENABLED:true}
   gov-action-metadata:
     enabled: ${GOV_ACTION_METADATA_JOB_ENABLED:true}
     fixed-delay: ${GOV_ACTION_METADATA_FIXED_DELAY:300000}
