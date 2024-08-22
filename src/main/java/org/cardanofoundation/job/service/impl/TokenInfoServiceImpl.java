@@ -15,7 +15,9 @@ import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -39,6 +41,8 @@ import org.cardanofoundation.job.service.TokenInfoServiceAsync;
 @RequiredArgsConstructor
 @Slf4j
 public class TokenInfoServiceImpl implements TokenInfoService {
+
+  @Autowired @Lazy TokenInfoServiceImpl selfProxyService;
 
   private final TokenInfoCheckpointRepository tokenInfoCheckpointRepository;
   private final BlockRepository blockRepository;
@@ -116,7 +120,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
       // not care about rollbacks.
 
       TokenInfoCheckpoint slotCheckpoint =
-          processTokenInSlotRange(
+          selfProxyService.processTokenInSlotRange(
               latestProcessedSlot,
               maxSafeProcessableSlot,
               currentSlot); // one iteration done and committed on DB, compute
@@ -149,7 +153,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     // Compute latest aggregation as well as rollback values
 
     log.info("The token info scheduler switched to incremental mode");
-    processTokenFromSafetySlot(latestProcessedSlot, currentSlot);
+    selfProxyService.processTokenFromSafetySlot(latestProcessedSlot, currentSlot);
     saveTotalTokenCount();
     log.info(
         "Token info scheduler finished processing. The data had processed up to slot: {}",
@@ -158,7 +162,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
   // We need requires new so that just this block of code is run in isolation
   @Transactional(value = "explorerTransactionManager", propagation = Propagation.REQUIRES_NEW)
-  public TokenInfoCheckpoint processTokenInSlotRange(Long fromSlot, Long toSlot, Long currentSlot) {
+  protected TokenInfoCheckpoint processTokenInSlotRange(
+      Long fromSlot, Long toSlot, Long currentSlot) {
 
     TokenInfoCheckpoint checkpoint =
         TokenInfoCheckpoint.builder()
@@ -197,7 +202,8 @@ public class TokenInfoServiceImpl implements TokenInfoService {
 
   // A safety slot is a time slot that is guaranteed to be in the past, usually equal to the tip
   // minus 24 hours.
-  private void processTokenFromSafetySlot(Long latestProcessedSlot, Long tip) {
+  @Transactional(value = "explorerTransactionManager", propagation = Propagation.REQUIRES_NEW)
+  protected void processTokenFromSafetySlot(Long latestProcessedSlot, Long tip) {
     Set<String> unitMultiAssetCollection =
         addressTxAmountRepository.getTokensInTransactionInSlotRange(latestProcessedSlot, tip);
 
@@ -228,37 +234,35 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     tokenInfoList.forEach(
         tokenInfo -> {
           if (tokenInfoMap.containsKey(tokenInfo.getUnit())) {
-            // if the token is already in the database
-            // then update the previous values with the existing values and the updated values with
-            // the new values
             TokenInfo existingTokenInfo = tokenInfoMap.get(tokenInfo.getUnit());
-
-            if (Objects.isNull(existingTokenInfo.getPreviousSlot())) {
+            if (existingTokenInfo.getIncrementalMode()
+                && Objects.isNull(existingTokenInfo.getPreviousSlot())) {
+              tokenInfo.setPreviousTotalVolume(tokenInfo.getTotalVolume());
               tokenInfo.setPreviousNumberOfHolders(tokenInfo.getNumberOfHolders());
               tokenInfo.setPreviousTotalVolume(tokenInfo.getTotalVolume());
-              tokenInfo.setPreviousVolume24h(tokenInfo.getVolume24h());
               tokenInfo.setPreviousSlot(tokenInfo.getUpdatedSlot());
-            } else {
-              // case: The updated slot is greater than the latest processed slot and there is no
-              // previous slot
-              // meaning: The token is updated in a slot that might be rolled back
-              // then: update the updated values and the previous value
-              // note that: current slot ( toSlot) is the trusted slot that will not be rolled back
-              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getNumberOfHolders());
-              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getTotalVolume());
-              tokenInfo.setPreviousVolume24h(existingTokenInfo.getVolume24h());
+            } else if (existingTokenInfo.getIncrementalMode()
+                && Objects.nonNull(existingTokenInfo.getPreviousSlot())) {
+              tokenInfo.setTotalVolume(
+                  existingTokenInfo.getPreviousTotalVolume().add(tokenInfo.getTotalVolume()));
+              tokenInfo.setPreviousSlot(existingTokenInfo.getPreviousSlot());
+              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getPreviousNumberOfHolders());
+              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getPreviousTotalVolume());
+            } else if (!existingTokenInfo.getIncrementalMode()
+                && Objects.nonNull(existingTokenInfo.getPreviousSlot())) {
               tokenInfo.setPreviousSlot(existingTokenInfo.getUpdatedSlot());
+              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getTotalVolume());
+              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getNumberOfHolders());
               tokenInfo.setTotalVolume(
                   existingTokenInfo.getTotalVolume().add(tokenInfo.getTotalVolume()));
             }
           } else {
-            // if the token is not in the database
-            // then the previous values must be equal to the updated values
+            tokenInfo.setPreviousTotalVolume(tokenInfo.getTotalVolume());
             tokenInfo.setPreviousNumberOfHolders(tokenInfo.getNumberOfHolders());
             tokenInfo.setPreviousTotalVolume(tokenInfo.getTotalVolume());
-            tokenInfo.setPreviousVolume24h(tokenInfo.getVolume24h());
             tokenInfo.setPreviousSlot(tokenInfo.getUpdatedSlot());
           }
+          tokenInfo.setIncrementalMode(false);
         });
     tokenInfoRepository.saveAllAndFlush(tokenInfoList);
   }
@@ -274,20 +278,24 @@ public class TokenInfoServiceImpl implements TokenInfoService {
           // if the token is already in the database
           if (tokenInfoMap.containsKey(tokenInfo.getUnit())) {
             TokenInfo existingTokenInfo = tokenInfoMap.get(tokenInfo.getUnit());
-
-            if (Objects.nonNull(existingTokenInfo.getPreviousSlot())) {
-              // case: The previous slot is not null
-              // then: The updated values must be added to the previous values
-              tokenInfo.setPreviousSlot(existingTokenInfo.getUpdatedSlot());
-              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getNumberOfHolders());
-              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getTotalVolume());
-              tokenInfo.setPreviousVolume24h(existingTokenInfo.getVolume24h());
+            if (existingTokenInfo.getIncrementalMode()
+                && Objects.nonNull(existingTokenInfo.getPreviousSlot())) {
               tokenInfo.setTotalVolume(
                   existingTokenInfo.getPreviousTotalVolume().add(tokenInfo.getTotalVolume()));
+              tokenInfo.setPreviousSlot(existingTokenInfo.getPreviousSlot());
+              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getPreviousTotalVolume());
+              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getPreviousNumberOfHolders());
+              tokenInfo.setPreviousVolume24h(existingTokenInfo.getPreviousVolume24h());
+            } else if (!existingTokenInfo.getIncrementalMode()) {
+              tokenInfo.setPreviousSlot(existingTokenInfo.getUpdatedSlot());
+              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getTotalVolume());
+              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getNumberOfHolders());
+              tokenInfo.setTotalVolume(
+                  existingTokenInfo.getTotalVolume().add(tokenInfo.getTotalVolume()));
             }
           }
+          tokenInfo.setIncrementalMode(true);
         });
-
     tokenInfoRepository.saveAllAndFlush(tokenInfoList);
   }
 
