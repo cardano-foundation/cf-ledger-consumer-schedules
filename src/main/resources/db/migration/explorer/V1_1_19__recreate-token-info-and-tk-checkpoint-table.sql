@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS token_info
     previous_total_volume       numeric(40) NULL,
     previous_tx_count           int8 NULL,
     previous_slot               bigint NULL,
+    incremental_mode            boolean NULL,
     CONSTRAINT token_info_pkey PRIMARY KEY (unit)
     );
 
