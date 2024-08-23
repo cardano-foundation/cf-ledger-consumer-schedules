@@ -2,7 +2,6 @@ package org.cardanofoundation.job.repository.ledgersyncagg;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import jakarta.transaction.Transactional;
 
@@ -58,7 +57,7 @@ public interface LatestTokenBalanceRepository
           AND latestTokenBalance.quantity > 0
           GROUP BY latestTokenBalance.unit
       """)
-  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(@Param("units") Set<String> units);
+  List<TokenNumberHolders> countHoldersByMultiAssetIdInRange(@Param("units") List<String> units);
 
   @Modifying(clearAutomatically = true)
   @Transactional
