@@ -35,7 +35,7 @@ public class TokenInfoServiceAsync {
 
   @Transactional(readOnly = true)
   public List<TokenInfo> buildTokenInfoList(
-      Set<String> units, Long fromSlot, Long toSlot, Long currentSlot) {
+      List<String> units, Long fromSlot, Long toSlot, Long currentSlot) {
     var curTime = System.currentTimeMillis();
 
     List<TokenInfo> saveEntities = buildTokenInfo(units, fromSlot, toSlot, currentSlot);
@@ -61,7 +61,7 @@ public class TokenInfoServiceAsync {
 
   @Async
   public CompletableFuture<List<TokenVolume>> getVolume24h(
-      Set<String> multiAssetUnits, Long toSlot, Long currentSlot) {
+      List<String> multiAssetUnits, Long toSlot, Long currentSlot) {
     long startTime = System.currentTimeMillis();
     List<TokenVolume> tokenVolumes = new ArrayList<>();
 
@@ -81,7 +81,7 @@ public class TokenInfoServiceAsync {
 
   @Async
   public CompletableFuture<List<TokenVolume>> getTotalVolume(
-      Set<String> multiAssetUnits, Long fromSlot, Long toSlot) {
+      List<String> multiAssetUnits, Long fromSlot, Long toSlot) {
     long startTime = System.currentTimeMillis();
     List<TokenVolume> tokenVolumes =
         addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits, fromSlot, toSlot);
@@ -95,7 +95,7 @@ public class TokenInfoServiceAsync {
 
   @Async
   public CompletableFuture<Map<String, Long>> getMapNumberHolderByUnits(
-      Set<String> multiAssetUnits) {
+      List<String> multiAssetUnits) {
     long startTime = System.currentTimeMillis();
     Map<String, Long> mapNumberHolder =
         multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
@@ -105,7 +105,7 @@ public class TokenInfoServiceAsync {
   }
 
   private List<TokenInfo> buildTokenInfo(
-      Set<String> multiAssetUnits, Long fromSlot, Long toSlot, Long realSlot) {
+      List<String> multiAssetUnits, Long fromSlot, Long toSlot, Long realSlot) {
 
     List<TokenInfo> saveEntities = new ArrayList<>();
 

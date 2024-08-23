@@ -1,7 +1,6 @@
 package org.cardanofoundation.job.repository.ledgersyncagg;
 
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -72,7 +71,7 @@ public interface AddressTxAmountRepository
       GROUP BY ata.unit
       """)
   List<TokenVolume> sumBalanceAfterSlot(
-      @Param("units") Set<String> units, @Param("toSlot") Long toSlot);
+      @Param("units") List<String> units, @Param("toSlot") Long toSlot);
 
   @Query(
       """
@@ -84,7 +83,7 @@ public interface AddressTxAmountRepository
       GROUP BY ata.unit
       """)
   List<TokenVolume> getTotalVolumeByUnits(
-      @Param("units") Set<String> units,
+      @Param("units") List<String> units,
       @Param("fromSlot") Long fromSlot,
       @Param("toSlot") Long toSlot);
 
@@ -116,7 +115,7 @@ public interface AddressTxAmountRepository
             AND addressTxAmount.slot <= :toSlot
             AND addressTxAmount.unit != 'lovelace'
           """)
-  Set<String> getTokensInTransactionInSlotRange(
+  List<String> getTokensInTransactionInSlotRange(
       @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
 
   @Query(
