@@ -69,7 +69,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
   public void updateTokenInfoList() {
 
     final String latestTokenBalanceCheckpoint =
-        getRedisKey(RedisKey.LATEST_TOKEN_BALANCE_CHECKPOINT.name());
+        RedisKey.LATEST_TOKEN_BALANCE_CHECKPOINT.name().concat("_").concat(network);
     Optional<Block> latestBlock = blockRepository.findLatestBlock();
 
     // This the slot for the current time
@@ -91,7 +91,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
             .opsForValue()
             .get(
                 latestTokenBalanceCheckpoint); // the max slot processed by ledger sync aggregation.
-    if (Objects.isNull(maxLedgerSyncAggregationSlot) || latestBlock.isEmpty()) {
+    if (Objects.isNull(maxLedgerSyncAggregationSlot)
+        || latestBlock.isEmpty()
+        || maxLedgerSyncAggregationSlot.longValue() == 0) {
       log.error("No block found in the ledger sync database");
       return;
     }
@@ -357,7 +359,7 @@ public class TokenInfoServiceImpl implements TokenInfoService {
     log.info("Total token count: {}", totalTokenCount);
   }
 
-  private String getRedisKey(String prefix) {
-    return prefix + "_" + network;
+  private String getRedisKey(String key) {
+    return String.join("_", network.toUpperCase(), key);
   }
 }
