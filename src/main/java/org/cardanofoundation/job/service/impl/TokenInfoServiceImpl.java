@@ -91,7 +91,9 @@ public class TokenInfoServiceImpl implements TokenInfoService {
             .opsForValue()
             .get(
                 latestTokenBalanceCheckpoint); // the max slot processed by ledger sync aggregation.
-    if (Objects.isNull(maxLedgerSyncAggregationSlot) || latestBlock.isEmpty()) {
+    if (Objects.isNull(maxLedgerSyncAggregationSlot)
+        || latestBlock.isEmpty()
+        || maxLedgerSyncAggregationSlot.longValue() == 0) {
       log.error("No block found in the ledger sync database");
       return;
     }
