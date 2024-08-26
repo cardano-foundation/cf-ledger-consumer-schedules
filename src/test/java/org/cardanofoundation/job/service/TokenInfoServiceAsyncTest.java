@@ -9,19 +9,20 @@ import static org.mockito.Mockito.when;
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
+import java.util.*;
+
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.cardanofoundation.conversions.CardanoConverters;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
@@ -31,17 +32,20 @@ import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountReposit
 
 @ExtendWith(MockitoExtension.class)
 class TokenInfoServiceAsyncTest {
-
+  @Spy private TokenInfoServiceAsync selfProxyService;
   @Mock private AddressTxAmountRepository addressTxAmountRepository;
   @Mock private MultiAssetRepository multiAssetRepository;
   @Mock private MultiAssetService multiAssetService;
   @InjectMocks private TokenInfoServiceAsync tokenInfoServiceAsync;
+  @MockBean private CardanoConverters cardanoConverters;
 
   @Test
   @Disabled
   void testBuildTokenInfoList() {
-    Long blockNo = 1000L;
-    Long afterTxId = 100000L;
+    List<String> unit = List.of("1L", "2L", "3L");
+    Long fromSlot = 500L;
+    Long toSlot = 600L;
+    Long currentSlot = 1000L;
     Timestamp updateTime = Timestamp.valueOf(LocalDateTime.of(2020, 1, 1, 0, 0, 0, 0));
     TokenVolume volume24h1 = new TokenVolume("1L", BigInteger.valueOf(100L));
     TokenVolume volume24h2 = new TokenVolume("2L", BigInteger.valueOf(200L));
@@ -62,10 +66,7 @@ class TokenInfoServiceAsyncTest {
     TokenTxCount tokenTxCount1 = new TokenTxCount("1L", 100L);
     TokenTxCount tokenTxCount2 = new TokenTxCount("2L", 200L);
     TokenTxCount tokenTxCount3 = new TokenTxCount("3L", 300L);
-    List<TokenTxCount> tokenTxCounts = new ArrayList<>();
-    tokenTxCounts.add(tokenTxCount1);
-    tokenTxCounts.add(tokenTxCount2);
-    tokenTxCounts.add(tokenTxCount3);
+    List<TokenTxCount> tokenTxCounts = List.of(tokenTxCount1, tokenTxCount2, tokenTxCount3);
 
     Long startIdent = 1L;
     Long endIdent = 3L;
@@ -76,10 +77,10 @@ class TokenInfoServiceAsyncTest {
                 new TokenUnitProjectionImpl(1L, "1L"),
                 new TokenUnitProjectionImpl(2L, "2L"),
                 new TokenUnitProjectionImpl(3L, "3L")));
-    when(addressTxAmountRepository.sumBalanceAfterBlockTime(anyList(), anyLong()))
+    when(addressTxAmountRepository.sumBalanceAfterSlot(anyList(), anyLong()))
         .thenReturn(volume24hLst);
 
-    when(addressTxAmountRepository.getTotalVolumeByUnits(anyList())).thenReturn(tokenVolumes);
+    when(addressTxAmountRepository.getTotalTxCountByUnitIn(anyList())).thenReturn(tokenTxCounts);
 
     when(addressTxAmountRepository.getTotalTxCountByUnitIn(anyList())).thenReturn(tokenTxCounts);
 
@@ -87,37 +88,30 @@ class TokenInfoServiceAsyncTest {
         .thenReturn(
             Map.ofEntries(Map.entry("1L", 10L), Map.entry("2L", 20L), Map.entry("3L", 30L)));
 
-    CompletableFuture<List<TokenInfo>> result =
-        tokenInfoServiceAsync.buildTokenInfoList(
-            startIdent, endIdent, blockNo, afterTxId, updateTime);
-    var tokenInfoListReturned = result.join();
+    List<TokenInfo> result =
+        tokenInfoServiceAsync.buildTokenInfoList(unit, fromSlot, toSlot, currentSlot);
 
-    assertThat(tokenInfoListReturned)
+    assertThat(result)
         .hasSize(3)
         .extracting(
-            TokenInfo::getBlockNo,
             TokenInfo::getVolume24h,
             TokenInfo::getTotalVolume,
             TokenInfo::getTxCount,
-            TokenInfo::getNumberOfHolders,
-            TokenInfo::getUpdateTime)
+            TokenInfo::getNumberOfHolders)
         .containsExactlyInAnyOrder(
             tuple(
-                blockNo,
                 volume24h1.getVolume(),
                 totalVolume1.getVolume(),
                 tokenTxCount1.getTxCount(),
                 10L,
                 updateTime),
             tuple(
-                blockNo,
                 volume24h2.getVolume(),
                 totalVolume2.getVolume(),
                 tokenTxCount2.getTxCount(),
                 20L,
                 updateTime),
             tuple(
-                blockNo,
                 volume24h3.getVolume(),
                 totalVolume3.getVolume(),
                 tokenTxCount3.getTxCount(),

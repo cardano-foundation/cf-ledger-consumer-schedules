@@ -1,12 +1,10 @@
 package org.cardanofoundation.job.service;
 
 import java.math.BigInteger;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -17,11 +15,10 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.cardanofoundation.conversions.CardanoConverters;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
-import org.cardanofoundation.job.projection.TokenUnitProjection;
-import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.util.StreamUtil;
 
@@ -33,69 +30,21 @@ public class TokenInfoServiceAsync {
   @Autowired @Lazy TokenInfoServiceAsync selfProxyService;
 
   private final AddressTxAmountRepository addressTxAmountRepository;
-  private final MultiAssetRepository multiAssetRepository;
   private final MultiAssetService multiAssetService;
+  private final CardanoConverters cardanoConverters;
 
-  /**
-   * Asynchronously builds a list of TokenInfo entities based on the provided list of MultiAsset.
-   * This method is called when initializing TokenInfo data
-   *
-   * @param startIdent The starting multi-asset ID.
-   * @param endIdent The ending multi-asset ID.
-   * @param blockNo The maximum block number to set for the TokenInfo entities.
-   * @param epochSecond24hAgo epochSecond 24 hours ago
-   * @param timeLatestBlock The timestamp to set as the update time for the TokenInfo entities.
-   * @return A CompletableFuture containing the list of TokenInfo entities built from the provided
-   *     MultiAsset list.
-   */
-  @Async
   @Transactional(readOnly = true)
-  public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
-      Long startIdent,
-      Long endIdent,
-      Long blockNo,
-      Long epochSecond24hAgo,
-      Timestamp timeLatestBlock) {
-
+  public List<TokenInfo> buildTokenInfoList(
+      List<String> units, Long fromSlot, Long toSlot, Long currentSlot) {
     var curTime = System.currentTimeMillis();
 
-    Map<String, Long> multiAssetUnitMap =
-        multiAssetRepository.getTokenUnitByIdBetween(startIdent, endIdent).stream()
-            .collect(Collectors.toMap(TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
-
-    List<String> multiAssetUnits = new ArrayList<>(multiAssetUnitMap.keySet());
-
-    List<TokenInfo> saveEntities =
-        buildTokenInfo(
-            blockNo, epochSecond24hAgo, timeLatestBlock, multiAssetUnits, multiAssetUnitMap);
+    List<TokenInfo> saveEntities = buildTokenInfo(units, fromSlot, toSlot, currentSlot);
 
     log.info(
-        "getTokenInfoListNeedSave startIdent: {} endIdent: {} took: {}ms",
-        startIdent,
-        endIdent,
-        System.currentTimeMillis() - curTime);
-
-    return CompletableFuture.completedFuture(saveEntities);
-  }
-
-  @Async
-  @Transactional(readOnly = true)
-  public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
-      List<String> units, Long blockNo, Long epochSecond24hAgo, Timestamp timeLatestBlock) {
-    var curTime = System.currentTimeMillis();
-
-    Map<String, Long> multiAssetUnitMap =
-        multiAssetRepository.getTokenUnitByUnitIn(units).stream()
-            .collect(Collectors.toMap(TokenUnitProjection::getUnit, TokenUnitProjection::getIdent));
-
-    List<TokenInfo> saveEntities =
-        buildTokenInfo(blockNo, epochSecond24hAgo, timeLatestBlock, units, multiAssetUnitMap);
-
-    log.info(
-        "getTokenInfoListNeedSave size: {} took: {}ms",
+        "Build token list with size: {} took: {}ms",
         saveEntities.size(),
         System.currentTimeMillis() - curTime);
-    return CompletableFuture.completedFuture(saveEntities);
+    return saveEntities;
   }
 
   @Async
@@ -112,48 +61,61 @@ public class TokenInfoServiceAsync {
 
   @Async
   public CompletableFuture<List<TokenVolume>> getVolume24h(
-      List<String> multiAssetUnits, Long epochSecond24hAgo, Long epochSecondLastTimeBlock) {
+      List<String> multiAssetUnits, Long toSlot, Long currentSlot) {
+    long startTime = System.currentTimeMillis();
     List<TokenVolume> tokenVolumes = new ArrayList<>();
 
-    if (epochSecond24hAgo <= epochSecondLastTimeBlock) {
-      tokenVolumes =
-          addressTxAmountRepository.sumBalanceAfterBlockTime(multiAssetUnits, epochSecond24hAgo);
+    LocalDateTime toTime = cardanoConverters.slot().slotToTime(toSlot);
+    LocalDateTime realTime = cardanoConverters.slot().slotToTime(currentSlot);
+
+    Long slot24hAgo = cardanoConverters.time().toSlot(realTime.minusHours(24));
+
+    // meaning if toSlot is less than 24h ago from the current slot (current time - tip).
+    // then we must be calculating the volume24h values
+    if (ChronoUnit.HOURS.between(toTime, realTime) <= 24) {
+      tokenVolumes = addressTxAmountRepository.sumBalanceAfterSlot(multiAssetUnits, slot24hAgo);
     }
+    log.info("Processing getVolume24h took: {}ms", System.currentTimeMillis() - startTime);
     return CompletableFuture.completedFuture(tokenVolumes);
   }
 
   @Async
-  public CompletableFuture<List<TokenVolume>> getTotalVolume(List<String> multiAssetUnits) {
+  public CompletableFuture<List<TokenVolume>> getTotalVolume(
+      List<String> multiAssetUnits, Long fromSlot, Long toSlot) {
+    long startTime = System.currentTimeMillis();
     List<TokenVolume> tokenVolumes =
-        addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits);
+        addressTxAmountRepository.getTotalVolumeByUnits(multiAssetUnits, fromSlot, toSlot);
+    log.info(
+        "Processing getTotalVolume took: {}ms, from slot {} to slot {}",
+        System.currentTimeMillis() - startTime,
+        fromSlot,
+        toSlot);
     return CompletableFuture.completedFuture(tokenVolumes);
   }
 
   @Async
   public CompletableFuture<Map<String, Long>> getMapNumberHolderByUnits(
       List<String> multiAssetUnits) {
+    long startTime = System.currentTimeMillis();
     Map<String, Long> mapNumberHolder =
         multiAssetService.getMapNumberHolderByUnits(multiAssetUnits);
+    log.info(
+        "Processing getMapNumberHolderByUnits took: {}ms", System.currentTimeMillis() - startTime);
     return CompletableFuture.completedFuture(mapNumberHolder);
   }
 
   private List<TokenInfo> buildTokenInfo(
-      Long blockNo,
-      Long epochSecond24hAgo,
-      Timestamp timeLatestBlock,
-      List<String> multiAssetUnits,
-      Map<String, Long> multiAssetUnitMap) {
+      List<String> multiAssetUnits, Long fromSlot, Long toSlot, Long realSlot) {
 
     List<TokenInfo> saveEntities = new ArrayList<>();
 
     // Get the volume 24h, total volume, and number of holders for each multi-asset unit
     // Should be call by selfProxyService to make it async
     CompletableFuture<List<TokenVolume>> volumes24hFuture =
-        selfProxyService.getVolume24h(
-            multiAssetUnits, epochSecond24hAgo, timeLatestBlock.toInstant().getEpochSecond());
+        selfProxyService.getVolume24h(multiAssetUnits, toSlot, realSlot);
 
     CompletableFuture<List<TokenVolume>> totalVolumesFuture =
-        selfProxyService.getTotalVolume(multiAssetUnits);
+        selfProxyService.getTotalVolume(multiAssetUnits, fromSlot, toSlot);
 
     CompletableFuture<Map<String, Long>> mapNumberHolderFuture =
         selfProxyService.getMapNumberHolderByUnits(multiAssetUnits);
@@ -166,20 +128,19 @@ public class TokenInfoServiceAsync {
     List<TokenVolume> totalVolumes = totalVolumesFuture.join();
     Map<String, Long> mapNumberHolder = mapNumberHolderFuture.join();
 
-    var tokenVolume24hMap =
+    Map<String, BigInteger> tokenVolume24hMap =
         StreamUtil.toMap(volumes24h, TokenVolume::getUnit, TokenVolume::getVolume);
-    var totalVolumeMap =
+    Map<String, BigInteger> totalVolumeMap =
         StreamUtil.toMap(totalVolumes, TokenVolume::getUnit, TokenVolume::getVolume);
 
     multiAssetUnits.forEach(
         unit -> {
-          var tokenInfo = new TokenInfo();
-          tokenInfo.setMultiAssetId(multiAssetUnitMap.get(unit));
+          TokenInfo tokenInfo = new TokenInfo();
+          tokenInfo.setUnit(unit);
           tokenInfo.setVolume24h(tokenVolume24hMap.getOrDefault(unit, BigInteger.ZERO));
           tokenInfo.setTotalVolume(totalVolumeMap.getOrDefault(unit, BigInteger.ZERO));
           tokenInfo.setNumberOfHolders(mapNumberHolder.getOrDefault(unit, 0L));
-          tokenInfo.setUpdateTime(timeLatestBlock);
-          tokenInfo.setBlockNo(blockNo);
+          tokenInfo.setUpdatedSlot(toSlot);
           saveEntities.add(tokenInfo);
         });
 

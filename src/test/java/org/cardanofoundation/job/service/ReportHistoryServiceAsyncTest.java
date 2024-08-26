@@ -237,11 +237,4 @@ class ReportHistoryServiceAsyncTest {
     Assertions.assertEquals(0, response.getLstData().size());
     Assertions.assertEquals(PoolDeregistration.class, response.getClazz());
   }
-
-  @Test
-  void getTeset() {
-    String pattern = "MM/dd/yyyy, HH:mm:ss";
-    String datePattern = pattern.substring(0, pattern.indexOf(','));
-    System.out.println(datePattern.length());
-  }
 }
