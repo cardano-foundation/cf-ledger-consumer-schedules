@@ -9,17 +9,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import org.cardanofoundation.job.common.constant.Constant;
-import org.cardanofoundation.job.repository.ledgersyncagg.AddressBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTokenRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTxBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.StakeTxBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.TopAddressBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.TopStakeAddressBalanceRepository;
+import org.cardanofoundation.job.common.enumeration.RedisKey;
+import org.cardanofoundation.job.repository.ledgersyncagg.*;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQStakeAddressBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
@@ -43,6 +39,14 @@ public class AggregateAnalyticSchedule {
   private final TopAddressBalanceRepository topAddressBalanceRepository;
   private final TopStakeAddressBalanceRepository topStakeAddressBalanceRepository;
   private final StakeTxBalanceRepository stakeTxBalanceRepository;
+  private final RedisTemplate<String, Boolean> redisTemplate;
+
+  @Value("${application.network}")
+  private String network;
+
+  private String getRedisKey(String prefix) {
+    return prefix + "_" + network;
+  }
 
   @Value("${jobs.agg-analytic.number-of-concurrent-tasks}")
   private Integer numberOfConcurrentTasks;
@@ -78,10 +82,30 @@ public class AggregateAnalyticSchedule {
 
   @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
   public void cleanUpAddressBalance() {
-    cleanUpBalance(
-        jooqAddressBalanceRepository::cleanUpAddressBalance,
-        addressBalanceRepository::getMaxSlot,
-        "AddressBalance");
+    log.info("cleanUpAddressBalance - starting");
+    final String addressBalanceInitialCleanup =
+        getRedisKey(RedisKey.ADDRESS_BALANCE_INITIAL_CLEANUP.name());
+    log.info("addressBalanceInitialCleanup: {}", addressBalanceInitialCleanup);
+
+    final Boolean initialCleanupCompleted =
+        redisTemplate.opsForValue().get(addressBalanceInitialCleanup);
+    log.info("initialCleanupCompleted: {}", initialCleanupCompleted);
+
+    if (Boolean.TRUE.equals(initialCleanupCompleted)) {
+      log.info("AddressBalance subsequent cleanup");
+      cleanUpBalance(
+          jooqAddressBalanceRepository::cleanUpAddressBalance,
+          addressBalanceRepository::getMaxSlot,
+          "AddressBalance");
+    } else {
+      log.info("AddressBalance  subsequent cleanup");
+      cleanUpBalanceFromTip(
+          jooqAddressBalanceRepository::cleanUpAddressBalanceV2,
+          addressBalanceRepository::getMaxSlot,
+          "AddressBalance");
+    }
+
+    redisTemplate.opsForValue().set(addressBalanceInitialCleanup, Boolean.TRUE);
   }
 
   @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
@@ -139,6 +163,40 @@ public class AggregateAnalyticSchedule {
       totalDeletedRowsRows += deletedRows;
       log.info("Total {} history removed {} rows", tableName, totalDeletedRowsRows);
     } while (deletedRows > 0);
+
+    log.info(
+        "---CleanUp{}---- Remove history record has ended. Time taken {}ms",
+        tableName,
+        System.currentTimeMillis() - currentTime);
+  }
+
+  private void cleanUpBalanceFromTip(
+      BiFunction<Long, Long, Integer> cleanUpFunction,
+      Supplier<Long> maxSlotSupplier,
+      String tableName) {
+    long currentTime = System.currentTimeMillis();
+    log.info("---CleanUp{}---- Remove history record has been started", tableName);
+
+    var slotDecrement = 25_000L;
+
+    // Should be max slot - 43200 to ensure rollback case
+    var maxSlot = maxSlotSupplier.get() - Constant.ROLLBACKSLOT;
+    var slotTo = maxSlot;
+    var slotFrom = slotTo - slotDecrement;
+
+    log.info(
+        "Cleaning {} table. Slot from: {}, to: {}, max: {}", tableName, slotFrom, slotTo, maxSlot);
+    long totalDeletedRowsRows = 0;
+    long deletedRows = 0;
+
+    do {
+      log.info("slotFrom: {}, slotTo: {}", slotFrom, slotTo);
+      deletedRows = cleanUpFunction.apply(slotFrom, slotTo);
+      totalDeletedRowsRows += deletedRows;
+      log.info("Total {} history removed {} rows", tableName, totalDeletedRowsRows);
+      slotTo = slotFrom;
+      slotFrom -= slotDecrement;
+    } while (slotFrom > 0L);
 
     log.info(
         "---CleanUp{}---- Remove history record has ended. Time taken {}ms",
