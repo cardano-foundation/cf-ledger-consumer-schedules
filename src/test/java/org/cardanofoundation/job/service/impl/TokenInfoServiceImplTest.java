@@ -7,8 +7,6 @@ import static org.mockito.Mockito.*;
 import java.math.BigInteger;
 import java.util.List;
 
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import org.mockito.*;
@@ -22,29 +20,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
-import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
-import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
-import org.cardanofoundation.job.repository.ledgersync.TxRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
-import org.cardanofoundation.job.service.MultiAssetService;
 import org.cardanofoundation.job.service.TokenInfoServiceAsync;
 
 @ExtendWith(MockitoExtension.class)
 class TokenInfoServiceImplTest {
 
   @Mock private TokenInfoCheckpointRepository tokenInfoCheckpointRepository;
-  @Mock private BlockRepository blockRepository;
-  @Mock private MultiAssetRepository multiAssetRepository;
   @Mock private TokenInfoRepository tokenInfoRepository;
   @Mock private TokenInfoServiceAsync tokenInfoServiceAsync;
-  @Mock private TxRepository txRepository;
   @Mock private AddressTxAmountRepository addressTxAmountRepository;
-  @Mock private MultiAssetService multiAssetService;
-  @Mock private RedisTemplate<String, Long> redisTemplate;
-  @Mock private ValueOperations valueOperations;
-
-  //  @Captor private ArgumentCaptor<List<TokenInfo>> tokenInfosCaptor;
-  //  @Captor private ArgumentCaptor<TokenInfoCheckpoint> tokenInfoCheckpointCaptor;
 
   @InjectMocks private TokenInfoServiceImpl tokenInfoService;
 

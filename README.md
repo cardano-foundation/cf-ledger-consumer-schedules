@@ -81,6 +81,7 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - STAKE_TX_BALANCE_FIXED_DELAY: fixed delay for job stake tx balance
 - TOKEN_INFO_JOB_ENABLED: enable token info job
 - TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
+- TOKEN_INFO_NUM_SLOT_INTERVAL: number of slots for each iteration processing token info
 - AGGREGATE_POOL_INFO_FIXED_DELAY: fixed delay for job aggregate pool info
 - SMART_CONTRACT_INFO_FIXED_DELAY: fixed delay for job smart contract info
 - NATIVE_SCRIPT_INFO_FIXED_DELAY: fixed delay for job native script info
