@@ -187,7 +187,7 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
     Map<String, TokenTxCount> existingTokenTxCountMap =
         existingTokenTxCounts.stream()
             .collect(Collectors.toMap(TokenTxCount::getUnit, Function.identity()));
-    tokenTxCounts.forEach(
+    tokenTxCounts.parallelStream().forEach(
         tokenTxCount -> {
           if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
             TokenTxCount existingTokenTxCount = existingTokenTxCountMap.get(tokenTxCount.getUnit());
@@ -231,7 +231,7 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
     Map<String, TokenTxCount> existingTokenTxCountMap =
         existingTokenTxCounts.stream()
             .collect(Collectors.toMap(TokenTxCount::getUnit, Function.identity()));
-    tokenTxCounts.forEach(
+    tokenTxCounts.parallelStream().forEach(
         tokenTxCount -> {
           if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
             TokenTxCount existingTokenTxCount = existingTokenTxCountMap.get(tokenTxCount.getUnit());
@@ -240,7 +240,7 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
               tokenTxCount.setTxCount(
                   tokenTxCount.getTxCount() + existingTokenTxCount.getPreviousTxCount());
               tokenTxCount.setPreviousSlot(existingTokenTxCount.getPreviousSlot());
-              tokenTxCount.setPreviousTxCount(existingTokenTxCount.getTxCount());
+              tokenTxCount.setPreviousTxCount(existingTokenTxCount.getPreviousTxCount());
             } else if (!existingTokenTxCount.getIsCalculatedInIncrementalMode()) {
               tokenTxCount.setPreviousSlot(existingTokenTxCount.getUpdatedSlot());
               tokenTxCount.setPreviousTxCount(existingTokenTxCount.getTxCount());
