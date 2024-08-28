@@ -19,24 +19,6 @@ public interface LatestTokenBalanceRepository
     extends JpaRepository<LatestTokenBalance, AddressBalanceId> {
 
   @Query(
-      value =
-          """
-          select max(ltb.block_time) from latest_token_balance ltb
-          where ltb.block_time != (select max(ltb2.block_time) from latest_token_balance ltb2)
-      """,
-      nativeQuery = true)
-  Long getTheSecondLastBlockTime();
-
-  @Query(
-      value =
-          """
-                  select max(ltb.slot) from latest_token_balance ltb
-                  where ltb.slot != (select max(ltb2.slot) from latest_token_balance ltb2)
-              """,
-      nativeQuery = true)
-  Long getTheSecondLastSlot();
-
-  @Query(
       """
           SELECT latestTokenBalance.policy as scriptHash, COALESCE(COUNT(latestTokenBalance), 0) as numberOfHolders
           FROM LatestTokenBalance latestTokenBalance
