@@ -156,7 +156,7 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
     BatchUtils.processInBatches(
         DEFAULT_BATCH_SIZE,
         stakeAddressTxCounts,
-        list -> buildAddressTxCountListInRollbackCaseMightNotOccur(list, endSlot),
+        list -> buildStakeAddressTxCountListInRollbackCaseMightNotOccur(list, endSlot),
         stakeAddressTxCountRepository::saveAll,
         "AddressTxCount");
 
@@ -193,13 +193,13 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
     BatchUtils.processInBatches(
         DEFAULT_BATCH_SIZE,
         stakeAddressTxCounts,
-        list -> buildAddressTxCountListInRollbackCaseMightOccur(list, tip),
+        list -> buildStakeAddressTxCountListInRollbackCaseMightOccur(list, tip),
         stakeAddressTxCountRepository::saveAll,
         JOB_NAME);
   }
 
   private CompletableFuture<List<StakeAddressTxCount>>
-      buildAddressTxCountListInRollbackCaseMightNotOccur(
+      buildStakeAddressTxCountListInRollbackCaseMightNotOccur(
           List<StakeAddressTxCount> stakeAddressTxCounts, Long endSlot) {
     return CompletableFuture.supplyAsync(
         () -> {
@@ -273,7 +273,7 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
   }
 
   private CompletableFuture<List<StakeAddressTxCount>>
-      buildAddressTxCountListInRollbackCaseMightOccur(
+      buildStakeAddressTxCountListInRollbackCaseMightOccur(
           List<StakeAddressTxCount> stakeAddressTxCounts, Long endSlot) {
     return CompletableFuture.supplyAsync(
         () -> {

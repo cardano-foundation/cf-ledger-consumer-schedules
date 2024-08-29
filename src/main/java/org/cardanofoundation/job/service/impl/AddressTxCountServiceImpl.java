@@ -276,10 +276,10 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
           }
           List<String> addresses =
               addressTxCounts.stream().map(AddressTxCount::getAddress).toList();
-          List<AddressTxCount> existingTokenTxCounts =
+          List<AddressTxCount> existingAddressTxCounts =
               addressTxCountRepository.findAllByAddressIn(addresses);
           Map<String, AddressTxCount> existingAddressTxCountMap =
-              existingTokenTxCounts.stream()
+              existingAddressTxCounts.stream()
                   .collect(
                       Collectors.toConcurrentMap(AddressTxCount::getAddress, Function.identity()));
           addressTxCounts.parallelStream()
@@ -305,10 +305,10 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
                     } else {
                       addressTxCount.setUpdatedSlot(endSlot);
                       addressTxCount.setIsCalculatedInIncrementalMode(true);
-                      existingTokenTxCounts.add(addressTxCount);
+                      existingAddressTxCounts.add(addressTxCount);
                     }
                   });
-          return existingTokenTxCounts;
+          return existingAddressTxCounts;
         });
   }
 }
