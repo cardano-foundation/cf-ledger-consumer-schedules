@@ -98,6 +98,17 @@ public interface AddressTxAmountRepository
 
   @Query(
       """
+          SELECT new org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount(ata.unit, count(distinct (ata.txHash)))
+          FROM AddressTxAmount ata
+          WHERE ata.slot > :fromSlot AND ata.slot <= :toSlot
+          AND ata.unit != 'lovelace'
+          GROUP BY ata.unit
+          """)
+  List<TokenTxCount> getTotalTxCountByUnitInSlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
+
+  @Query(
+      """
       SELECT addressTxAmount.unit
       FROM AddressTxAmount addressTxAmount
       WHERE addressTxAmount.blockTime >= :fromTime
