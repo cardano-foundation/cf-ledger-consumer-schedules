@@ -105,7 +105,8 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
       // As long as the upper bound of our time interval is older than 1h, we can safely while loop
       // and
       // not care about rollbacks.
-      DataCheckpoint checkpoint = selfProxyService.processTokenInSlotRange(latestProcessedSlot, endSlot);
+      DataCheckpoint checkpoint =
+          selfProxyService.processTokenInSlotRange(latestProcessedSlot, endSlot);
       latestProcessedSlot = checkpoint.getSlotNo();
       endSlot = latestProcessedSlot + NUM_SLOT_INTERVAL;
 
@@ -187,35 +188,37 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
     Map<String, TokenTxCount> existingTokenTxCountMap =
         existingTokenTxCounts.stream()
             .collect(Collectors.toMap(TokenTxCount::getUnit, Function.identity()));
-    tokenTxCounts.parallelStream().forEach(
-        tokenTxCount -> {
-          if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
-            TokenTxCount existingTokenTxCount = existingTokenTxCountMap.get(tokenTxCount.getUnit());
-            if (existingTokenTxCount.getIsCalculatedInIncrementalMode()
-                && Objects.isNull(existingTokenTxCount.getPreviousSlot())) {
-              tokenTxCount.setPreviousSlot(endSlot);
-              tokenTxCount.setPreviousTxCount(tokenTxCount.getTxCount());
-            } else if (existingTokenTxCount.getIsCalculatedInIncrementalMode()
-                && Objects.nonNull(existingTokenTxCount.getPreviousSlot())) {
-              tokenTxCount.setTxCount(
-                  tokenTxCount.getTxCount() + existingTokenTxCount.getPreviousTxCount());
-              tokenTxCount.setPreviousTxCount(existingTokenTxCount.getPreviousTxCount());
-              tokenTxCount.setPreviousSlot(existingTokenTxCount.getPreviousSlot());
-            } else if (!existingTokenTxCount.getIsCalculatedInIncrementalMode()
-                && Objects.nonNull(existingTokenTxCount.getPreviousSlot())) {
-              tokenTxCount.setPreviousSlot(existingTokenTxCount.getUpdatedSlot());
-              tokenTxCount.setPreviousTxCount(existingTokenTxCount.getTxCount());
-              tokenTxCount.setTxCount(
-                  tokenTxCount.getTxCount() + existingTokenTxCount.getTxCount());
-            }
+    tokenTxCounts.parallelStream()
+        .forEach(
+            tokenTxCount -> {
+              if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
+                TokenTxCount existingTokenTxCount =
+                    existingTokenTxCountMap.get(tokenTxCount.getUnit());
+                if (existingTokenTxCount.getIsCalculatedInIncrementalMode()
+                    && Objects.isNull(existingTokenTxCount.getPreviousSlot())) {
+                  tokenTxCount.setPreviousSlot(endSlot);
+                  tokenTxCount.setPreviousTxCount(tokenTxCount.getTxCount());
+                } else if (existingTokenTxCount.getIsCalculatedInIncrementalMode()
+                    && Objects.nonNull(existingTokenTxCount.getPreviousSlot())) {
+                  tokenTxCount.setTxCount(
+                      tokenTxCount.getTxCount() + existingTokenTxCount.getPreviousTxCount());
+                  tokenTxCount.setPreviousTxCount(existingTokenTxCount.getPreviousTxCount());
+                  tokenTxCount.setPreviousSlot(existingTokenTxCount.getPreviousSlot());
+                } else if (!existingTokenTxCount.getIsCalculatedInIncrementalMode()
+                    && Objects.nonNull(existingTokenTxCount.getPreviousSlot())) {
+                  tokenTxCount.setPreviousSlot(existingTokenTxCount.getUpdatedSlot());
+                  tokenTxCount.setPreviousTxCount(existingTokenTxCount.getTxCount());
+                  tokenTxCount.setTxCount(
+                      tokenTxCount.getTxCount() + existingTokenTxCount.getTxCount());
+                }
 
-          } else {
-            tokenTxCount.setPreviousSlot(endSlot);
-            tokenTxCount.setPreviousTxCount(tokenTxCount.getTxCount());
-          }
-          tokenTxCount.setUpdatedSlot(endSlot);
-          tokenTxCount.setIsCalculatedInIncrementalMode(false);
-        });
+              } else {
+                tokenTxCount.setPreviousSlot(endSlot);
+                tokenTxCount.setPreviousTxCount(tokenTxCount.getTxCount());
+              }
+              tokenTxCount.setUpdatedSlot(endSlot);
+              tokenTxCount.setIsCalculatedInIncrementalMode(false);
+            });
     tokenTxCountRepository.saveAll(tokenTxCounts);
   }
 
@@ -231,26 +234,28 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
     Map<String, TokenTxCount> existingTokenTxCountMap =
         existingTokenTxCounts.stream()
             .collect(Collectors.toMap(TokenTxCount::getUnit, Function.identity()));
-    tokenTxCounts.parallelStream().forEach(
-        tokenTxCount -> {
-          if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
-            TokenTxCount existingTokenTxCount = existingTokenTxCountMap.get(tokenTxCount.getUnit());
-            if (existingTokenTxCount.getIsCalculatedInIncrementalMode()
-                && Objects.nonNull(existingTokenTxCount.getPreviousSlot())) {
-              tokenTxCount.setTxCount(
-                  tokenTxCount.getTxCount() + existingTokenTxCount.getPreviousTxCount());
-              tokenTxCount.setPreviousSlot(existingTokenTxCount.getPreviousSlot());
-              tokenTxCount.setPreviousTxCount(existingTokenTxCount.getPreviousTxCount());
-            } else if (!existingTokenTxCount.getIsCalculatedInIncrementalMode()) {
-              tokenTxCount.setPreviousSlot(existingTokenTxCount.getUpdatedSlot());
-              tokenTxCount.setPreviousTxCount(existingTokenTxCount.getTxCount());
-              tokenTxCount.setTxCount(
-                  tokenTxCount.getTxCount() + existingTokenTxCount.getTxCount());
-            }
-          }
-          tokenTxCount.setUpdatedSlot(endSlot);
-          tokenTxCount.setIsCalculatedInIncrementalMode(true);
-        });
+    tokenTxCounts.parallelStream()
+        .forEach(
+            tokenTxCount -> {
+              if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
+                TokenTxCount existingTokenTxCount =
+                    existingTokenTxCountMap.get(tokenTxCount.getUnit());
+                if (existingTokenTxCount.getIsCalculatedInIncrementalMode()
+                    && Objects.nonNull(existingTokenTxCount.getPreviousSlot())) {
+                  tokenTxCount.setTxCount(
+                      tokenTxCount.getTxCount() + existingTokenTxCount.getPreviousTxCount());
+                  tokenTxCount.setPreviousSlot(existingTokenTxCount.getPreviousSlot());
+                  tokenTxCount.setPreviousTxCount(existingTokenTxCount.getPreviousTxCount());
+                } else if (!existingTokenTxCount.getIsCalculatedInIncrementalMode()) {
+                  tokenTxCount.setPreviousSlot(existingTokenTxCount.getUpdatedSlot());
+                  tokenTxCount.setPreviousTxCount(existingTokenTxCount.getTxCount());
+                  tokenTxCount.setTxCount(
+                      tokenTxCount.getTxCount() + existingTokenTxCount.getTxCount());
+                }
+              }
+              tokenTxCount.setUpdatedSlot(endSlot);
+              tokenTxCount.setIsCalculatedInIncrementalMode(true);
+            });
     tokenTxCountRepository.saveAll(tokenTxCounts);
   }
 }
