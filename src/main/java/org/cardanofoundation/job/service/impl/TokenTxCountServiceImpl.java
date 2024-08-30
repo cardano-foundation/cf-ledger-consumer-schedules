@@ -115,7 +115,8 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
           Stream.of(endSlot, maxSlotFromLS, maxSlotFromLSAgg).min(Long::compareTo).get();
 
       if (previousValuesSafeProcessableSlot.equals(maxSafeProcessableSlot)) {
-        log.error("No progress in processing token tx count. Breaking the loop");
+        log.error("The token tx count scheduler is stuck in a loop. --- Job:[{}]---", JOB_NAME);
+        break;
       } else {
         previousValuesSafeProcessableSlot = maxSafeProcessableSlot;
       }
