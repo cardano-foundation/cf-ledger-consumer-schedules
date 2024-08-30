@@ -143,6 +143,7 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
 
     if (CollectionUtils.isEmpty(stakeAddressTxCounts)) {
       log.info("No stake address found for slots {} to {}", startSlot, endSlot);
+      jooqDataCheckpointRepository.upsertCheckpointByType(newCheckpoint);
       return newCheckpoint;
     }
 
@@ -224,50 +225,37 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
                           StakeAddressTxCount::getStakeAddress, Function.identity()));
           stakeAddressTxCounts.parallelStream()
               .forEach(
-                  element -> {
-                    if (existingAddressTxCountMap.containsKey(element.getStakeAddress())) {
-                      StakeAddressTxCount existingStakeAddressTxCount =
-                          existingAddressTxCountMap.get(element.getStakeAddress());
-                      if (existingStakeAddressTxCount.getIsCalculatedInIncrementalMode()
-                          && Objects.isNull(existingStakeAddressTxCount.getPreviousSlot())) {
-                        existingStakeAddressTxCount.setTxCount(element.getTxCount());
-                        existingStakeAddressTxCount.setPreviousSlot(endSlot);
-                        existingStakeAddressTxCount.setPreviousTxCount(element.getTxCount());
-                      } else if (existingStakeAddressTxCount.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existingStakeAddressTxCount.getPreviousSlot())) {
-                        existingStakeAddressTxCount.setTxCount(
-                            element.getTxCount()
-                                + existingStakeAddressTxCount.getPreviousTxCount());
-                        existingStakeAddressTxCount.setPreviousSlot(
-                            existingStakeAddressTxCount.getPreviousSlot());
-                      } else if (!existingStakeAddressTxCount.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existingStakeAddressTxCount.getPreviousSlot())) {
-                        existingStakeAddressTxCount.setPreviousSlot(
-                            existingStakeAddressTxCount.getUpdatedSlot());
-                        existingStakeAddressTxCount.setPreviousTxCount(
-                            existingStakeAddressTxCount.getTxCount());
-                        existingStakeAddressTxCount.setTxCount(
-                            element.getTxCount() + existingStakeAddressTxCount.getTxCount());
+                  stakeAddressTxCount -> {
+                    if (existingAddressTxCountMap.containsKey(
+                        stakeAddressTxCount.getStakeAddress())) {
+                      StakeAddressTxCount existing =
+                          existingAddressTxCountMap.get(stakeAddressTxCount.getStakeAddress());
+                      if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.isNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(stakeAddressTxCount.getTxCount());
+                        existing.setPreviousSlot(endSlot);
+                        existing.setPreviousTxCount(stakeAddressTxCount.getTxCount());
+                      } else if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.nonNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(
+                            stakeAddressTxCount.getTxCount() + existing.getPreviousTxCount());
+                      } else if (!existing.getIsCalculatedInIncrementalMode()
+                          && Objects.nonNull(existing.getPreviousSlot())) {
+                        existing.setPreviousSlot(existing.getUpdatedSlot());
+                        existing.setPreviousTxCount(existing.getTxCount());
+                        existing.setTxCount(
+                            stakeAddressTxCount.getTxCount() + existing.getTxCount());
                       }
-                      existingStakeAddressTxCount.setUpdatedSlot(endSlot);
-                      existingStakeAddressTxCount.setIsCalculatedInIncrementalMode(false);
+                      existing.setUpdatedSlot(endSlot);
+                      existing.setIsCalculatedInIncrementalMode(false);
                     } else {
-                      element.setPreviousSlot(endSlot);
-                      element.setPreviousTxCount(element.getTxCount());
-                      element.setUpdatedSlot(endSlot);
-                      element.setIsCalculatedInIncrementalMode(false);
-                      existingStakeAddressTxCounts.add(element);
+                      stakeAddressTxCount.setPreviousSlot(endSlot);
+                      stakeAddressTxCount.setPreviousTxCount(stakeAddressTxCount.getTxCount());
+                      stakeAddressTxCount.setUpdatedSlot(endSlot);
+                      stakeAddressTxCount.setIsCalculatedInIncrementalMode(false);
+                      existingStakeAddressTxCounts.add(stakeAddressTxCount);
                     }
                   });
-
-          long startTime = System.currentTimeMillis();
-          stakeAddressTxCountRepository.saveAll(existingStakeAddressTxCounts);
-          long endTime = System.currentTimeMillis();
-          log.info(
-              "Time taken to save {} stakeAddressTxCounts: {} ms --- Job: [{}] ---",
-              stakeAddressTxCounts.size(),
-              endTime - startTime,
-              JOB_NAME);
           return existingStakeAddressTxCounts;
         });
   }
@@ -294,26 +282,23 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
                   stakeAddressTxCount -> {
                     if (existingStakeAddressTxCountMap.containsKey(
                         stakeAddressTxCount.getStakeAddress())) {
-                      StakeAddressTxCount existingStakeAddressTxCount =
+                      StakeAddressTxCount existing =
                           existingStakeAddressTxCountMap.get(stakeAddressTxCount.getStakeAddress());
-                      if (existingStakeAddressTxCount.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existingStakeAddressTxCount.getPreviousSlot())) {
-                        stakeAddressTxCount.setTxCount(
-                            stakeAddressTxCount.getTxCount()
-                                + existingStakeAddressTxCount.getPreviousTxCount());
-                        stakeAddressTxCount.setPreviousSlot(
-                            existingStakeAddressTxCount.getPreviousSlot());
-                        stakeAddressTxCount.setPreviousTxCount(
-                            existingStakeAddressTxCount.getPreviousTxCount());
-                      } else if (!existingStakeAddressTxCount.getIsCalculatedInIncrementalMode()) {
-                        stakeAddressTxCount.setPreviousSlot(
-                            existingStakeAddressTxCount.getUpdatedSlot());
-                        stakeAddressTxCount.setPreviousTxCount(
-                            existingStakeAddressTxCount.getTxCount());
-                        stakeAddressTxCount.setTxCount(
-                            stakeAddressTxCount.getTxCount()
-                                + existingStakeAddressTxCount.getTxCount());
+                      if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.nonNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(
+                            stakeAddressTxCount.getTxCount() + existing.getPreviousTxCount());
+                      } else if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.isNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(stakeAddressTxCount.getTxCount());
+                      } else if (!existing.getIsCalculatedInIncrementalMode()) {
+                        existing.setPreviousSlot(existing.getUpdatedSlot());
+                        existing.setPreviousTxCount(existing.getTxCount());
+                        existing.setTxCount(
+                            stakeAddressTxCount.getTxCount() + existing.getTxCount());
                       }
+                      existing.setUpdatedSlot(endSlot);
+                      existing.setIsCalculatedInIncrementalMode(true);
                     } else {
                       stakeAddressTxCount.setUpdatedSlot(endSlot);
                       stakeAddressTxCount.setIsCalculatedInIncrementalMode(true);

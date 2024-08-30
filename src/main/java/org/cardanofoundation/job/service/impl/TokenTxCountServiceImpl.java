@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
@@ -29,6 +31,7 @@ import org.cardanofoundation.explorer.common.entity.explorer.DataCheckpoint;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.repository.explorer.DataCheckpointRepository;
+import org.cardanofoundation.job.repository.explorer.jooq.JOOQDataCheckpointRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.TokenTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
@@ -42,13 +45,14 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
 
   @Autowired @Lazy TokenTxCountServiceImpl selfProxyService;
 
+  private final JOOQDataCheckpointRepository jooqDataCheckpointRepository;
   private final CardanoConverters cardanoConverters;
   private final BlockRepository blockRepository;
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final DataCheckpointRepository dataCheckpointRepository;
   private final TokenTxCountRepository tokenTxCountRepository;
-
-  private static final int DEFAULT_BATCH_SIZE = 30000;
+  private static final Integer DEFAULT_BATCH_SIZE = 500;
+  private final String JOB_NAME = "TokenTxCount";
 
   @Value("${application.network}")
   private String network;
@@ -67,25 +71,25 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
     Long maxSlotFromLSAgg = addressTxAmountRepository.getMaxSlotNoFromCursor();
 
     if (latestBlockFromLs.isEmpty() || maxSlotFromLSAgg == null) {
-      log.error("No latest block found in LS or no max slot found in LS_AGG");
+      log.error(
+          "No latest block found in LS or no max slot found in LS_AGG --- Job: [{}] ---", JOB_NAME);
       return;
     }
 
     // Get the max slot from LS
     Long maxSlotFromLS = latestBlockFromLs.get().getSlotNo();
 
+    Long startSlot =
+        cardanoConverters.time().toSlot(cardanoConverters.genesisConfig().getStartTime());
     // Get the latest processed checkpoint
     DataCheckpoint latestProcessedCheckpoint =
         dataCheckpointRepository
             .findFirstByType(DataCheckpointType.TOKEN_TX_COUNT)
             .orElse(
                 DataCheckpoint.builder()
-                    .slotNo(0L)
+                    .slotNo(startSlot)
                     .type(DataCheckpointType.TOKEN_TX_COUNT)
                     .build());
-
-    Long startSlot =
-        cardanoConverters.time().toSlot(cardanoConverters.genesisConfig().getStartTime());
 
     Long latestProcessedSlot = latestProcessedCheckpoint.getSlotNo();
     Long endSlot = latestProcessedSlot + NUM_SLOT_INTERVAL;
@@ -127,7 +131,7 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
         currentSlot);
   }
 
-  @Transactional
+  @Transactional(value = "explorerTransactionManager", propagation = Propagation.REQUIRES_NEW)
   protected DataCheckpoint processTokenInSlotRange(Long startSlot, Long endSlot) {
     long startTime = System.currentTimeMillis();
     log.info("Processing token tx count for slots {} to {}", startSlot, endSlot);
@@ -144,15 +148,25 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
 
     if (CollectionUtils.isEmpty(tokenTxCounts)) {
       log.info("No units found for slots {} to {}", startSlot, endSlot);
+      jooqDataCheckpointRepository.upsertCheckpointByType(newCheckpoint);
       return newCheckpoint;
     }
 
-    BatchUtils.doBatching(
+    log.info(
+        "Processing token tx count for slots {} to {}, size [{}] --- Job: [{}] ---",
+        startSlot,
+        endSlot,
+        tokenTxCounts.size(),
+        JOB_NAME);
+
+    BatchUtils.processInBatches(
         DEFAULT_BATCH_SIZE,
         tokenTxCounts,
-        list -> buildTokenTxCountListInRollbackCaseMightNotOccur(list, endSlot));
+        list -> buildTokenTxCountListInRollbackCaseMightNotOccur(list, endSlot),
+        tokenTxCountRepository::saveAll,
+        "TokenTxCount");
 
-    dataCheckpointRepository.save(newCheckpoint);
+    jooqDataCheckpointRepository.upsertCheckpointByType(newCheckpoint);
     log.info(
         "Processing token tx count for slots {} to {} took {} ms",
         startSlot,
@@ -161,7 +175,7 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
     return newCheckpoint;
   }
 
-  @Transactional
+  @Transactional(value = "explorerTransactionManager", propagation = Propagation.REQUIRES_NEW)
   protected void processTokenTxCountFromSafetySlotToTip(Long latestProcessedSlot, Long tip) {
     List<TokenTxCount> tokenTxCounts =
         addressTxAmountRepository.getTotalTxCountByUnitInSlotRange(latestProcessedSlot, tip);
@@ -170,10 +184,12 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
       log.info("No units found for slots {} to {}", latestProcessedSlot, tip);
       return;
     }
-    BatchUtils.doBatching(
+    BatchUtils.processInBatches(
         DEFAULT_BATCH_SIZE,
         tokenTxCounts,
-        list -> buildTokenTxCountListInRollbackCaseMightOccur(list, tip));
+        list -> buildTokenTxCountListInRollbackCaseMightOccur(list, tip),
+        tokenTxCountRepository::saveAll,
+        "TokenTxCount");
   }
   // The function is used in cases where data is saved to the database and a rollback might not
   // occur.
@@ -181,45 +197,47 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
   // Note that:
   // - All values had been computed and the isCalculatedInIncrementalMode fields are set to FALSE
   // - The updated values and previous values always can be TRUSTED
-  void buildTokenTxCountListInRollbackCaseMightNotOccur(
+  private CompletableFuture<List<TokenTxCount>> buildTokenTxCountListInRollbackCaseMightNotOccur(
       List<TokenTxCount> tokenTxCounts, Long endSlot) {
-    List<String> units = tokenTxCounts.stream().map(TokenTxCount::getUnit).toList();
-    List<TokenTxCount> existingTokenTxCounts = tokenTxCountRepository.findAllByUnitIn(units);
-    Map<String, TokenTxCount> existingTokenTxCountMap =
-        existingTokenTxCounts.stream()
-            .collect(Collectors.toMap(TokenTxCount::getUnit, Function.identity()));
-    tokenTxCounts.parallelStream()
-        .forEach(
-            tokenTxCount -> {
-              if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
-                TokenTxCount existingTokenTxCount =
-                    existingTokenTxCountMap.get(tokenTxCount.getUnit());
-                if (existingTokenTxCount.getIsCalculatedInIncrementalMode()
-                    && Objects.isNull(existingTokenTxCount.getPreviousSlot())) {
-                  tokenTxCount.setPreviousSlot(endSlot);
-                  tokenTxCount.setPreviousTxCount(tokenTxCount.getTxCount());
-                } else if (existingTokenTxCount.getIsCalculatedInIncrementalMode()
-                    && Objects.nonNull(existingTokenTxCount.getPreviousSlot())) {
-                  tokenTxCount.setTxCount(
-                      tokenTxCount.getTxCount() + existingTokenTxCount.getPreviousTxCount());
-                  tokenTxCount.setPreviousTxCount(existingTokenTxCount.getPreviousTxCount());
-                  tokenTxCount.setPreviousSlot(existingTokenTxCount.getPreviousSlot());
-                } else if (!existingTokenTxCount.getIsCalculatedInIncrementalMode()
-                    && Objects.nonNull(existingTokenTxCount.getPreviousSlot())) {
-                  tokenTxCount.setPreviousSlot(existingTokenTxCount.getUpdatedSlot());
-                  tokenTxCount.setPreviousTxCount(existingTokenTxCount.getTxCount());
-                  tokenTxCount.setTxCount(
-                      tokenTxCount.getTxCount() + existingTokenTxCount.getTxCount());
-                }
-
-              } else {
-                tokenTxCount.setPreviousSlot(endSlot);
-                tokenTxCount.setPreviousTxCount(tokenTxCount.getTxCount());
-              }
-              tokenTxCount.setUpdatedSlot(endSlot);
-              tokenTxCount.setIsCalculatedInIncrementalMode(false);
-            });
-    tokenTxCountRepository.saveAll(tokenTxCounts);
+    return CompletableFuture.supplyAsync(
+        () -> {
+          List<String> units = tokenTxCounts.stream().map(TokenTxCount::getUnit).toList();
+          List<TokenTxCount> existingTokenTxCounts = tokenTxCountRepository.findAllByUnitIn(units);
+          Map<String, TokenTxCount> existingTokenTxCountMap =
+              existingTokenTxCounts.stream()
+                  .collect(Collectors.toConcurrentMap(TokenTxCount::getUnit, Function.identity()));
+          tokenTxCounts.parallelStream()
+              .forEach(
+                  tokenTxCount -> {
+                    if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
+                      TokenTxCount existing = existingTokenTxCountMap.get(tokenTxCount.getUnit());
+                      if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.isNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(tokenTxCount.getTxCount());
+                        existing.setPreviousSlot(endSlot);
+                        existing.setPreviousTxCount(tokenTxCount.getTxCount());
+                      } else if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.nonNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(
+                            tokenTxCount.getTxCount() + existing.getPreviousTxCount());
+                      } else if (!existing.getIsCalculatedInIncrementalMode()
+                          && Objects.nonNull(existing.getPreviousSlot())) {
+                        existing.setPreviousSlot(existing.getUpdatedSlot());
+                        existing.setPreviousTxCount(existing.getTxCount());
+                        existing.setTxCount(tokenTxCount.getTxCount() + existing.getTxCount());
+                      }
+                      existing.setUpdatedSlot(endSlot);
+                      existing.setIsCalculatedInIncrementalMode(false);
+                    } else {
+                      tokenTxCount.setPreviousSlot(endSlot);
+                      tokenTxCount.setPreviousTxCount(tokenTxCount.getTxCount());
+                      tokenTxCount.setUpdatedSlot(endSlot);
+                      tokenTxCount.setIsCalculatedInIncrementalMode(false);
+                      existingTokenTxCounts.add(tokenTxCount);
+                    }
+                  });
+          return existingTokenTxCounts;
+        });
   }
 
   // The function is used in cases where data is saved to the database and a rollback might occur.
@@ -227,35 +245,41 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
   // Note that:
   // - After updating the token info, the isCalculatedInIncrementalMode fields are set to TRUE
   // - the updated values can be UNTRUSTED, but the previous values always can be TRUSTED
-  void buildTokenTxCountListInRollbackCaseMightOccur(
+  private CompletableFuture<List<TokenTxCount>> buildTokenTxCountListInRollbackCaseMightOccur(
       List<TokenTxCount> tokenTxCounts, Long endSlot) {
-    List<String> units = tokenTxCounts.stream().map(TokenTxCount::getUnit).toList();
-    List<TokenTxCount> existingTokenTxCounts = tokenTxCountRepository.findAllByUnitIn(units);
-    Map<String, TokenTxCount> existingTokenTxCountMap =
-        existingTokenTxCounts.stream()
-            .collect(Collectors.toMap(TokenTxCount::getUnit, Function.identity()));
-    tokenTxCounts.parallelStream()
-        .forEach(
-            tokenTxCount -> {
-              if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
-                TokenTxCount existingTokenTxCount =
-                    existingTokenTxCountMap.get(tokenTxCount.getUnit());
-                if (existingTokenTxCount.getIsCalculatedInIncrementalMode()
-                    && Objects.nonNull(existingTokenTxCount.getPreviousSlot())) {
-                  tokenTxCount.setTxCount(
-                      tokenTxCount.getTxCount() + existingTokenTxCount.getPreviousTxCount());
-                  tokenTxCount.setPreviousSlot(existingTokenTxCount.getPreviousSlot());
-                  tokenTxCount.setPreviousTxCount(existingTokenTxCount.getPreviousTxCount());
-                } else if (!existingTokenTxCount.getIsCalculatedInIncrementalMode()) {
-                  tokenTxCount.setPreviousSlot(existingTokenTxCount.getUpdatedSlot());
-                  tokenTxCount.setPreviousTxCount(existingTokenTxCount.getTxCount());
-                  tokenTxCount.setTxCount(
-                      tokenTxCount.getTxCount() + existingTokenTxCount.getTxCount());
-                }
-              }
-              tokenTxCount.setUpdatedSlot(endSlot);
-              tokenTxCount.setIsCalculatedInIncrementalMode(true);
-            });
-    tokenTxCountRepository.saveAll(tokenTxCounts);
+    return CompletableFuture.supplyAsync(
+        () -> {
+          List<String> units = tokenTxCounts.stream().map(TokenTxCount::getUnit).toList();
+          List<TokenTxCount> existingTokenTxCounts = tokenTxCountRepository.findAllByUnitIn(units);
+          Map<String, TokenTxCount> existingTokenTxCountMap =
+              existingTokenTxCounts.stream()
+                  .collect(Collectors.toConcurrentMap(TokenTxCount::getUnit, Function.identity()));
+          tokenTxCounts.parallelStream()
+              .forEach(
+                  tokenTxCount -> {
+                    if (existingTokenTxCountMap.containsKey(tokenTxCount.getUnit())) {
+                      TokenTxCount existing = existingTokenTxCountMap.get(tokenTxCount.getUnit());
+                      if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.nonNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(
+                            tokenTxCount.getTxCount() + existing.getPreviousTxCount());
+                      } else if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.isNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(tokenTxCount.getTxCount());
+                      } else if (!existing.getIsCalculatedInIncrementalMode()) {
+                        existing.setPreviousSlot(existing.getUpdatedSlot());
+                        existing.setPreviousTxCount(existing.getTxCount());
+                        existing.setTxCount(tokenTxCount.getTxCount() + existing.getTxCount());
+                      }
+                      existing.setUpdatedSlot(endSlot);
+                      existing.setIsCalculatedInIncrementalMode(true);
+                    } else {
+                      tokenTxCount.setUpdatedSlot(endSlot);
+                      tokenTxCount.setIsCalculatedInIncrementalMode(true);
+                      existingTokenTxCounts.add(tokenTxCount);
+                    }
+                  });
+          return existingTokenTxCounts;
+        });
   }
 }
