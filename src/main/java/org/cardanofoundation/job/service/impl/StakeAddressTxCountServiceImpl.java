@@ -113,9 +113,8 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
           Stream.of(endSlot, maxSlotFromLS, maxSlotFromLSAgg).min(Long::compareTo).get();
 
       if (previousValuesSafeProcessableSlot.equals(maxSafeProcessableSlot)) {
-        log.error(
-            "No progress in processing stake address tx count. Breaking the loop --- Job: [{}] ---",
-            JOB_NAME);
+        log.error("The address tx count scheduler is stuck in a loop. --- Job:[{}]---", JOB_NAME);
+        break;
       } else {
         previousValuesSafeProcessableSlot = maxSafeProcessableSlot;
       }
