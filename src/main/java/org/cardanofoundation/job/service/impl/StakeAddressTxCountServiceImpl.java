@@ -221,41 +221,37 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
           Map<String, StakeAddressTxCount> existingAddressTxCountMap =
               existingStakeAddressTxCounts.stream()
                   .collect(
-                      Collectors.toConcurrentMap(
-                          StakeAddressTxCount::getStakeAddress, Function.identity()));
-          stakeAddressTxCounts.parallelStream()
-              .forEach(
-                  stakeAddressTxCount -> {
-                    if (existingAddressTxCountMap.containsKey(
-                        stakeAddressTxCount.getStakeAddress())) {
-                      StakeAddressTxCount existing =
-                          existingAddressTxCountMap.get(stakeAddressTxCount.getStakeAddress());
-                      if (existing.getIsCalculatedInIncrementalMode()
-                          && Objects.isNull(existing.getPreviousSlot())) {
-                        existing.setTxCount(stakeAddressTxCount.getTxCount());
-                        existing.setPreviousSlot(endSlot);
-                        existing.setPreviousTxCount(stakeAddressTxCount.getTxCount());
-                      } else if (existing.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existing.getPreviousSlot())) {
-                        existing.setTxCount(
-                            stakeAddressTxCount.getTxCount() + existing.getPreviousTxCount());
-                      } else if (!existing.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existing.getPreviousSlot())) {
-                        existing.setPreviousSlot(existing.getUpdatedSlot());
-                        existing.setPreviousTxCount(existing.getTxCount());
-                        existing.setTxCount(
-                            stakeAddressTxCount.getTxCount() + existing.getTxCount());
-                      }
-                      existing.setUpdatedSlot(endSlot);
-                      existing.setIsCalculatedInIncrementalMode(false);
-                    } else {
-                      stakeAddressTxCount.setPreviousSlot(endSlot);
-                      stakeAddressTxCount.setPreviousTxCount(stakeAddressTxCount.getTxCount());
-                      stakeAddressTxCount.setUpdatedSlot(endSlot);
-                      stakeAddressTxCount.setIsCalculatedInIncrementalMode(false);
-                      existingStakeAddressTxCounts.add(stakeAddressTxCount);
-                    }
-                  });
+                      Collectors.toMap(StakeAddressTxCount::getStakeAddress, Function.identity()));
+          stakeAddressTxCounts.forEach(
+              stakeAddressTxCount -> {
+                if (existingAddressTxCountMap.containsKey(stakeAddressTxCount.getStakeAddress())) {
+                  StakeAddressTxCount existing =
+                      existingAddressTxCountMap.get(stakeAddressTxCount.getStakeAddress());
+                  if (existing.getIsCalculatedInIncrementalMode()
+                      && Objects.isNull(existing.getPreviousSlot())) {
+                    existing.setTxCount(stakeAddressTxCount.getTxCount());
+                    existing.setPreviousSlot(endSlot);
+                    existing.setPreviousTxCount(stakeAddressTxCount.getTxCount());
+                  } else if (existing.getIsCalculatedInIncrementalMode()
+                      && Objects.nonNull(existing.getPreviousSlot())) {
+                    existing.setTxCount(
+                        stakeAddressTxCount.getTxCount() + existing.getPreviousTxCount());
+                  } else if (!existing.getIsCalculatedInIncrementalMode()
+                      && Objects.nonNull(existing.getPreviousSlot())) {
+                    existing.setPreviousSlot(existing.getUpdatedSlot());
+                    existing.setPreviousTxCount(existing.getTxCount());
+                    existing.setTxCount(stakeAddressTxCount.getTxCount() + existing.getTxCount());
+                  }
+                  existing.setUpdatedSlot(endSlot);
+                  existing.setIsCalculatedInIncrementalMode(false);
+                } else {
+                  stakeAddressTxCount.setPreviousSlot(endSlot);
+                  stakeAddressTxCount.setPreviousTxCount(stakeAddressTxCount.getTxCount());
+                  stakeAddressTxCount.setUpdatedSlot(endSlot);
+                  stakeAddressTxCount.setIsCalculatedInIncrementalMode(false);
+                  existingStakeAddressTxCounts.add(stakeAddressTxCount);
+                }
+              });
           return existingStakeAddressTxCounts;
         });
   }
@@ -275,36 +271,33 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
           Map<String, StakeAddressTxCount> existingStakeAddressTxCountMap =
               existingStakeAddressTxCounts.stream()
                   .collect(
-                      Collectors.toConcurrentMap(
-                          StakeAddressTxCount::getStakeAddress, Function.identity()));
-          stakeAddressTxCounts.parallelStream()
-              .forEach(
-                  stakeAddressTxCount -> {
-                    if (existingStakeAddressTxCountMap.containsKey(
-                        stakeAddressTxCount.getStakeAddress())) {
-                      StakeAddressTxCount existing =
-                          existingStakeAddressTxCountMap.get(stakeAddressTxCount.getStakeAddress());
-                      if (existing.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existing.getPreviousSlot())) {
-                        existing.setTxCount(
-                            stakeAddressTxCount.getTxCount() + existing.getPreviousTxCount());
-                      } else if (existing.getIsCalculatedInIncrementalMode()
-                          && Objects.isNull(existing.getPreviousSlot())) {
-                        existing.setTxCount(stakeAddressTxCount.getTxCount());
-                      } else if (!existing.getIsCalculatedInIncrementalMode()) {
-                        existing.setPreviousSlot(existing.getUpdatedSlot());
-                        existing.setPreviousTxCount(existing.getTxCount());
-                        existing.setTxCount(
-                            stakeAddressTxCount.getTxCount() + existing.getTxCount());
-                      }
-                      existing.setUpdatedSlot(endSlot);
-                      existing.setIsCalculatedInIncrementalMode(true);
-                    } else {
-                      stakeAddressTxCount.setUpdatedSlot(endSlot);
-                      stakeAddressTxCount.setIsCalculatedInIncrementalMode(true);
-                      existingStakeAddressTxCounts.add(stakeAddressTxCount);
-                    }
-                  });
+                      Collectors.toMap(StakeAddressTxCount::getStakeAddress, Function.identity()));
+          stakeAddressTxCounts.forEach(
+              stakeAddressTxCount -> {
+                if (existingStakeAddressTxCountMap.containsKey(
+                    stakeAddressTxCount.getStakeAddress())) {
+                  StakeAddressTxCount existing =
+                      existingStakeAddressTxCountMap.get(stakeAddressTxCount.getStakeAddress());
+                  if (existing.getIsCalculatedInIncrementalMode()
+                      && Objects.nonNull(existing.getPreviousSlot())) {
+                    existing.setTxCount(
+                        stakeAddressTxCount.getTxCount() + existing.getPreviousTxCount());
+                  } else if (existing.getIsCalculatedInIncrementalMode()
+                      && Objects.isNull(existing.getPreviousSlot())) {
+                    existing.setTxCount(stakeAddressTxCount.getTxCount());
+                  } else if (!existing.getIsCalculatedInIncrementalMode()) {
+                    existing.setPreviousSlot(existing.getUpdatedSlot());
+                    existing.setPreviousTxCount(existing.getTxCount());
+                    existing.setTxCount(stakeAddressTxCount.getTxCount() + existing.getTxCount());
+                  }
+                  existing.setUpdatedSlot(endSlot);
+                  existing.setIsCalculatedInIncrementalMode(true);
+                } else {
+                  stakeAddressTxCount.setUpdatedSlot(endSlot);
+                  stakeAddressTxCount.setIsCalculatedInIncrementalMode(true);
+                  existingStakeAddressTxCounts.add(stakeAddressTxCount);
+                }
+              });
           return existingStakeAddressTxCounts;
         });
   }

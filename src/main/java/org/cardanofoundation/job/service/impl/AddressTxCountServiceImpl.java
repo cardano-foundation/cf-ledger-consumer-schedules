@@ -216,39 +216,37 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
               JOB_NAME);
           Map<String, AddressTxCount> existingAddressTxCountMap =
               existingTokenTxCounts.stream()
-                  .collect(
-                      Collectors.toConcurrentMap(AddressTxCount::getAddress, Function.identity()));
-          addressTxCounts.parallelStream()
-              .forEach(
-                  addressTxCount -> {
-                    if (existingAddressTxCountMap.containsKey(addressTxCount.getAddress())) {
-                      AddressTxCount existing =
-                          existingAddressTxCountMap.get(addressTxCount.getAddress());
-                      if (existing.getIsCalculatedInIncrementalMode()
-                          && Objects.isNull(existing.getPreviousSlot())) {
-                        existing.setTxCount(addressTxCount.getTxCount());
-                        existing.setPreviousSlot(endSlot);
-                        existing.setPreviousTxCount(addressTxCount.getTxCount());
-                      } else if (existing.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existing.getPreviousSlot())) {
-                        existing.setTxCount(
-                            addressTxCount.getTxCount() + existing.getPreviousTxCount());
-                      } else if (!existing.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existing.getPreviousSlot())) {
-                        existing.setPreviousSlot(existing.getUpdatedSlot());
-                        existing.setPreviousTxCount(existing.getTxCount());
-                        existing.setTxCount(addressTxCount.getTxCount() + existing.getTxCount());
-                      }
-                      existing.setUpdatedSlot(endSlot);
-                      existing.setIsCalculatedInIncrementalMode(false);
-                    } else {
-                      addressTxCount.setPreviousSlot(endSlot);
-                      addressTxCount.setPreviousTxCount(addressTxCount.getTxCount());
-                      addressTxCount.setUpdatedSlot(endSlot);
-                      addressTxCount.setIsCalculatedInIncrementalMode(false);
-                      existingTokenTxCounts.add(addressTxCount);
-                    }
-                  });
+                  .collect(Collectors.toMap(AddressTxCount::getAddress, Function.identity()));
+          addressTxCounts.forEach(
+              addressTxCount -> {
+                if (existingAddressTxCountMap.containsKey(addressTxCount.getAddress())) {
+                  AddressTxCount existing =
+                      existingAddressTxCountMap.get(addressTxCount.getAddress());
+                  if (existing.getIsCalculatedInIncrementalMode()
+                      && Objects.isNull(existing.getPreviousSlot())) {
+                    existing.setTxCount(addressTxCount.getTxCount());
+                    existing.setPreviousSlot(endSlot);
+                    existing.setPreviousTxCount(addressTxCount.getTxCount());
+                  } else if (existing.getIsCalculatedInIncrementalMode()
+                      && Objects.nonNull(existing.getPreviousSlot())) {
+                    existing.setTxCount(
+                        addressTxCount.getTxCount() + existing.getPreviousTxCount());
+                  } else if (!existing.getIsCalculatedInIncrementalMode()
+                      && Objects.nonNull(existing.getPreviousSlot())) {
+                    existing.setPreviousSlot(existing.getUpdatedSlot());
+                    existing.setPreviousTxCount(existing.getTxCount());
+                    existing.setTxCount(addressTxCount.getTxCount() + existing.getTxCount());
+                  }
+                  existing.setUpdatedSlot(endSlot);
+                  existing.setIsCalculatedInIncrementalMode(false);
+                } else {
+                  addressTxCount.setPreviousSlot(endSlot);
+                  addressTxCount.setPreviousTxCount(addressTxCount.getTxCount());
+                  addressTxCount.setUpdatedSlot(endSlot);
+                  addressTxCount.setIsCalculatedInIncrementalMode(false);
+                  existingTokenTxCounts.add(addressTxCount);
+                }
+              });
           return existingTokenTxCounts;
         });
   }
@@ -266,34 +264,32 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
               addressTxCountRepository.findAllByAddressIn(addresses);
           Map<String, AddressTxCount> existingAddressTxCountMap =
               existingAddressTxCounts.stream()
-                  .collect(
-                      Collectors.toConcurrentMap(AddressTxCount::getAddress, Function.identity()));
-          addressTxCounts.parallelStream()
-              .forEach(
-                  addressTxCount -> {
-                    if (existingAddressTxCountMap.containsKey(addressTxCount.getAddress())) {
-                      AddressTxCount existing =
-                          existingAddressTxCountMap.get(addressTxCount.getAddress());
-                      if (existing.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existing.getPreviousSlot())) {
-                        existing.setTxCount(
-                            addressTxCount.getTxCount() + existing.getPreviousTxCount());
-                      } else if (existing.getIsCalculatedInIncrementalMode()
-                          && Objects.isNull(existing.getPreviousSlot())) {
-                        existing.setTxCount(addressTxCount.getTxCount());
-                      } else if (!existing.getIsCalculatedInIncrementalMode()) {
-                        existing.setPreviousSlot(existing.getUpdatedSlot());
-                        existing.setPreviousTxCount(existing.getTxCount());
-                        existing.setTxCount(addressTxCount.getTxCount() + existing.getTxCount());
-                      }
-                      existing.setUpdatedSlot(endSlot);
-                      existing.setIsCalculatedInIncrementalMode(true);
-                    } else {
-                      addressTxCount.setUpdatedSlot(endSlot);
-                      addressTxCount.setIsCalculatedInIncrementalMode(true);
-                      existingAddressTxCounts.add(addressTxCount);
-                    }
-                  });
+                  .collect(Collectors.toMap(AddressTxCount::getAddress, Function.identity()));
+          addressTxCounts.forEach(
+              addressTxCount -> {
+                if (existingAddressTxCountMap.containsKey(addressTxCount.getAddress())) {
+                  AddressTxCount existing =
+                      existingAddressTxCountMap.get(addressTxCount.getAddress());
+                  if (existing.getIsCalculatedInIncrementalMode()
+                      && Objects.nonNull(existing.getPreviousSlot())) {
+                    existing.setTxCount(
+                        addressTxCount.getTxCount() + existing.getPreviousTxCount());
+                  } else if (existing.getIsCalculatedInIncrementalMode()
+                      && Objects.isNull(existing.getPreviousSlot())) {
+                    existing.setTxCount(addressTxCount.getTxCount());
+                  } else if (!existing.getIsCalculatedInIncrementalMode()) {
+                    existing.setPreviousSlot(existing.getUpdatedSlot());
+                    existing.setPreviousTxCount(existing.getTxCount());
+                    existing.setTxCount(addressTxCount.getTxCount() + existing.getTxCount());
+                  }
+                  existing.setUpdatedSlot(endSlot);
+                  existing.setIsCalculatedInIncrementalMode(true);
+                } else {
+                  addressTxCount.setUpdatedSlot(endSlot);
+                  addressTxCount.setIsCalculatedInIncrementalMode(true);
+                  existingAddressTxCounts.add(addressTxCount);
+                }
+              });
           return existingAddressTxCounts;
         });
   }
