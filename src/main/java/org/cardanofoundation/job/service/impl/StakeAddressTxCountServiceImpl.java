@@ -34,6 +34,7 @@ import org.cardanofoundation.job.repository.explorer.DataCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQDataCheckpointRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
+import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressTxCountRepository;
 import org.cardanofoundation.job.service.StakeAddressTxCountService;
 import org.cardanofoundation.job.util.BatchUtils;
@@ -54,6 +55,8 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
 
   @Value("${jobs.stake-address-tx-count.num-slot-interval}")
   private Integer NUM_SLOT_INTERVAL;
+
+  @Autowired private AddressTxCountRepository addressTxCountRepository;
 
   @Override
   public void updateStakeAddressTxCount() {
@@ -154,13 +157,16 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
         stakeAddressTxCounts.size(),
         JOB_NAME);
 
-    BatchUtils.processInBatches(
-        DEFAULT_BATCH_SIZE,
-        stakeAddressTxCounts,
-        list -> buildStakeAddressTxCountListInRollbackCaseMightNotOccur(list, endSlot),
-        stakeAddressTxCountRepository::saveAll,
-        "AddressTxCount");
+    List<StakeAddressTxCount> stakeAddressTxCountListNeedSave =
+        BatchUtils.processInBatches(
+            DEFAULT_BATCH_SIZE,
+            stakeAddressTxCounts,
+            list -> buildStakeAddressTxCountListInRollbackCaseMightNotOccur(list, endSlot),
+            "AddressTxCount");
 
+    if (!CollectionUtils.isEmpty(stakeAddressTxCountListNeedSave)) {
+      stakeAddressTxCountRepository.saveAll(stakeAddressTxCountListNeedSave);
+    }
     jooqDataCheckpointRepository.upsertCheckpointByType(newCheckpoint);
     log.info(
         "Processing stake address tx count for slots {} to {} took {} ms --- Job: [{}] ---",
@@ -191,12 +197,15 @@ public class StakeAddressTxCountServiceImpl implements StakeAddressTxCountServic
         latestProcessedSlot,
         tip,
         stakeAddressTxCounts.size());
-    BatchUtils.processInBatches(
-        DEFAULT_BATCH_SIZE,
-        stakeAddressTxCounts,
-        list -> buildStakeAddressTxCountListInRollbackCaseMightOccur(list, tip),
-        stakeAddressTxCountRepository::saveAll,
-        JOB_NAME);
+    List<StakeAddressTxCount> stakeAddressTxCountListNeedSave =
+        BatchUtils.processInBatches(
+            DEFAULT_BATCH_SIZE,
+            stakeAddressTxCounts,
+            list -> buildStakeAddressTxCountListInRollbackCaseMightOccur(list, tip),
+            JOB_NAME);
+    if (!CollectionUtils.isEmpty(stakeAddressTxCountListNeedSave)) {
+      stakeAddressTxCountRepository.saveAll(stakeAddressTxCountListNeedSave);
+    }
   }
 
   private CompletableFuture<List<StakeAddressTxCount>>
