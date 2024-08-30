@@ -139,7 +139,8 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
         addressTxAmountRepository.getTotalTxCountByAddressInSlotRange(startSlot, endSlot);
 
     if (CollectionUtils.isEmpty(addressTxCounts)) {
-      log.info("No units found for slots {} to {}", startSlot, endSlot);
+      log.info("No address found for slots {} to {}", startSlot, endSlot);
+      jooqDataCheckpointRepository.upsertCheckpointByType(newCheckpoint);
       return newCheckpoint;
     }
 
@@ -221,31 +222,25 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
               .forEach(
                   addressTxCount -> {
                     if (existingAddressTxCountMap.containsKey(addressTxCount.getAddress())) {
-                      AddressTxCount existingAddressTxCount =
+                      AddressTxCount existing =
                           existingAddressTxCountMap.get(addressTxCount.getAddress());
-                      if (existingAddressTxCount.getIsCalculatedInIncrementalMode()
-                          && Objects.isNull(existingAddressTxCount.getPreviousSlot())) {
-                        existingAddressTxCount.setTxCount(addressTxCount.getTxCount());
-                        existingAddressTxCount.setPreviousSlot(endSlot);
-                        existingAddressTxCount.setPreviousTxCount(addressTxCount.getTxCount());
-                      } else if (existingAddressTxCount.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existingAddressTxCount.getPreviousSlot())) {
-                        existingAddressTxCount.setTxCount(
-                            addressTxCount.getTxCount()
-                                + existingAddressTxCount.getPreviousTxCount());
-                        existingAddressTxCount.setPreviousSlot(
-                            existingAddressTxCount.getPreviousSlot());
-                      } else if (!existingAddressTxCount.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existingAddressTxCount.getPreviousSlot())) {
-                        existingAddressTxCount.setPreviousSlot(
-                            existingAddressTxCount.getUpdatedSlot());
-                        existingAddressTxCount.setPreviousTxCount(
-                            existingAddressTxCount.getTxCount());
-                        existingAddressTxCount.setTxCount(
-                            addressTxCount.getTxCount() + existingAddressTxCount.getTxCount());
+                      if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.isNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(addressTxCount.getTxCount());
+                        existing.setPreviousSlot(endSlot);
+                        existing.setPreviousTxCount(addressTxCount.getTxCount());
+                      } else if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.nonNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(
+                            addressTxCount.getTxCount() + existing.getPreviousTxCount());
+                      } else if (!existing.getIsCalculatedInIncrementalMode()
+                          && Objects.nonNull(existing.getPreviousSlot())) {
+                        existing.setPreviousSlot(existing.getUpdatedSlot());
+                        existing.setPreviousTxCount(existing.getTxCount());
+                        existing.setTxCount(addressTxCount.getTxCount() + existing.getTxCount());
                       }
-                      existingAddressTxCount.setUpdatedSlot(endSlot);
-                      existingAddressTxCount.setIsCalculatedInIncrementalMode(false);
+                      existing.setUpdatedSlot(endSlot);
+                      existing.setIsCalculatedInIncrementalMode(false);
                     } else {
                       addressTxCount.setPreviousSlot(endSlot);
                       addressTxCount.setPreviousTxCount(addressTxCount.getTxCount());
@@ -254,15 +249,6 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
                       existingTokenTxCounts.add(addressTxCount);
                     }
                   });
-
-          long startTime = System.currentTimeMillis();
-          addressTxCountRepository.saveAll(existingTokenTxCounts);
-          long endTime = System.currentTimeMillis();
-          log.info(
-              "Time taken to save {} addressTxCounts: {} ms --- Job: [{}] ---",
-              addressTxCounts.size(),
-              endTime - startTime,
-              JOB_NAME);
           return existingTokenTxCounts;
         });
   }
@@ -286,22 +272,22 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
               .forEach(
                   addressTxCount -> {
                     if (existingAddressTxCountMap.containsKey(addressTxCount.getAddress())) {
-                      AddressTxCount existingAddressTxCount =
+                      AddressTxCount existing =
                           existingAddressTxCountMap.get(addressTxCount.getAddress());
-                      if (existingAddressTxCount.getIsCalculatedInIncrementalMode()
-                          && Objects.nonNull(existingAddressTxCount.getPreviousSlot())) {
-                        addressTxCount.setTxCount(
-                            addressTxCount.getTxCount()
-                                + existingAddressTxCount.getPreviousTxCount());
-                        addressTxCount.setPreviousSlot(existingAddressTxCount.getPreviousSlot());
-                        addressTxCount.setPreviousTxCount(
-                            existingAddressTxCount.getPreviousTxCount());
-                      } else if (!existingAddressTxCount.getIsCalculatedInIncrementalMode()) {
-                        addressTxCount.setPreviousSlot(existingAddressTxCount.getUpdatedSlot());
-                        addressTxCount.setPreviousTxCount(existingAddressTxCount.getTxCount());
-                        addressTxCount.setTxCount(
-                            addressTxCount.getTxCount() + existingAddressTxCount.getTxCount());
+                      if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.nonNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(
+                            addressTxCount.getTxCount() + existing.getPreviousTxCount());
+                      } else if (existing.getIsCalculatedInIncrementalMode()
+                          && Objects.isNull(existing.getPreviousSlot())) {
+                        existing.setTxCount(addressTxCount.getTxCount());
+                      } else if (!existing.getIsCalculatedInIncrementalMode()) {
+                        existing.setPreviousSlot(existing.getUpdatedSlot());
+                        existing.setPreviousTxCount(existing.getTxCount());
+                        existing.setTxCount(addressTxCount.getTxCount() + existing.getTxCount());
                       }
+                      existing.setUpdatedSlot(endSlot);
+                      existing.setIsCalculatedInIncrementalMode(true);
                     } else {
                       addressTxCount.setUpdatedSlot(endSlot);
                       addressTxCount.setIsCalculatedInIncrementalMode(true);
