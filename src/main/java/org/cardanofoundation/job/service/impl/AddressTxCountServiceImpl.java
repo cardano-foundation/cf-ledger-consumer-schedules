@@ -151,13 +151,16 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
         addressTxCounts.size(),
         JOB_NAME);
 
-    BatchUtils.processInBatches(
-        DEFAULT_BATCH_SIZE,
-        addressTxCounts,
-        list -> buildAddressTxCountListInRollbackCaseMightNotOccur(list, endSlot),
-        addressTxCountRepository::saveAll,
-        "AddressTxCount");
+    List<AddressTxCount> addressTxCountListNeedSave =
+        BatchUtils.processInBatches(
+            DEFAULT_BATCH_SIZE,
+            addressTxCounts,
+            list -> buildAddressTxCountListInRollbackCaseMightNotOccur(list, endSlot),
+            "AddressTxCount");
 
+    if (!CollectionUtils.isEmpty(addressTxCountListNeedSave)) {
+      addressTxCountRepository.saveAll(addressTxCountListNeedSave);
+    }
     jooqDataCheckpointRepository.upsertCheckpointByType(newCheckpoint);
     log.info(
         "Processing address tx count for slots {} to {} took {} ms --- Job: [{}] ---",
@@ -187,12 +190,15 @@ public class AddressTxCountServiceImpl implements AddressTxCountService {
         latestProcessedSlot,
         tip,
         addressTxCounts.size());
-    BatchUtils.processInBatches(
-        DEFAULT_BATCH_SIZE,
-        addressTxCounts,
-        list -> buildAddressTxCountListInRollbackCaseMightOccur(list, tip),
-        addressTxCountRepository::saveAll,
-        "AddressTxCount");
+    List<AddressTxCount> addressTxCountListNeedSave =
+        BatchUtils.processInBatches(
+            DEFAULT_BATCH_SIZE,
+            addressTxCounts,
+            list -> buildAddressTxCountListInRollbackCaseMightOccur(list, tip),
+            "AddressTxCount");
+    if (!CollectionUtils.isEmpty(addressTxCountListNeedSave)) {
+      addressTxCountRepository.saveAll(addressTxCountListNeedSave);
+    }
   }
 
   private CompletableFuture<List<AddressTxCount>>

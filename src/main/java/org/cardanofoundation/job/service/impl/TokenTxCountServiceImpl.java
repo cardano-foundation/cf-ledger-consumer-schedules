@@ -54,9 +54,6 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
   private static final Integer DEFAULT_BATCH_SIZE = 500;
   private final String JOB_NAME = "TokenTxCount";
 
-  @Value("${application.network}")
-  private String network;
-
   @Value("${jobs.token-info.num-slot-interval}")
   private Integer NUM_SLOT_INTERVAL;
 
@@ -159,13 +156,15 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
         tokenTxCounts.size(),
         JOB_NAME);
 
-    BatchUtils.processInBatches(
-        DEFAULT_BATCH_SIZE,
-        tokenTxCounts,
-        list -> buildTokenTxCountListInRollbackCaseMightNotOccur(list, endSlot),
-        tokenTxCountRepository::saveAll,
-        "TokenTxCount");
-
+    List<TokenTxCount> tokenTxCountListNeedSave =
+        BatchUtils.processInBatches(
+            DEFAULT_BATCH_SIZE,
+            tokenTxCounts,
+            list -> buildTokenTxCountListInRollbackCaseMightNotOccur(list, endSlot),
+            "TokenTxCount");
+    if (!CollectionUtils.isEmpty(tokenTxCountListNeedSave)) {
+      tokenTxCountRepository.saveAll(tokenTxCountListNeedSave);
+    }
     jooqDataCheckpointRepository.upsertCheckpointByType(newCheckpoint);
     log.info(
         "Processing token tx count for slots {} to {} took {} ms",
@@ -184,12 +183,15 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
       log.info("No units found for slots {} to {}", latestProcessedSlot, tip);
       return;
     }
-    BatchUtils.processInBatches(
-        DEFAULT_BATCH_SIZE,
-        tokenTxCounts,
-        list -> buildTokenTxCountListInRollbackCaseMightOccur(list, tip),
-        tokenTxCountRepository::saveAll,
-        "TokenTxCount");
+    List<TokenTxCount> tokenTxCountListNeedSave =
+        BatchUtils.processInBatches(
+            DEFAULT_BATCH_SIZE,
+            tokenTxCounts,
+            list -> buildTokenTxCountListInRollbackCaseMightOccur(list, tip),
+            "TokenTxCount");
+    if (!CollectionUtils.isEmpty(tokenTxCountListNeedSave)) {
+      tokenTxCountRepository.saveAll(tokenTxCountListNeedSave);
+    }
   }
   // The function is used in cases where data is saved to the database and a rollback might not
   // occur.

@@ -113,7 +113,7 @@ public interface AddressTxAmountRepository
       """
               SELECT new org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxCount(ata.address, count(distinct(ata.txHash)))
               FROM AddressTxAmount ata
-              WHERE ata.slot > :fromSlot AND ata.slot <= :toSlot
+              WHERE ata.slot > :fromSlot AND ata.slot <= :toSlot AND ata.address IS NOT NULL
               GROUP BY ata.address
               """)
   List<AddressTxCount> getTotalTxCountByAddressInSlotRange(
