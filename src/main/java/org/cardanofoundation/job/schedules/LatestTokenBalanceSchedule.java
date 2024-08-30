@@ -100,8 +100,8 @@ public class LatestTokenBalanceSchedule {
 
     // Create all indexes after inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.createAllIndexes();
-    jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
-    jooqAddressBalanceRepository.deleteAllZeroHolders(currentMaxSlotNo);
+//    jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
+//    jooqAddressBalanceRepository.deleteAllZeroHolders(currentMaxSlotNo);
     log.info("End init LatestTokenBalance in {} ms", System.currentTimeMillis() - startTime);
   }
 
@@ -168,11 +168,8 @@ public class LatestTokenBalanceSchedule {
    */
   private void processingLatestTokenBalance(
       List<String> units, Long slotCheckpoint, boolean includeZeroHolders) {
-    log.info("a");
     List<TokenTxCount> tokenTxCounts = getTokenTxCountOrderedByTxCount(units);
-    log.info("b");
     List<CompletableFuture<List<Void>>> savingLatestTokenBalanceFutures = new ArrayList<>();
-    log.info("c");
 
     // This variable holds the threshold value for the total transaction count before batching
     // starts.
@@ -209,10 +206,8 @@ public class LatestTokenBalanceSchedule {
             .join();
         savingLatestTokenBalanceFutures.clear();
       }
-      log.info("d");
     }
 
-    log.info("e");
     // Check if there are any remaining units to process.
     if (!currentProcessingUnits.isEmpty()) {
       addLatestTokenBalanceFutures(
@@ -221,11 +216,9 @@ public class LatestTokenBalanceSchedule {
           slotCheckpoint,
           includeZeroHolders);
     }
-    log.info("f");
     // Insert the remaining stake address tx count data into the database.
     CompletableFuture.allOf(savingLatestTokenBalanceFutures.toArray(new CompletableFuture[0]))
         .join();
-    log.info("g");
   }
 
   private List<TokenTxCount> getTokenTxCountOrderedByTxCount(List<String> units) {
