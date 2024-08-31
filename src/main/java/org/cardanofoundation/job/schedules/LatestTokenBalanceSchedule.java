@@ -100,8 +100,8 @@ public class LatestTokenBalanceSchedule {
 
     // Create all indexes after inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.createAllIndexes();
-//    jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
-//    jooqAddressBalanceRepository.deleteAllZeroHolders(currentMaxSlotNo);
+    //    jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
+    //    jooqAddressBalanceRepository.deleteAllZeroHolders(currentMaxSlotNo);
     log.info("End init LatestTokenBalance in {} ms", System.currentTimeMillis() - startTime);
   }
 

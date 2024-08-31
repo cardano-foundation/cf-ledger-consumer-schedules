@@ -142,9 +142,7 @@ public class JOOQLatestTokenBalanceRepository {
                             .from(table(addressBalanceEntity.getTableName()))
                             .where(
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT))
-                                    .notEqual("lovelace"),
-                                field(addressBalanceEntity.getColumnField(AddressBalance_.QUANTITY))
-                                    .gt(0))
+                                    .notEqual("lovelace"))
                             .orderBy(
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.ADDRESS)),
                                 field(addressBalanceEntity.getColumnField(AddressBalance_.UNIT)),
