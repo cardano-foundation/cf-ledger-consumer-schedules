@@ -47,6 +47,7 @@ public class StakeKeyReportServiceImpl implements StakeKeyReportService {
 
   @Value("${application.network}")
   private String folderPrefix;
+
   /**
    * Export stake key report
    *

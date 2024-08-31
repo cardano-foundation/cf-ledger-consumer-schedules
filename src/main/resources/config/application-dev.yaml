@@ -143,49 +143,61 @@ jobs:
   meta-data:
     enabled: ${META_DATA_JOB_ENABLED:false}
   report-history:
-    enabled: ${REPORT_HISTORY_JOB_ENABLED:true}
+    enabled: ${REPORT_HISTORY_JOB_ENABLED:false}
     fixed-delay: ${REPORT_HISTORY_FIXED_DELAY:60000}
     expired:
       rate: ${SET_EXPIRED_REPORTS_DELAY:86400000} # 1 day
   pool-status:
+    enabled: ${POOL_STATUS_JOB_ENABLED:false}
     fixed-delay: ${POOL_STATUS_FIXED_DELAY:300000}
   number-delegator:
+    enabled: ${NUMBER_DELEGATOR_JOB_ENABLED:false}
     fixed-delay: ${NUMBER_DELEGATOR_FIXED_DELAY:300000}
   unique-account:
     enabled: ${UNIQUE_ACCOUNT_ENABLED:false}
     fixed-delay: ${UNIQUE_ACCOUNT_FIXED_DELAY:300000}
   stake-tx-balance:
-    enabled: ${STAKE_TX_BALANCE_JOB_ENABLED:true}
+    enabled: ${STAKE_TX_BALANCE_JOB_ENABLED:false}
     fixed-delay: ${STAKE_TX_BALANCE_FIXED_DELAY:300000}
   aggregate-pool-info:
+    enabled: ${AGGREGATE_POOL_INFO_JOB_ENABLED:false}
     fixed-delay: ${AGGREGATE_POOL_INFO_FIXED_DELAY:10000}
   token-info:
-    enabled: ${TOKEN_INFO_JOB_ENABLED:true}
+    enabled: ${TOKEN_INFO_JOB_ENABLED:false}
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
+  token-tx-count:
+    enabled: ${TOKEN_TX_COUNT_JOB_ENABLED:false}
+    fixed-delay: ${TOKEN_TX_COUNT_FIXED_DELAY:60000}
   smart-contract-info:
+    enabled: ${SMART_CONTRACT_INFO_JOB_ENABLED:false}
     fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:30000}
   native-script-info:
+    enabled: ${NATIVE_SCRIPT_INFO_JOB_ENABLED:false}
     fixed-delay: ${NATIVE_SCRIPT_INFO_FIXED_DELAY:10000}
   drep-info:
-    enabled: ${DREP_INFO_JOB_ENABLED:true}
+    enabled: ${DREP_INFO_JOB_ENABLED:false}
     fixed-delay: ${DREP_INFO_FIXED_DELAY:30000}
   governance-info:
-    enabled: ${GOVERNANCE_INFO_JOB_ENABLED:true}
+    enabled: ${GOVERNANCE_INFO_JOB_ENABLED:false}
     fixed-delay: ${GOVERNANCE_INFO_FIXED_DELAY:30000}
   agg-analytic:
-    enabled: ${AGG_ANALYTIC_JOB_ENABLED:true}
+    enabled: ${AGG_ANALYTIC_JOB_ENABLED:false}
     number-of-concurrent-tasks: ${AGG_ANALYTIC_NUMBER_OF_CONCURRENT_TASKS:2}
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
   address-tx-count:
+    enabled: ${ADDRESS_TX_COUNT_JOB_ENABLED:false}
     fixed-delay: ${ADDRESS_TX_COUNT_FIXED_DELAY:300000}
   latest-token-balance:
+    enabled: ${LATEST_TOKEN_BALANCE_JOB_ENABLED:false}
     fixed-delay: ${LATEST_TOKEN_BALANCE_FIXED_DELAY:300000}
   block-statistics:
     enabled: ${BLOCK_STATISTICS_JOB_ENABLED:false}
     daily-url: ${BLOCK_STATISTICS_DAILY_URL:https://data.blockperf.cardanofoundation.org/daily/daily_agr_cfm.json}
     per-epoch-url: ${BLOCK_STATISTICS_PER_EPOCH_URL:https://data.blockperf.cardanofoundation.org/per_epoch/epoch_agr_cfm.json}
+  committee-info:
+    enabled: ${COMMITTEE_INFO_JOB_ENABLED:false}
   gov-action-metadata:
-    enabled: ${GOV_ACTION_METADATA_JOB_ENABLED:true}
+    enabled: ${GOV_ACTION_METADATA_JOB_ENABLED:false}
     fixed-delay: ${GOV_ACTION_METADATA_FIXED_DELAY:300000}
     retry-count: ${GOV_ACTION_METADATA_RETRY_COUNT:3}
   install-batch: 100

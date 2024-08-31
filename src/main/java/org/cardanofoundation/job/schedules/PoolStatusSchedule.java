@@ -9,6 +9,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,10 @@ import org.cardanofoundation.job.service.PoolService;
 @Slf4j
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@ConditionalOnProperty(
+    value = "jobs.token-tx-count.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class PoolStatusSchedule {
 
   final RedisTemplate<String, Integer> redisTemplate;

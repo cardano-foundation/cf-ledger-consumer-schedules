@@ -14,16 +14,12 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.Sort;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.cardanofoundation.explorer.common.entity.ledgersync.BaseEntity_;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.common.constant.Constant;
@@ -40,9 +36,13 @@ import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQLatestTokenBa
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+    value = "jobs.latest-token-balance.enabled",
+    matchIfMissing = true,
+    havingValue = "true")
 public class LatestTokenBalanceSchedule {
 
-  private static final int DEFAULT_PAGE_SIZE = 1000;
+  private static final int DEFAULT_PAGE_SIZE = 10;
   private final AddressTxAmountRepository addressTxAmountRepository;
   private final TokenTxCountRepository tokenTxCountRepository;
   private final MultiAssetRepository multiAssetRepository;
@@ -96,23 +96,12 @@ public class LatestTokenBalanceSchedule {
 
     // Drop all indexes before inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.dropAllIndexes();
-    long index = 1;
-    Pageable pageable =
-        PageRequest.of(0, DEFAULT_PAGE_SIZE, Sort.by(Sort.Direction.ASC, BaseEntity_.ID));
-    Slice<String> multiAssetSlice = multiAssetRepository.getTokenUnitSlice(pageable);
-    processingLatestTokenBalance(multiAssetSlice.getContent(), 0L, false);
-
-    while (multiAssetSlice.hasNext()) {
-      multiAssetSlice = multiAssetRepository.getTokenUnitSlice(multiAssetSlice.nextPageable());
-      processingLatestTokenBalance(multiAssetSlice.getContent(), 0L, false);
-      index++;
-      log.info("Total processed units: {}", index * DEFAULT_PAGE_SIZE);
-    }
+    jooqLatestTokenBalanceRepository.init();
 
     // Create all indexes after inserting the latest token balance data into the database.
     jooqLatestTokenBalanceRepository.createAllIndexes();
-    jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
-    jooqAddressBalanceRepository.deleteAllZeroHolders(currentMaxSlotNo);
+    //    jooqLatestTokenBalanceRepository.deleteAllZeroHolders();
+    //    jooqAddressBalanceRepository.deleteAllZeroHolders(currentMaxSlotNo);
     log.info("End init LatestTokenBalance in {} ms", System.currentTimeMillis() - startTime);
   }
 
@@ -124,8 +113,12 @@ public class LatestTokenBalanceSchedule {
     savingLatestTokenBalanceFutures.add(
         CompletableFuture.supplyAsync(
             () -> {
+              var startTime = System.currentTimeMillis();
               jooqLatestTokenBalanceRepository.insertLatestTokenBalanceByUnitIn(
                   units, slotCheckpoint, includeZeroHolders);
+              log.info(
+                  "jooqLatestTokenBalanceRepository.insertLatestTokenBalanceByUnitIn took {}ms",
+                  System.currentTimeMillis() - startTime);
               return null;
             }));
   }

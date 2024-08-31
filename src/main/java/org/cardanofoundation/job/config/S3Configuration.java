@@ -2,8 +2,6 @@ package org.cardanofoundation.job.config;
 
 import java.util.List;
 
-import jakarta.annotation.PostConstruct;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -36,7 +34,7 @@ public class S3Configuration implements BeanFactoryAware {
     this.beanFactory = beanFactory;
   }
 
-  @PostConstruct
+  //  @PostConstruct
   public void onPostConstruct() {
     ConfigurableBeanFactory configurableBeanFactory = (ConfigurableBeanFactory) beanFactory;
     List<S3Config> s3Beans = s3Properties.getS3Configs();
