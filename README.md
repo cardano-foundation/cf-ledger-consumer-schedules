@@ -13,13 +13,42 @@ This repository executes tasks in a periodic sequence to precompute computationa
 
 👉 Check the [Explorer repository](https://github.com/cardano-foundation/cf-explorer) to understand how the microservices work together
 
+## How to run
+Following prerequisites are required to run the application:
+- Java 17
+- Redis 
+- Postgres (ledger-sync and explorer database)
+- Ledger-sync (Ledgersync + Aggregate app + Postgres)
+
+An example docker-compose script is provided in the `example-infra` directory. 
+(This script only sets up Redis and Postgres, for a ledger-sync setup, please refer to the [ledger-sync repository](https://github.com/cardano-foundation/cf-ledger-sync))
+
+This can be used right away with the provided `.env.example` and adjusted as needed.
+
+To start the needed Infrastructure, run:
+```shell
+# Start Redis and Postgres
+docker-compose -f example-infra/docker-compose.yml up
+# Additionally start Ledger Sync according to the docs in the ledger-sync repository 
+```
+To run the application via command line:
+```shell
+# Copy the .env.example to .env and adjust as needed
+cp .env.example .env
+# Build the application
+source .env
+mvn clean package
+mvn spring-boot:run
+```
+
 ## 🧪 Test Reports
 
 To ensure the stability and reliability of this project, unit and mutation tests have been implemented. By clicking on the links below, you can access the detailed test reports and review the outcomes of the tests performed.
 
 📊 [Mutation report](https://cardano-foundation.github.io/cf-ledger-consumer-schedules/mutation-report/)
+<details>
+<summary> 🌱 Environment Variables</summary>
 
-## 🌱 Environment Variables
 - LEDGER_SYNC_HOST: Ledger-sync database host.
 - LEDGER_SYNC_PORT: Ledger-sync database port
 - LEDGER_SYNC_USER: Ledger-sync database username
@@ -81,6 +110,7 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - STAKE_TX_BALANCE_FIXED_DELAY: fixed delay for job stake tx balance
 - TOKEN_INFO_JOB_ENABLED: enable token info job
 - TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
+- TOKEN_INFO_NUM_SLOT_INTERVAL: number of slots for each iteration processing token info
 - AGGREGATE_POOL_INFO_FIXED_DELAY: fixed delay for job aggregate pool info
 - SMART_CONTRACT_INFO_FIXED_DELAY: fixed delay for job smart contract info
 - NATIVE_SCRIPT_INFO_FIXED_DELAY: fixed delay for job native script info
@@ -95,3 +125,6 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - GOV_ACTION_METADATA_JOB_ENABLED: Enable the upsert government action metadata job. Default is true.
 - GOV_ACTION_METADATA_FIXED_DELAY: Fixed delay for the government action metadata scheduler.
 - GOV_ACTION_METADATA_RETRY_COUNT: The number of retries to fetch the URL to get government action metadata.
+
+</details>
+
