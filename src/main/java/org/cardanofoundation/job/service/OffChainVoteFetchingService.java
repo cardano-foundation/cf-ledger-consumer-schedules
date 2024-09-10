@@ -17,6 +17,7 @@ import javax.net.ssl.SSLException;
 
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -31,6 +32,7 @@ import io.netty.handler.ssl.SslProvider;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.apache.logging.log4j.util.Strings;
 import reactor.netty.http.client.HttpClient;
 
 import org.cardanofoundation.explorer.common.utils.UrlUtil;
@@ -39,6 +41,9 @@ import org.cardanofoundation.job.dto.govActionMetaData.OffChainFetchResult;
 
 @Log4j2
 public abstract class OffChainVoteFetchingService<S, F> {
+
+  @Value("${application.api.ipfs.base-url}")
+  private String ipfsGatewayBaseUrl;
 
   static final int TIMEOUT = 30000;
   static final int READ_TIMEOUT = 19000;
@@ -82,13 +87,16 @@ public abstract class OffChainVoteFetchingService<S, F> {
 
   protected CompletableFuture<Void> fetchAnchorUrl(Anchor anchor) {
     try {
-      if (!UrlUtil.isUrl(anchor.getAnchorUrl())) {
+      String anchorUrl = anchor.getAnchorUrl();
+      if (!UrlUtil.isUrl(anchorUrl) && !isIPFSUrl(anchorUrl)) {
         handleFetchFailure("Invalid URL", anchor);
         return CompletableFuture.completedFuture(null);
+      } else if (!UrlUtil.isUrl(anchorUrl) && isIPFSUrl(anchorUrl)) {
+        anchorUrl = getIPFSUrl(anchorUrl);
       }
       return buildWebClient()
           .get()
-          .uri(UrlUtil.formatSpecialCharactersUrl(anchor.getAnchorUrl()))
+          .uri(UrlUtil.formatSpecialCharactersUrl(anchorUrl))
           .acceptCharset(StandardCharsets.UTF_8)
           .retrieve()
           .toEntity(String.class)
@@ -204,5 +212,23 @@ public abstract class OffChainVoteFetchingService<S, F> {
         .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
         .clientConnector(new ReactorClientHttpConnector(httpClient))
         .build();
+  }
+
+  private Boolean isIPFSUrl(String url) {
+    if (Objects.isNull(url)) {
+      return Boolean.FALSE;
+    }
+    return url.startsWith("ipfs://");
+  }
+
+  private String getIPFSUrl(String url) {
+    if (Objects.isNull(url)) {
+      return null;
+    }
+    String cid = url.substring(7);
+    if (Strings.isBlank(cid)) {
+      return null;
+    }
+    return Strings.concat(ipfsGatewayBaseUrl, cid);
   }
 }

@@ -176,7 +176,11 @@ class OffChainVoteGovActionFetchingDataServiceImplTest {
     Anchor anchor2 = new Anchor();
     anchor2.setAnchorUrl("https://hornan7.github.io/proposal.jsonld"); // fetchSuccess
     anchor2.setAnchorHash("c64b5f660510891a198de8aa15e4b4c1138948cec1e2b5d99164ef3ac33a52e1");
-    List<Anchor> anchors = List.of(anchor1, anchor2);
+
+    Anchor anchor3 = new Anchor(); // fetchSuccess
+    anchor3.setAnchorUrl("https://ipfs.io/ipfs/QmWjcHsrq9kKHZZ7aPPFjqN6wLuxH9d8bcqssmrE7H4cvb");
+    anchor3.setAnchorHash("2f98f57c4149fdfed2b73cbd821226fe417ef5ed49d8f836a37b31edf14dea47");
+    List<Anchor> anchors = List.of(anchor1, anchor2, anchor3);
 
     offChainVoteGovActionFetchingDataServiceImpl.crawlOffChainAnchors(anchors);
 
@@ -184,10 +188,12 @@ class OffChainVoteGovActionFetchingDataServiceImplTest {
         offChainVoteGovActionFetchingDataServiceImpl.getOffChainAnchorsFetchSuccess();
     var fetchErrorLst = offChainVoteGovActionFetchingDataServiceImpl.getOffChainAnchorsFetchError();
 
-    Assertions.assertEquals(1, fetchSuccessLst.size());
+    Assertions.assertEquals(2, fetchSuccessLst.size());
     Assertions.assertEquals(1, fetchErrorLst.size());
-    Assertions.assertEquals(
-        "https://hornan7.github.io/proposal.jsonld", fetchSuccessLst.get(0).getAnchorUrl());
+    Assertions.assertTrue(
+        fetchSuccessLst.stream()
+            .anyMatch(
+                item -> item.getAnchorUrl().equals("https://hornan7.github.io/proposal.jsonld")));
     Assertions.assertEquals("http://bit.ly/3QFMhii?index=6", fetchErrorLst.get(0).getAnchorUrl());
   }
 }
