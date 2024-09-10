@@ -42,7 +42,7 @@ import org.cardanofoundation.job.dto.govActionMetaData.OffChainFetchResult;
 @Log4j2
 public abstract class OffChainVoteFetchingService<S, F> {
 
-  @Value("${application.api.ipfs.base-url}")
+  @Value("${application.api.ipfs-gateway.base-url}")
   private String ipfsGatewayBaseUrl;
 
   static final int TIMEOUT = 30000;
