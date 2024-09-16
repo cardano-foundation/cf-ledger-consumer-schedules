@@ -178,7 +178,8 @@ class OffChainVoteGovActionFetchingDataServiceImplTest {
     anchor2.setAnchorHash("c64b5f660510891a198de8aa15e4b4c1138948cec1e2b5d99164ef3ac33a52e1");
 
     Anchor anchor3 = new Anchor(); // fetchSuccess
-    anchor3.setAnchorUrl("https://gateway.pinata.cloud/ipfs/QmWjcHsrq9kKHZZ7aPPFjqN6wLuxH9d8bcqssmrE7H4cvb");
+    anchor3.setAnchorUrl(
+        "https://gateway.pinata.cloud/ipfs/QmWjcHsrq9kKHZZ7aPPFjqN6wLuxH9d8bcqssmrE7H4cvb");
     anchor3.setAnchorHash("2f98f57c4149fdfed2b73cbd821226fe417ef5ed49d8f836a37b31edf14dea47");
     List<Anchor> anchors = List.of(anchor1, anchor2, anchor3);
 
