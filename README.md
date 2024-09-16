@@ -125,6 +125,6 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - GOV_ACTION_METADATA_JOB_ENABLED: Enable the upsert government action metadata job. Default is true.
 - GOV_ACTION_METADATA_FIXED_DELAY: Fixed delay for the government action metadata scheduler.
 - GOV_ACTION_METADATA_RETRY_COUNT: The number of retries to fetch the URL to get government action metadata.
-
+- IPFS_GATEWAY_BASE_URL: The base URL of the gateway to support download the IPFS file.
 </details>
 
