@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 import org.cardanofoundation.explorer.common.entity.compositeKey.AddressTxAmountId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxAmount;
+import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxCount;
+import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.StakeAddressTxCount;
 import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
@@ -95,6 +97,37 @@ public interface AddressTxAmountRepository
       GROUP BY ata.unit
       """)
   List<TokenTxCount> getTotalTxCountByUnitIn(@Param("units") List<String> units);
+
+  @Query(
+      """
+          SELECT new org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount(ata.unit, count(distinct (ata.txHash)))
+          FROM AddressTxAmount ata
+          WHERE ata.slot > :fromSlot AND ata.slot <= :toSlot
+          AND ata.unit != 'lovelace'
+          GROUP BY ata.unit
+          """)
+  List<TokenTxCount> getTotalTxCountByUnitInSlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
+
+  @Query(
+      """
+              SELECT new org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxCount(ata.address, count(distinct(ata.txHash)))
+              FROM AddressTxAmount ata
+              WHERE ata.slot > :fromSlot AND ata.slot <= :toSlot AND ata.address IS NOT NULL
+              GROUP BY ata.address
+              """)
+  List<AddressTxCount> getTotalTxCountByAddressInSlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
+
+  @Query(
+      """
+        SELECT new org.cardanofoundation.explorer.common.entity.ledgersyncsagg.StakeAddressTxCount(ata.stakeAddress, count(distinct(ata.txHash)))
+        FROM AddressTxAmount ata
+        WHERE ata.slot > :fromSlot AND ata.slot <= :toSlot AND ata.stakeAddress IS NOT NULL
+        GROUP BY ata.stakeAddress
+""")
+  List<StakeAddressTxCount> getTotalTxCountByStakeAddressInSlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
 
   @Query(
       """

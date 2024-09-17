@@ -178,7 +178,13 @@ jobs:
     number-of-concurrent-tasks: ${AGG_ANALYTIC_NUMBER_OF_CONCURRENT_TASKS:2}
     fixed-delay: ${AGG_ANALYTIC_FIXED_DELAY:300000}
   address-tx-count:
+    enabled: ${ADDRESS_TX_COUNT_JOB_ENABLED:true}
     fixed-delay: ${ADDRESS_TX_COUNT_FIXED_DELAY:300000}
+    num-slot-interval: ${ADDRESS_TX_COUNT_NUM_SLOT_INTERVAL:2000}
+  stake-address-tx-count:
+    enabled: ${STAKE_ADDRESS_TX_COUNT_JOB_ENABLED:true}
+    fixed-delay: ${STAKE_ADDRESS_TX_COUNT_FIXED_DELAY:300000}
+    num-slot-interval: ${STAKE_ADDRESS_TX_COUNT_NUM_SLOT_INTERVAL:2000}
   latest-token-balance:
     fixed-delay: ${LATEST_TOKEN_BALANCE_FIXED_DELAY:300000}
   block-statistics:
