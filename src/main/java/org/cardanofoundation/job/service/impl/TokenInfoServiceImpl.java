@@ -6,30 +6,31 @@ import static org.cardanofoundation.job.common.enumeration.RedisKey.TOTAL_TOKEN_
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
+import org.cardanofoundation.conversions.CardanoConverters;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfo;
 import org.cardanofoundation.explorer.common.entity.explorer.TokenInfoCheckpoint;
 import org.cardanofoundation.explorer.common.entity.ledgersync.Block;
 import org.cardanofoundation.job.common.enumeration.RedisKey;
 import org.cardanofoundation.job.repository.explorer.TokenInfoCheckpointRepository;
-import org.cardanofoundation.job.repository.explorer.jooq.JOOQTokenInfoRepository;
+import org.cardanofoundation.job.repository.explorer.TokenInfoRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
 import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
@@ -43,220 +44,309 @@ import org.cardanofoundation.job.util.BatchUtils;
 @Slf4j
 public class TokenInfoServiceImpl implements TokenInfoService {
 
+  @Autowired @Lazy TokenInfoServiceImpl selfProxyService;
+
   private final TokenInfoCheckpointRepository tokenInfoCheckpointRepository;
   private final BlockRepository blockRepository;
   private final MultiAssetRepository multiAssetRepository;
   private final TokenInfoServiceAsync tokenInfoServiceAsync;
-  private final JOOQTokenInfoRepository jooqTokenInfoRepository;
-  private final AddressTxAmountRepository addressTxAmountRepository;
   private final LatestTokenBalanceRepository latestTokenBalanceRepository;
+  private final CardanoConverters cardanoConverters;
+  private final TokenInfoRepository tokenInfoRepository;
+  private final AddressTxAmountRepository addressTxAmountRepository;
+
+  @Value("${jobs.token-info.num-slot-interval}")
+  private Integer NUM_SLOT_INTERVAL;
 
   private final RedisTemplate<String, Integer> redisTemplate;
+
+  private static final int DEFAULT_BATCH_SIZE = 30000;
 
   @Value("${application.network}")
   private String network;
 
   @Override
-  @Transactional(value = "explorerTransactionManager")
-  @SneakyThrows
   public void updateTokenInfoList() {
-    Optional<Block> latestBlock = blockRepository.findLatestBlock();
-    if (latestBlock.isEmpty()) {
-      return;
-    }
-    Long maxBLockTimeFromLsAgg = latestTokenBalanceRepository.getTheSecondLastBlockTime();
 
-    Long maxBlockNoFromLsAgg = blockRepository.getBlockNoByExtractEpochTime(maxBLockTimeFromLsAgg);
     final String latestTokenBalanceCheckpoint =
-        RedisKey.LATEST_TOKEN_BALANCE_CHECKPOINT.name() + "_" + network;
-    final Integer latestTokenBalanceCheckpointValue =
-        redisTemplate.opsForValue().get(latestTokenBalanceCheckpoint);
+        RedisKey.LATEST_TOKEN_BALANCE_CHECKPOINT.name().concat("_").concat(network);
+    Optional<Block> latestBlock = blockRepository.findLatestBlock();
 
-    if (latestTokenBalanceCheckpointValue == null) {
-      log.info("No latest token balance checkpoint found >>> Skip token info scheduled");
+    // This the slot for the current time
+    Long currentSlot = cardanoConverters.time().toSlot(LocalDateTime.now(ZoneOffset.UTC));
+    log.info("TokenInfo Scheduler Job: Current slot: {}", currentSlot);
+    // Get start time from genesis file
+    Long startSlot =
+        cardanoConverters.time().toSlot(cardanoConverters.genesisConfig().getStartTime());
+    // Last slot processed
+    TokenInfoCheckpoint latestProcessedCheckpoint =
+        tokenInfoCheckpointRepository
+            .findLatestTokenInfoCheckpoint()
+            .orElse(TokenInfoCheckpoint.builder().slot(startSlot).build());
+    Long latestProcessedSlot = latestProcessedCheckpoint.getSlot();
+    Long endSlot = latestProcessedSlot + NUM_SLOT_INTERVAL;
+
+    var maxLedgerSyncAggregationSlot =
+        redisTemplate
+            .opsForValue()
+            .get(
+                latestTokenBalanceCheckpoint); // the max slot processed by ledger sync aggregation.
+    if (Objects.isNull(maxLedgerSyncAggregationSlot)
+        || latestBlock.isEmpty()
+        || maxLedgerSyncAggregationSlot.longValue() == 0) {
+      log.error("No block found in the ledger sync database");
       return;
     }
 
-    long latestBlockNo = Math.min(maxBlockNoFromLsAgg, latestBlock.get().getBlockNo());
-    latestBlockNo = Math.min(latestBlockNo, latestTokenBalanceCheckpointValue + 2160);
+    // the max slot processed by ledger sync main app.
+    Long maxLedgerSyncSlot = latestBlock.get().getSlotNo();
+    // This is the min block across all the data, as main app or aggregation could be behind
+    // We want to be sure all the data used for computation are consistent.
+    long maxSafeProcessableSlot =
+        Stream.of(endSlot, maxLedgerSyncSlot, maxLedgerSyncAggregationSlot.longValue())
+            .sorted()
+            .findFirst()
+            .get();
 
-    log.info(
-        "Compare latest block no from LS_AGG: {} and latest block no from LS_MAIN: {}",
-        maxBlockNoFromLsAgg,
-        latestBlock.get().getBlockNo());
+    LocalDateTime maxSafeProcessableTime =
+        cardanoConverters.slot().slotToTime(maxSafeProcessableSlot);
 
-    Timestamp timeLatestBlock = blockRepository.getBlockTimeByBlockNo(latestBlockNo);
-    var tokenInfoCheckpoint = tokenInfoCheckpointRepository.findLatestTokenInfoCheckpoint();
+    Long previousValuesSafeProcessableSlot = maxSafeProcessableSlot;
 
-    if (tokenInfoCheckpoint.isEmpty()) {
-      // If no token info checkpoint found, this means it's the first update,
-      // so initialize token info data for the first time.
-      initializeTokenInfoDataForFirstTime(latestBlockNo, timeLatestBlock);
-    } else {
-      // If a checkpoint exists, update the existing token info data by
-      // inserting new data and updating existing ones.
-      updateExistingTokenInfo(tokenInfoCheckpoint.get(), latestBlockNo, timeLatestBlock);
-    }
+    // Check if the order of maxTime and now matter (could be positive/negative)
+    while (ChronoUnit.MINUTES.between(maxSafeProcessableTime, LocalDateTime.now(ZoneOffset.UTC))
+        > 60L) {
+      // As long as the upper bound of our time interval is older than 1h, we can safely while loop
+      // and
+      // not care about rollbacks.
 
-    // Save total token count into redis cache
-    saveTotalTokenCount();
-  }
+      TokenInfoCheckpoint slotCheckpoint =
+          selfProxyService.processTokenInSlotRange(
+              latestProcessedSlot,
+              maxSafeProcessableSlot,
+              currentSlot); // one iteration done and committed on DB, compute
+      // next range of slots and continue if while condition still valid
 
-  /**
-   * Initialize token info data for the first time.
-   *
-   * @param maxBlockNo The maximum block number.
-   * @param timeLatestBlock The update time.
-   */
-  private void initializeTokenInfoDataForFirstTime(Long maxBlockNo, Timestamp timeLatestBlock) {
-    log.info("Init token info data for the first time");
+      latestProcessedSlot = slotCheckpoint.getSlot();
+      endSlot = latestProcessedSlot + NUM_SLOT_INTERVAL;
 
-    List<CompletableFuture<List<TokenInfo>>> tokenInfoFutures = new ArrayList<>();
+      // This is the min block across all the data, as main app or aggregation could be behind
+      // We want to be sure all the data used for computation are consistent.
+      maxSafeProcessableSlot =
+          Stream.of(endSlot, maxLedgerSyncSlot, maxLedgerSyncAggregationSlot.longValue())
+              .sorted()
+              .findFirst()
+              .get();
 
-    var maxMultiAssetId = multiAssetRepository.getCurrentMaxIdent();
-
-    if (maxMultiAssetId == null) {
-      log.info("No multi-asset found >>> Skip token info initialization");
-      return;
-    }
-
-    // Collect the results from all CompletableFuture instances to get the list of multi-assets.
-    var multiAssetIdList =
-        LongStream.rangeClosed(1, maxMultiAssetId).boxed().collect(Collectors.toList());
-
-    Long epochSecond24hAgo =
-        LocalDateTime.now(ZoneOffset.UTC).minusDays(1).toEpochSecond(ZoneOffset.UTC);
-
-    // Define the maximum batch size for processing multi-assets.
-    int multiAssetListSize = 1000;
-
-    // Process the multi-assets in batches to build token info data.
-    for (int i = 0; i < multiAssetIdList.size(); i += multiAssetListSize) {
-      int toIndex = Math.min(i + multiAssetListSize, multiAssetIdList.size());
-      var subList = multiAssetIdList.subList(i, toIndex);
-      Long startIdent = subList.get(0);
-      Long endIdent = subList.get(subList.size() - 1);
-
-      tokenInfoFutures.add(
-          tokenInfoServiceAsync
-              .buildTokenInfoList(
-                  startIdent, endIdent, maxBlockNo, epochSecond24hAgo, timeLatestBlock)
-              .exceptionally(
-                  e -> {
-                    throw new RuntimeException(
-                        "Exception occurs when initializing token info list", e);
-                  }));
-
-      // After every 5 batches, insert the fetched token info data into the database in batches.
-      if (tokenInfoFutures.size() % 5 == 0) {
-        var tokenInfoList =
-            tokenInfoFutures.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
-        BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
-        tokenInfoFutures.clear();
+      if (previousValuesSafeProcessableSlot.equals(maxSafeProcessableSlot)) {
+        log.error("The token info scheduler is stuck in a loop, exiting");
+        break;
+      } else {
+        previousValuesSafeProcessableSlot = maxSafeProcessableSlot;
       }
+
+      maxSafeProcessableTime = cardanoConverters.slot().slotToTime(maxSafeProcessableSlot);
+      currentSlot = cardanoConverters.time().toSlot(LocalDateTime.now(ZoneOffset.UTC));
     }
 
-    // Wait for the remaining CompletableFuture instances to complete.
-    CompletableFuture.allOf(tokenInfoFutures.toArray(new CompletableFuture[0])).join();
-    List<TokenInfo> tokenInfoList =
-        tokenInfoFutures.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
-    BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
+    // if we get here, the while condition failed, it means we are in incremental mode, so we must
+    // to the same as before, BUT
+    // Compute latest aggregation as well as rollback values
 
-    multiAssetIdList.clear();
-
-    tokenInfoCheckpointRepository.save(
-        TokenInfoCheckpoint.builder().blockNo(maxBlockNo).updateTime(timeLatestBlock).build());
+    log.info("The token info scheduler switched to incremental mode");
+    selfProxyService.processTokenFromSafetySlot(latestProcessedSlot, currentSlot);
+    saveTotalTokenCount();
+    log.info(
+        "Token info scheduler finished processing. The data had processed up to slot: {}",
+        currentSlot);
   }
 
-  /**
-   * Update existing token info by inserting new data and updating existing ones.
-   *
-   * @param tokenInfoCheckpoint The latest token info checkpoint.
-   * @param maxBlockNo The maximum block number.
-   * @param timeLatestBlock The update time.
-   */
-  private void updateExistingTokenInfo(
-      TokenInfoCheckpoint tokenInfoCheckpoint, Long maxBlockNo, Timestamp timeLatestBlock) {
-    if (maxBlockNo.compareTo(tokenInfoCheckpoint.getBlockNo()) <= 0) {
-      log.info(
-          "Stop updating token info as the latest block no is not greater than the checkpoint, {} <= {}",
-          maxBlockNo,
-          tokenInfoCheckpoint.getBlockNo());
-      return;
+  // We need requires new so that just this block of code is run in isolation
+  @Transactional(value = "explorerTransactionManager", propagation = Propagation.REQUIRES_NEW)
+  protected TokenInfoCheckpoint processTokenInSlotRange(
+      Long fromSlot, Long toSlot, Long currentSlot) {
+
+    TokenInfoCheckpoint checkpoint =
+        TokenInfoCheckpoint.builder()
+            .slot(toSlot)
+            .updateTime(Timestamp.valueOf(LocalDateTime.now()))
+            .build();
+    long start = System.currentTimeMillis();
+    List<String> unitMultiAssetCollection =
+        addressTxAmountRepository.getTokensInTransactionInSlotRange(fromSlot, toSlot);
+    log.info(
+        "Processing token info from slot: {} to slot: {}, with number of units in transaction is {}",
+        fromSlot,
+        toSlot,
+        unitMultiAssetCollection.size());
+
+    if (CollectionUtils.isEmpty(unitMultiAssetCollection)) {
+      return checkpoint;
     }
-    log.info(
-        "Update existing token info from blockNo: {} to blockNo: {}",
-        tokenInfoCheckpoint.getBlockNo(),
-        maxBlockNo);
 
-    Long epochSecond24hAgo =
-        LocalDateTime.now(ZoneOffset.UTC).minusDays(1).toEpochSecond(ZoneOffset.UTC);
-    Long epochSecondLastUpdateTime =
-        tokenInfoCheckpoint
-            .getUpdateTime()
-            .toLocalDateTime()
-            .minusDays(1)
-            .toEpochSecond(ZoneOffset.UTC);
-
-    // Retrieve multi-assets involved in transactions between the last processed block and the
-    // latest block.
-    List<String> tokensInTransactionWithNewBlockRange =
-        addressTxAmountRepository.getTokensInTransactionInTimeRange(
-            tokenInfoCheckpoint.getUpdateTime().toInstant().getEpochSecond(),
-            timeLatestBlock.toInstant().getEpochSecond());
-    log.info(
-        "tokensInTransactionWithNewBlockRange has size: {}",
-        tokensInTransactionWithNewBlockRange.size());
-
-    // Retrieve multi-assets involved in transactions
-    // from 24h before last update time to 24h before the current time
-    List<String> tokenNeedUpdateVolume24h =
-        addressTxAmountRepository.getTokensInTransactionInTimeRange(
-            epochSecondLastUpdateTime, epochSecond24hAgo);
-
-    // Create a map that merges all the multi-assets that need to be processed in this update.
-    Set<String> tokenToProcessSet = new HashSet<>();
-    tokenToProcessSet.addAll(tokensInTransactionWithNewBlockRange);
-    tokenToProcessSet.addAll(tokenNeedUpdateVolume24h);
-
-    log.info("tokenToProcess has size: {}", tokenToProcessSet.size());
-
-    List<CompletableFuture<List<TokenInfo>>> tokenInfoFutures = new ArrayList<>();
-
-    // Process the tokens to update the corresponding TokenInfo entities in batches of 10,000.
     BatchUtils.doBatching(
-        1000,
-        tokenToProcessSet.stream().toList(),
-        units -> {
-          tokenInfoFutures.add(
-              tokenInfoServiceAsync
-                  .buildTokenInfoList(units, maxBlockNo, epochSecond24hAgo, timeLatestBlock)
-                  .exceptionally(
-                      e -> {
-                        throw new RuntimeException(
-                            "Exception occurs when updating token info list", e);
-                      }));
-
-          // After every 5 batches, insert the fetched token info data into the database in batches.
-          if (tokenInfoFutures.size() % 5 == 0) {
-            var tokenInfoList =
-                tokenInfoFutures.stream()
-                    .map(CompletableFuture::join)
-                    .flatMap(List::stream)
-                    .toList();
-            BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
-            tokenInfoFutures.clear();
-          }
+        DEFAULT_BATCH_SIZE,
+        unitMultiAssetCollection,
+        unitsBatch -> {
+          List<TokenInfo> tokenInfoList =
+              tokenInfoServiceAsync.buildTokenInfoList(unitsBatch, fromSlot, toSlot, currentSlot);
+          saveTokenInfoListToDbInRollbackCaseMightNotOccur(tokenInfoList, unitsBatch, toSlot);
         });
 
-    // Wait for the remaining CompletableFuture instances to complete.
-    CompletableFuture.allOf(tokenInfoFutures.toArray(new CompletableFuture[0])).join();
-    List<TokenInfo> tokenInfoList =
-        tokenInfoFutures.stream().map(CompletableFuture::join).flatMap(List::stream).toList();
-    BatchUtils.doBatching(1000, tokenInfoList, jooqTokenInfoRepository::insertAll);
+    tokenInfoCheckpointRepository.save(checkpoint); // new checkpoint
 
-    tokenInfoCheckpointRepository.save(
-        TokenInfoCheckpoint.builder().blockNo(maxBlockNo).updateTime(timeLatestBlock).build());
+    log.info(
+        "Token info processing from slot: {} to slot: {} took: {} ms",
+        fromSlot,
+        toSlot,
+        System.currentTimeMillis() - start);
+    return checkpoint;
+  }
+
+  // A safety slot is a time slot that is guaranteed to be in the past, usually equal to the tip
+  // minus 24 hours.
+  @Transactional(value = "explorerTransactionManager", propagation = Propagation.REQUIRES_NEW)
+  protected void processTokenFromSafetySlot(Long latestProcessedSlot, Long tip) {
+    List<String> unitMultiAssetCollection =
+        addressTxAmountRepository.getTokensInTransactionInSlotRange(latestProcessedSlot, tip);
+
+    if (CollectionUtils.isEmpty(unitMultiAssetCollection)) {
+      return;
+    }
+
+    // to leverage the async capabilities of the service
+    // public CompletableFuture<List<TokenInfo>> buildTokenInfoList(
+    //      Set<String> units, Long fromSlot, Long toSlot, Long currentSlot)
+    // the toSlot must be the tip because we need calculate from the latest processed slot to the
+    // tip
+
+    BatchUtils.doBatching(
+        DEFAULT_BATCH_SIZE,
+        unitMultiAssetCollection,
+        unitsBatch -> {
+          List<TokenInfo> tokenInfoList =
+              tokenInfoServiceAsync.buildTokenInfoList(unitsBatch, latestProcessedSlot, tip, tip);
+          saveTokenInfoListToDbInRollbackCaseMightOccur(tokenInfoList, unitsBatch);
+        });
+  }
+
+  // The function is used in cases where data is saved to the database and a rollback might not
+  // occur.
+  // Init Mode
+  // Note that:
+  // - All values had been computed and the isCalculatedInIncrementalMode fields are set to FALSE
+  // - The updated values and previous values always can be TRUSTED
+  private void saveTokenInfoListToDbInRollbackCaseMightNotOccur(
+      List<TokenInfo> tokenInfoList, List<String> unitMultiAssetCollection, Long toSlot) {
+
+    Map<String, TokenInfo> tokenInfoMap =
+        tokenInfoRepository.findByUnitIn(unitMultiAssetCollection).stream()
+            .collect(Collectors.toMap(TokenInfo::getUnit, Function.identity()));
+
+    tokenInfoList.forEach(
+        tokenInfo -> {
+          // If the token info is already in the database
+          if (tokenInfoMap.containsKey(tokenInfo.getUnit())) {
+            TokenInfo existingTokenInfo = tokenInfoMap.get(tokenInfo.getUnit());
+            if (existingTokenInfo.getIsCalculatedInIncrementalMode()
+                && Objects.isNull(existingTokenInfo.getPreviousSlot())) {
+              // case: the token info had been calculated in incremental mode and the previous
+              // values are null
+              // meaning: the token info is calculated for the first time in the incremental mode
+              // updated values = previous values = values calculated within that slot
+              tokenInfo.setPreviousTotalVolume(tokenInfo.getTotalVolume());
+              tokenInfo.setPreviousNumberOfHolders(tokenInfo.getNumberOfHolders());
+              tokenInfo.setPreviousTotalVolume(tokenInfo.getTotalVolume());
+              tokenInfo.setPreviousSlot(tokenInfo.getUpdatedSlot());
+            } else if (existingTokenInfo.getIsCalculatedInIncrementalMode()
+                && Objects.nonNull(existingTokenInfo.getPreviousSlot())) {
+              // The token info had been calculated before in the incremental mode.
+              // In this case, the updated values can be untrusted, but the previous values can be
+              // trusted
+              // then: recalculated the updated values base on the previous values.
+              // updated values = previous values + values calculated within that slot
+              // previous values unchanged
+              tokenInfo.setTotalVolume(
+                  existingTokenInfo.getPreviousTotalVolume().add(tokenInfo.getTotalVolume()));
+              tokenInfo.setPreviousSlot(existingTokenInfo.getPreviousSlot());
+              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getPreviousNumberOfHolders());
+              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getPreviousTotalVolume());
+            } else if (!existingTokenInfo.getIsCalculatedInIncrementalMode()
+                && Objects.nonNull(existingTokenInfo.getPreviousSlot())) {
+              // The token info had been calculated before in the init mode, then the updated values
+              // is recalculated, and its
+              // value will be equal the current value plus the value calculated within that slot
+              // the previous values are the same as the updated values
+              // updated values = current updated values + values calculated within that slot
+              // previous values = current updated values
+              tokenInfo.setPreviousSlot(existingTokenInfo.getUpdatedSlot());
+              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getTotalVolume());
+              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getNumberOfHolders());
+              tokenInfo.setTotalVolume(
+                  existingTokenInfo.getTotalVolume().add(tokenInfo.getTotalVolume()));
+            }
+          } else {
+            // the token info is not in the database
+            // In the init mode, the token info is calculated for the first time, the updated values
+            // and
+            // previous values are the same
+            tokenInfo.setPreviousTotalVolume(tokenInfo.getTotalVolume());
+            tokenInfo.setPreviousNumberOfHolders(tokenInfo.getNumberOfHolders());
+            tokenInfo.setPreviousTotalVolume(tokenInfo.getTotalVolume());
+            tokenInfo.setPreviousSlot(tokenInfo.getUpdatedSlot());
+          }
+          tokenInfo.setIsCalculatedInIncrementalMode(false);
+        });
+    tokenInfoRepository.saveAllAndFlush(tokenInfoList);
+  }
+
+  // The function is used in cases where data is saved to the database and a rollback might occur.
+  // Incremental Mode
+  // Note that:
+  // - After updating the token info, the isCalculatedInIncrementalMode fields are set to TRUE
+  // - the updated values can be UNTRUSTED, but the previous values always can be TRUSTED
+  private void saveTokenInfoListToDbInRollbackCaseMightOccur(
+      List<TokenInfo> tokenInfoList, List<String> unitMultiAssetCollection) {
+    Map<String, TokenInfo> tokenInfoMap =
+        tokenInfoRepository.findByUnitIn(unitMultiAssetCollection).stream()
+            .collect(Collectors.toMap(TokenInfo::getUnit, Function.identity()));
+    tokenInfoList.forEach(
+        tokenInfo -> {
+          // if the token is already in the database
+          if (tokenInfoMap.containsKey(tokenInfo.getUnit())) {
+            TokenInfo existingTokenInfo = tokenInfoMap.get(tokenInfo.getUnit());
+            if (existingTokenInfo.getIsCalculatedInIncrementalMode()
+                && Objects.nonNull(existingTokenInfo.getPreviousSlot())) {
+              // The token info has been calculated in the incremental mode before.
+              // In this case, the updated values must not be trusted, but the previous values can
+              // be trusted
+              // then:
+              // updated values = previous values + values calculated within that slot
+              // previous values unchanged
+              tokenInfo.setTotalVolume(
+                  existingTokenInfo.getPreviousTotalVolume().add(tokenInfo.getTotalVolume()));
+              tokenInfo.setPreviousSlot(existingTokenInfo.getPreviousSlot());
+              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getPreviousTotalVolume());
+              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getPreviousNumberOfHolders());
+              tokenInfo.setPreviousVolume24h(existingTokenInfo.getPreviousVolume24h());
+            } else if (!existingTokenInfo.getIsCalculatedInIncrementalMode()) {
+              // The token info has been calculated before in the init mode.
+              // In this case, the updated values must be recalculated, and its value will be equal
+              // the current value plus the value calculated within that slot
+              // the previous values are the same as the updated values
+              tokenInfo.setPreviousSlot(existingTokenInfo.getUpdatedSlot());
+              tokenInfo.setPreviousTotalVolume(existingTokenInfo.getTotalVolume());
+              tokenInfo.setPreviousNumberOfHolders(existingTokenInfo.getNumberOfHolders());
+              tokenInfo.setTotalVolume(
+                  existingTokenInfo.getTotalVolume().add(tokenInfo.getTotalVolume()));
+            }
+          }
+          tokenInfo.setIsCalculatedInIncrementalMode(true);
+        });
+    // if the condition is false, the token info is not in the database
+    // then: the updated values equal the values calculated within that slot and the previous values
+    // must be null
+    tokenInfoRepository.saveAllAndFlush(tokenInfoList);
   }
 
   /** Save total token count into redis cache. */

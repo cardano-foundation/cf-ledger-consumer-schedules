@@ -1,5 +1,7 @@
 package org.cardanofoundation.job.schedules;
 
+import static org.apache.commons.math3.util.Precision.round;
+
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +62,8 @@ public class DRepInfoSchedule {
 
   private final DRepMapper dRepMapper;
   private static final int DEFAULT_PAGE_SIZE = 100;
+  // round the double value to 4 decimal places
+  private static final int ROUND_SCALE = 4;
 
   @Scheduled(fixedRateString = "${jobs.drep-info.fixed-delay}")
   @Transactional
@@ -146,7 +150,9 @@ public class DRepInfoSchedule {
                     return 0.0;
                   }
 
-                  return entry.getValue() * 1.0 / (countOfGovActionThatAllowedToVoteForDRep);
+                  return round(
+                      entry.getValue() * 1.0 / (countOfGovActionThatAllowedToVoteForDRep),
+                      ROUND_SCALE);
                 }));
   }
 

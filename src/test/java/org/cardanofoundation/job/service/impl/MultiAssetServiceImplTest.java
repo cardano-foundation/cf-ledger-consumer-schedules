@@ -27,6 +27,7 @@ class MultiAssetServiceImplTest {
   @Test
   void testGetMapNumberHolder() {
     List<String> multiAssetUnitIds = Arrays.asList("unit6", "unit7");
+
     Mockito.when(latestTokenBalanceRepository.countHoldersByMultiAssetIdInRange(multiAssetUnitIds))
         .thenReturn(
             Arrays.asList(

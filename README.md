@@ -110,6 +110,7 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - STAKE_TX_BALANCE_FIXED_DELAY: fixed delay for job stake tx balance
 - TOKEN_INFO_JOB_ENABLED: enable token info job
 - TOKEN_INFO_FIXED_DELAY: delay time between each time run token info job
+- TOKEN_INFO_NUM_SLOT_INTERVAL: number of slots for each iteration processing token info
 - AGGREGATE_POOL_INFO_FIXED_DELAY: fixed delay for job aggregate pool info
 - SMART_CONTRACT_INFO_FIXED_DELAY: fixed delay for job smart contract info
 - NATIVE_SCRIPT_INFO_FIXED_DELAY: fixed delay for job native script info
@@ -118,4 +119,12 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - GOVERNANCE_INFO_JOB_ENABLED: enable governance info job
 - GOVERNANCE_INFO_FIXED_DELAY: fixed delay for job governance info
 - AGG_ANALYTIC_FIXED_DELAY: fixed delay for job aggregate analytic that related to address and token
+- BLOCK_STATISTICS_DAILY_URL: The URL to get daily block statistics
+- BLOCK_STATISTICS_PER_EPOCH_URL: The URL to get per-epoch block statistics.
+- BLOCK_STATISTICS_JOB_ENABLED: Enable the crawl block statistics job. Default is true.
+- GOV_ACTION_METADATA_JOB_ENABLED: Enable the upsert government action metadata job. Default is true.
+- GOV_ACTION_METADATA_FIXED_DELAY: Fixed delay for the government action metadata scheduler.
+- GOV_ACTION_METADATA_RETRY_COUNT: The number of retries to fetch the URL to get government action metadata.
+
 </details>
+

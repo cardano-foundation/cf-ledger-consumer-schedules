@@ -162,6 +162,7 @@ jobs:
   token-info:
     enabled: ${TOKEN_INFO_JOB_ENABLED:true}
     fixed-delay: ${TOKEN_INFO_FIXED_DELAY:60000}
+    num-slot-interval: ${TOKEN_INFO_NUM_SLOT_INTERVAL:8000}
   smart-contract-info:
     fixed-delay: ${SMART_CONTRACT_INFO_FIXED_DELAY:30000}
   native-script-info:
