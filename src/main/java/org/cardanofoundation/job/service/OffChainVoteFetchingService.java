@@ -48,7 +48,7 @@ public abstract class OffChainVoteFetchingService<S, F> {
   static final int TIMEOUT = 30000;
   static final int READ_TIMEOUT = 19000;
   static final int WRITE_TIMEOUT = 10000;
-  static final int LIMIT_BYTES = 4096;
+  static final int LIMIT_BYTES = 16384;
 
   protected Queue<OffChainFetchResult> offChainAnchorsFetchResult;
 
