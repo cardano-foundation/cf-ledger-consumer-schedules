@@ -12,20 +12,9 @@ import org.springframework.stereotype.Repository;
 
 import org.cardanofoundation.explorer.common.entity.ledgersync.MultiAsset;
 import org.cardanofoundation.job.projection.ScriptNumberTokenProjection;
-import org.cardanofoundation.job.projection.TokenUnitProjection;
 
 @Repository
 public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
-
-  @Query(
-      "SELECT multiAsset.id AS ident, multiAsset.unit AS unit FROM MultiAsset multiAsset "
-          + "WHERE multiAsset.id >= :startIdent AND multiAsset.id <= :endIdent")
-  List<TokenUnitProjection> getTokenUnitByIdBetween(
-      @Param("startIdent") Long startIdent, @Param("endIdent") Long endIdent);
-
-  @Query(
-      "SELECT multiAsset.id AS ident, multiAsset.unit AS unit FROM MultiAsset multiAsset WHERE multiAsset.unit IN :units")
-  List<TokenUnitProjection> getTokenUnitByUnitIn(@Param("units") List<String> units);
 
   @Query(
       "SELECT count(multiAsset) as numberOfTokens, multiAsset.policy as scriptHash"
@@ -34,9 +23,6 @@ public interface MultiAssetRepository extends JpaRepository<MultiAsset, Long> {
           + " GROUP BY multiAsset.policy")
   List<ScriptNumberTokenProjection> countByPolicyIn(
       @Param("policyIds") Collection<String> policyIds);
-
-  @Query("SELECT max(multiAsset.id) FROM MultiAsset multiAsset")
-  Long getCurrentMaxIdent();
 
   @Query("SELECT multiAsset.unit AS unit FROM MultiAsset multiAsset")
   Slice<String> getTokenUnitSlice(Pageable pageable);
