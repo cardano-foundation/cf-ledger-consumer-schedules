@@ -1,5 +1,8 @@
 package org.cardanofoundation.job.service.impl;
 
+import static org.cardanofoundation.job.common.enumeration.RedisKey.AGGREGATED_CACHE;
+import static org.cardanofoundation.job.common.enumeration.RedisKey.TOTAL_TOKEN_COUNT;
+
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -20,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +37,7 @@ import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.job.repository.explorer.DataCheckpointRepository;
 import org.cardanofoundation.job.repository.explorer.jooq.JOOQDataCheckpointRepository;
 import org.cardanofoundation.job.repository.ledgersync.BlockRepository;
+import org.cardanofoundation.job.repository.ledgersync.MultiAssetRepository;
 import org.cardanofoundation.job.repository.ledgersync.TokenTxCountRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.AddressTxAmountRepository;
 import org.cardanofoundation.job.service.TokenTxCountService;
@@ -53,6 +58,13 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
   private final TokenTxCountRepository tokenTxCountRepository;
   private static final Integer DEFAULT_BATCH_SIZE = 500;
   private final String JOB_NAME = "TokenTxCount";
+
+  private final MultiAssetRepository multiAssetRepository;
+
+  private final RedisTemplate<String, Integer> redisTemplate;
+
+  @Value("${application.network}")
+  private String network;
 
   @Value("${jobs.token-info.num-slot-interval}")
   private Integer NUM_SLOT_INTERVAL;
@@ -124,6 +136,7 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
     }
     log.info("The token tx count job switched to incremental mode");
     selfProxyService.processTokenTxCountFromSafetySlotToTip(latestProcessedSlot, currentSlot);
+    saveTotalTokenCount();
     log.info(
         "Token tx count scheduler finished processing. The data had processed up to slot {}",
         currentSlot);
@@ -280,5 +293,15 @@ public class TokenTxCountServiceImpl implements TokenTxCountService {
               });
           return existingTokenTxCounts;
         });
+  }
+
+  /** Save total token count into redis cache. */
+  void saveTotalTokenCount() {
+    String redisKey = String.join("_", network.toUpperCase(), AGGREGATED_CACHE.name());
+    long totalTokenCount = multiAssetRepository.count();
+    redisTemplate
+        .opsForHash()
+        .put(redisKey, TOTAL_TOKEN_COUNT.name(), String.valueOf(totalTokenCount));
+    log.info("Total token count: {}", totalTokenCount);
   }
 }
