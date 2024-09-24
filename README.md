@@ -125,6 +125,12 @@ To ensure the stability and reliability of this project, unit and mutation tests
 - GOV_ACTION_METADATA_JOB_ENABLED: Enable the upsert government action metadata job. Default is true.
 - GOV_ACTION_METADATA_FIXED_DELAY: Fixed delay for the government action metadata scheduler.
 - GOV_ACTION_METADATA_RETRY_COUNT: The number of retries to fetch the URL to get government action metadata.
+- ADDRESS_TX_COUNT_FIXED_DELAY: Fixed delay for the address tx count job.
+- ADDRESS_TX_COUNT_JOB_ENABLED: Enable the address tx count job. Default is true.
+- ADDRESS_TX_COUNT_NUM_SLOT_INTERVAL: number of slots for each iteration processing addresses tx count
+- STAKE_ADDRESS_TX_COUNT_FIXED_DELAY: Fixed delay for the stake address tx count job.
+- STAKE_ADDRESS_TX_COUNT_JOB_ENABLED: Enable the stake address tx count job. Default is true.
+- STAKE_ADDRESS_TX_COUNT_NUM_SLOT_INTERVAL: number of slots for each iteration processing stake addresses tx count
 - IPFS_GATEWAY_BASE_URL: The base URL of the gateway to support download the IPFS file.
 </details>
 

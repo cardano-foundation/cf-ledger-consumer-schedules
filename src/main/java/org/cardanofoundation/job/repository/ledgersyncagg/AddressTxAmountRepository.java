@@ -11,6 +11,9 @@ import org.springframework.data.repository.query.Param;
 import org.cardanofoundation.explorer.common.entity.compositeKey.AddressTxAmountId;
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxAmount;
+import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxCount;
+import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.StakeAddressTxCount;
+import org.cardanofoundation.job.model.TokenVolume;
 import org.cardanofoundation.job.projection.StakeTxProjection;
 import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
 
@@ -62,12 +65,91 @@ public interface AddressTxAmountRepository
 
   @Query(
       """
+      SELECT new org.cardanofoundation.job.model.TokenVolume(ata.unit, sum(ata.quantity))
+      FROM AddressTxAmount ata
+      WHERE ata.unit IN :units
+        AND ata.slot >= :toSlot
+        AND ata.quantity > 0
+      GROUP BY ata.unit
+      """)
+  List<TokenVolume> sumBalanceAfterSlot(
+      @Param("units") List<String> units, @Param("toSlot") Long toSlot);
+
+  @Query(
+      """
+      SELECT new org.cardanofoundation.job.model.TokenVolume(ata.unit, sum(ata.quantity))
+      FROM AddressTxAmount ata
+      WHERE ata.unit IN :units
+      AND ata.quantity > 0
+      AND ata.slot > :fromSlot AND ata.slot <= :toSlot
+      GROUP BY ata.unit
+      """)
+  List<TokenVolume> getTotalVolumeByUnits(
+      @Param("units") List<String> units,
+      @Param("fromSlot") Long fromSlot,
+      @Param("toSlot") Long toSlot);
+
+  @Query(
+      """
       SELECT new org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount(ata.unit, count(distinct (ata.txHash)))
       FROM AddressTxAmount ata
       WHERE ata.unit in :units
       GROUP BY ata.unit
       """)
   List<TokenTxCount> getTotalTxCountByUnitIn(@Param("units") List<String> units);
+
+  @Query(
+      """
+          SELECT new org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount(ata.unit, count(distinct (ata.txHash)))
+          FROM AddressTxAmount ata
+          WHERE ata.slot > :fromSlot AND ata.slot <= :toSlot
+          AND ata.unit != 'lovelace'
+          GROUP BY ata.unit
+          """)
+  List<TokenTxCount> getTotalTxCountByUnitInSlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
+
+  @Query(
+      """
+              SELECT new org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxCount(ata.address, count(distinct(ata.txHash)))
+              FROM AddressTxAmount ata
+              WHERE ata.slot > :fromSlot AND ata.slot <= :toSlot AND ata.address IS NOT NULL
+              GROUP BY ata.address
+              """)
+  List<AddressTxCount> getTotalTxCountByAddressInSlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
+
+  @Query(
+      """
+        SELECT new org.cardanofoundation.explorer.common.entity.ledgersyncsagg.StakeAddressTxCount(ata.stakeAddress, count(distinct(ata.txHash)))
+        FROM AddressTxAmount ata
+        WHERE ata.slot > :fromSlot AND ata.slot <= :toSlot AND ata.stakeAddress IS NOT NULL
+        GROUP BY ata.stakeAddress
+""")
+  List<StakeAddressTxCount> getTotalTxCountByStakeAddressInSlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
+
+  @Query(
+      """
+      SELECT addressTxAmount.unit
+      FROM AddressTxAmount addressTxAmount
+      WHERE addressTxAmount.blockTime >= :fromTime
+        AND addressTxAmount.blockTime <= :toTime
+        AND addressTxAmount.unit != 'lovelace'
+      """)
+  List<String> getTokensInTransactionInTimeRange(
+      @Param("fromTime") Long fromTime, @Param("toTime") Long toTime);
+
+  @Query(
+      """
+          SELECT distinct addressTxAmount.unit
+          FROM AddressTxAmount addressTxAmount
+          WHERE addressTxAmount.slot > :fromSlot
+            AND addressTxAmount.slot <= :toSlot
+            AND addressTxAmount.unit != 'lovelace'
+          """)
+  List<String> getTokensInTransactionInSlotRange(
+      @Param("fromSlot") Long fromSlot, @Param("toSlot") Long toSlot);
 
   @Query(
       """
