@@ -18,8 +18,6 @@ import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTokenR
 import org.cardanofoundation.job.repository.ledgersyncagg.AggregateAddressTxBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.StakeTxBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.TopAddressBalanceRepository;
-import org.cardanofoundation.job.repository.ledgersyncagg.TopStakeAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQAddressBalanceRepository;
 import org.cardanofoundation.job.repository.ledgersyncagg.jooq.JOOQStakeAddressBalanceRepository;
 import org.cardanofoundation.job.service.TxChartService;
@@ -40,8 +38,6 @@ public class AggregateAnalyticSchedule {
   private final JOOQStakeAddressBalanceRepository jooqStakeAddressBalanceRepository;
   private final AddressBalanceRepository addressBalanceRepository;
   private final StakeAddressBalanceRepository stakeAddressBalanceRepository;
-  private final TopAddressBalanceRepository topAddressBalanceRepository;
-  private final TopStakeAddressBalanceRepository topStakeAddressBalanceRepository;
   private final StakeTxBalanceRepository stakeTxBalanceRepository;
 
   @Value("${jobs.agg-analytic.number-of-concurrent-tasks}")
@@ -90,18 +86,6 @@ public class AggregateAnalyticSchedule {
         jooqStakeAddressBalanceRepository::cleanUpStakeAddressBalance,
         stakeAddressBalanceRepository::getMaxSlot,
         "StakeAddressBalance");
-  }
-
-  @Scheduled(initialDelay = 10000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void refreshTopAddressBalance() {
-    refreshMaterializedView(
-        topAddressBalanceRepository::refreshMaterializedView, "TopAddressBalance");
-  }
-
-  @Scheduled(initialDelay = 30000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
-  public void refreshTopStakeAddressBalance() {
-    refreshMaterializedView(
-        topStakeAddressBalanceRepository::refreshMaterializedView, "TopStakeAddressBalance");
   }
 
   @Scheduled(initialDelay = 20000, fixedDelayString = "${jobs.agg-analytic.fixed-delay}")
