@@ -90,8 +90,8 @@ public class GovActionMetadataSchedule {
   }
 
   /** Retry fetch gov action metadata. */
-  //  @Scheduled(cron = "0 0 0 * * *", zone = "UTC")
-  @Scheduled(fixedRateString = "${jobs.gov-action-metadata.fixed-delay}")
+  @Scheduled(cron = "0 0 0 * * *", zone = "UTC")
+  //  @Scheduled(fixedRateString = "${jobs.gov-action-metadata.fixed-delay}")
   @Transactional
   public void retryFetchGovActionMetadata() {
     long startTime = System.currentTimeMillis();
