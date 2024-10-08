@@ -1,5 +1,7 @@
 package org.cardanofoundation.job.schedules;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import io.jsonwebtoken.lang.Collections;
 
 import org.cardanofoundation.explorer.common.entity.enumeration.DataCheckpointType;
 import org.cardanofoundation.explorer.common.entity.explorer.DataCheckpoint;
@@ -61,17 +65,24 @@ public class GovActionMetadataSchedule {
         govActionProposalRepository.getAnchorInfoBySlotRange(
             currentCheckpoint.getSlotNo(), currentSlotNo);
 
-    fetchingDataService.initOffChainListData();
-    fetchingDataService.crawlOffChainAnchors(anchorList);
-    List<OffChainVoteFetchError> offChainVoteFetchErrors =
-        fetchingDataService.getOffChainAnchorsFetchError();
-    List<OffChainVoteGovActionData> offChainVoteGovActionDataList =
-        fetchingDataService.getOffChainAnchorsFetchSuccess();
+    if (Collections.isEmpty(anchorList)) {
+      log.info(
+          "No anchor data to fetch from slot {} to slot {}",
+          currentCheckpoint.getSlotNo(),
+          currentSlotNo);
+    } else {
+      fetchingDataService.initOffChainListData();
+      fetchingDataService.crawlOffChainAnchors(anchorList);
+      List<OffChainVoteFetchError> offChainVoteFetchErrors =
+          fetchingDataService.getOffChainAnchorsFetchError();
+      List<OffChainVoteGovActionData> offChainVoteGovActionDataList =
+          fetchingDataService.getOffChainAnchorsFetchSuccess();
 
-    storingDataService.insertFetchSuccessData(offChainVoteGovActionDataList);
-    storingDataService.insertFetchFailData(offChainVoteFetchErrors);
-
+      storingDataService.insertFetchSuccessData(offChainVoteGovActionDataList);
+      storingDataService.insertFetchFailData(offChainVoteFetchErrors);
+    }
     currentCheckpoint.setSlotNo(currentSlotNo);
+    currentCheckpoint.setUpdateTime(Timestamp.valueOf(LocalDateTime.now()));
     dataCheckpointRepository.save(currentCheckpoint);
     log.info(
         "End fetching gov action metadata, taken time: {} ms",
@@ -79,7 +90,8 @@ public class GovActionMetadataSchedule {
   }
 
   /** Retry fetch gov action metadata. */
-  @Scheduled(cron = "0 0 0 * * *", zone = "UTC")
+  //  @Scheduled(cron = "0 0 0 * * *", zone = "UTC")
+  @Scheduled(fixedRateString = "${jobs.gov-action-metadata.fixed-delay}")
   @Transactional
   public void retryFetchGovActionMetadata() {
     long startTime = System.currentTimeMillis();

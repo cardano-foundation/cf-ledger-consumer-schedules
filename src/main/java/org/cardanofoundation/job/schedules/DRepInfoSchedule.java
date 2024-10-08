@@ -241,11 +241,33 @@ public class DRepInfoSchedule {
 
           dRepInfo.setDelegators(
               countDelegation.getOrDefault(dRepInfo.getDrepHash(), 0L).intValue());
+          // if the certificate is unregistered, set the status to retired otherwise set to active
+          // as a default
           dRepInfo.setStatus(
               dRepRegistrationEntity.getType().equals(DRepActionType.UNREG_DREP_CERT)
                   ? DRepStatus.RETIRED
                   : DRepStatus.ACTIVE);
-          if (!dRepInfo.getStatus().equals(DRepStatus.RETIRED)) {
+          // Following the CIP-1694 document
+          // (https://github.com/cardano-foundation/CIPs/blob/master/CIP-1694/README.md)
+          // ***Specifically, if a DRep does not submit any votes for drepActivity-many epochs, the
+          // DRep is considered inactive,
+          // where drepActivity is a new protocol parameter. Inactive DReps no longer count towards
+          // the active voting stake
+          // but can become active again for drepActivity-many epochs by voting on any governance
+          // action or submitting a DRep update certificate.***
+
+          // If the epoch of the certificate is less than the value of the current epoch minus dRep
+          // activity,
+          // check if the latest activity in the voting procedure is less than the current epoch
+          // minus dRep activity.
+          // If so, set the status to inactive; otherwise, set the status to active.
+
+          // If the epoch of the certificate is greater than the value of the current epoch minus
+          // dRep activity,
+          // set the status to active, as one condition for being considered active is submitting
+          // any DRep update certificate.
+          if (!dRepInfo.getStatus().equals(DRepStatus.RETIRED)
+              && dRepRegistrationEntity.getEpoch() < currentEpoch - dRepActivity) {
             Long latestEpoch = latestEpochMap.getOrDefault(dRepInfo.getDrepHash(), 0L);
             dRepInfo.setStatus(
                 currentEpoch - dRepActivity > latestEpoch
