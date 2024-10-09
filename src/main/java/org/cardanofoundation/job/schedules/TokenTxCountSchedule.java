@@ -1,5 +1,8 @@
 package org.cardanofoundation.job.schedules;
 
+import static org.cardanofoundation.job.common.enumeration.RedisKey.AGGREGATED_CACHE;
+import static org.cardanofoundation.job.common.enumeration.RedisKey.TOTAL_TOKEN_COUNT;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -77,6 +80,7 @@ public class TokenTxCountSchedule {
       update(checkpoint.longValue(), currentMaxSlotNo);
     }
 
+    saveTotalTokenCount();
     // Update the checkpoint to the currentMaxSlotNo - 43200 (slot) to avoid missing any data when
     // node
     // rollback
@@ -182,5 +186,15 @@ public class TokenTxCountSchedule {
         "End update TokenTxCount with size = {} in {} ms",
         unitsInBlockRange.size(),
         System.currentTimeMillis() - startTime);
+  }
+
+  /** Save total token count into redis cache. */
+  void saveTotalTokenCount() {
+    String redisKey = String.join("_", network.toUpperCase(), AGGREGATED_CACHE.name());
+    long totalTokenCount = multiAssetRepository.count();
+    redisTemplate
+        .opsForHash()
+        .put(redisKey, TOTAL_TOKEN_COUNT.name(), String.valueOf(totalTokenCount));
+    log.info("Total token count: {}", totalTokenCount);
   }
 }

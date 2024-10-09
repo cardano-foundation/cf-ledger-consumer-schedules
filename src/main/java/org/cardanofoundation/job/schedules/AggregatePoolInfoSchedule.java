@@ -1,5 +1,7 @@
 package org.cardanofoundation.job.schedules;
 
+import static org.apache.commons.math3.util.Precision.round;
+
 import java.math.BigInteger;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -58,6 +60,9 @@ public class AggregatePoolInfoSchedule {
   final EpochRepository epochRepository;
   final FetchRewardDataService fetchRewardDataService;
   final PoolInfoRepository poolInfoRepository;
+
+  // round the double value to 6 decimal places
+  private static final int ROUND_SCALE = 6;
 
   @Scheduled(fixedDelayString = "${jobs.aggregate-pool-info.fixed-delay}")
   @Transactional
@@ -181,8 +186,9 @@ public class AggregatePoolInfoSchedule {
                       govActionProposalList.stream()
                           .filter(govActionProposal -> govActionProposal.getSlot() >= slot)
                           .count();
-                  return (Double)
-                      (entry.getValue() * 1.0 / (countOfGovActionThatAllowedToVoteForSPO));
+                  return round(
+                      entry.getValue() * 1.0 / countOfGovActionThatAllowedToVoteForSPO,
+                      ROUND_SCALE);
                 }));
   }
 
@@ -205,8 +211,10 @@ public class AggregatePoolInfoSchedule {
               Collectors.toMap(
                   PoolInfoProjection::getPoolId,
                   poolInfoProjection ->
-                      poolInfoProjection.getActiveStake().doubleValue()
-                          / sumOfActiveStake.doubleValue()));
+                      round(
+                          poolInfoProjection.getActiveStake().doubleValue()
+                              / sumOfActiveStake.doubleValue(),
+                          ROUND_SCALE)));
     }
     return new HashMap<>();
   }
