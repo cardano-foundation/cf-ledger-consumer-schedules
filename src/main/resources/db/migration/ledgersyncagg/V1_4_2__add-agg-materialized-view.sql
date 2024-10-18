@@ -44,26 +44,9 @@ GROUP BY ata.tx_hash, ata.slot, ata.stake_address;
 
 ------------------------------------------------------------------------------------------------------------------------
 DROP MATERIALIZED VIEW IF EXISTS latest_address_balance;
-CREATE MATERIALIZED VIEW IF NOT EXISTS top_address_balance AS
-WITH full_balances AS
-         (
-             SELECT DISTINCT ON (address) address, slot, quantity
-             FROM address_balance
-             WHERE unit = 'lovelace'
-             ORDER BY address, slot DESC
-         )
-SELECT * FROM full_balances WHERE quantity > 0 order by quantity desc limit 1000;
 
 ------------------------------------------------------------------------------------------------------------------------
 DROP MATERIALIZED VIEW IF EXISTS latest_stake_address_balance;
-CREATE MATERIALIZED VIEW IF NOT EXISTS top_stake_address_balance AS
-WITH full_balances AS
-         (
-             SELECT DISTINCT ON (address) address, slot, quantity
-             FROM stake_address_balance
-             ORDER BY address, slot DESC
-         )
-SELECT * FROM full_balances WHERE quantity > 0 order by quantity desc limit 1000;
 
 ------------------------------------------------------------------------------------------------------------------------
 CREATE MATERIALIZED VIEW IF NOT EXISTS stake_address_view AS
