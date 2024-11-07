@@ -12,23 +12,9 @@ import org.cardanofoundation.explorer.common.entity.compositeKey.AddressTxAmount
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxAmount;
 import org.cardanofoundation.job.projection.StakeTxProjection;
-import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
 
 public interface AddressTxAmountRepository
     extends JpaRepository<AddressTxAmount, AddressTxAmountId> {
-
-  @Query(
-      value =
-          """
-          SELECT (CASE WHEN ata.stake_address IS NULL THEN ata.address ELSE ata.stake_address END) AS account,
-                 COUNT(DISTINCT ata.tx_hash)                                                       AS txCount
-          FROM address_tx_amount ata
-          WHERE ata.epoch = :epochNo
-            AND ata.slot != -1
-          GROUP BY account;
-      """,
-      nativeQuery = true)
-  List<UniqueAccountTxCountProjection> findUniqueAccountsInEpoch(@Param("epochNo") Integer epochNo);
 
   @Query(
       """
