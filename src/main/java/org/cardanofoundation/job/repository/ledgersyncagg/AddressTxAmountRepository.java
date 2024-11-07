@@ -12,7 +12,6 @@ import org.cardanofoundation.explorer.common.entity.compositeKey.AddressTxAmount
 import org.cardanofoundation.explorer.common.entity.ledgersync.TokenTxCount;
 import org.cardanofoundation.explorer.common.entity.ledgersyncsagg.AddressTxAmount;
 import org.cardanofoundation.job.projection.StakeTxProjection;
-import org.cardanofoundation.job.projection.UniqueAccountTxCountProjection;
 
 public interface AddressTxAmountRepository
     extends JpaRepository<AddressTxAmount, AddressTxAmountId> {
